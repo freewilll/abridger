@@ -33,5 +33,8 @@ clean:
 	rm -f AUTHORS.TXT
 	find . -type f -name '*.pyc' -delete
 
+clean-tox:
+	rm -rf .tox
+
 python:
 	$(PYTHON) setup.py build
