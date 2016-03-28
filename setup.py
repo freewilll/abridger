@@ -22,7 +22,7 @@ setup(
     author_email='minime@example.com',
     url='http://minime.example.com/',
     license='GPLv3',
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'pyyaml', 'psycopg2'],
     package_dir={'': 'lib'},
     packages=find_packages('lib'),
     data_files=[],
