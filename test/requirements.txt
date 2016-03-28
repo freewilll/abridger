@@ -2,3 +2,4 @@ pytest
 pytest-cov
 pytest-xdist
 pytest-dbfixtures
+flake8
