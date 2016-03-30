@@ -1,7 +1,21 @@
+import tempfile
+import yaml
 from minime.schema import Schema
 
 
 class TestSchema(object):
+    test_relations_sql = '''
+        CREATE TABLE test1 (
+            id serial PRIMARY KEY
+        );
+
+        CREATE TABLE test2 (
+            id serial PRIMARY KEY,
+            fk1 integer REFERENCES test1,
+            fk2 integer CONSTRAINT test_constraint REFERENCES test1
+        );
+    '''
+
     def test_schema_tables(self, conn):
         with conn.cursor() as cur:
             cur.execute('''
@@ -47,17 +61,7 @@ class TestSchema(object):
 
     def test_schema_foreign_key_constraints(self, conn):
         with conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE test1 (
-                    id serial PRIMARY KEY
-                );
-
-                CREATE TABLE test2 (
-                    id serial PRIMARY KEY,
-                    fk1 integer REFERENCES test1,
-                    fk2 integer CONSTRAINT test_constraint REFERENCES test1
-                );
-            ''')
+            cur.execute(self.test_relations_sql)
         cur.close()
 
         schema = Schema.create_from_conn(conn)
@@ -92,3 +96,19 @@ class TestSchema(object):
         assert schema.tables[0].pk == schema.tables[0].cols[0]
         assert schema.tables[1].pk == schema.tables[1].cols[1]
         assert schema.tables[2].pk is None
+
+    def test_dump_relations(self, conn):
+        with conn.cursor() as cur:
+            cur.execute(self.test_relations_sql)
+        cur.close()
+
+        schema = Schema.create_from_conn(conn)
+
+        temp = tempfile.NamedTemporaryFile(mode='wb', delete=False)
+        schema.dump_relations(temp)
+        temp.close()
+
+        data = yaml.load(open(temp.name).read())
+        assert data == {'relations': [
+            {'column': 'fk1', 'table': 'test2', 'name': 'test2_fk1_fkey'},
+            {'column': 'fk2', 'table': 'test2', 'name': 'test_constraint'}]}

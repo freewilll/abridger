@@ -152,3 +152,12 @@ class Schema(object):
 
                 col = table.cols_by_attrnum[attrnum[0]]
                 table.pk = col
+
+    def dump_relations(self, f):
+        f.write('relations:\n')
+        f.write('\n')
+        for table in self.tables:
+            for fkc in table.fks:
+                f.write('  - name: %s\n' % fkc.name)
+                f.write('    table: %s\n' % table.name)
+                f.write('    column: %s\n' % fkc.src_col.name)
