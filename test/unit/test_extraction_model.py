@@ -5,35 +5,35 @@ from minime.extraction_model import ExtractionModel
 
 class TestExtractionModel(object):
     @pytest.fixture(autouse=True)
-    def self_schema1(self, schema1):
-        self.schema1 = schema1
-        self.relations = schema1.relations()
+    def self_schema1_sl(self, schema1_sl):
+        self.schema1_sl = schema1_sl
+        self.relations = schema1_sl.relations()
 
     def test_unknown_directive(self):
         with pytest.raises(ValidationError):
             data = [{'foo': []}]
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
 
     def test_relation_errors(self):
         with pytest.raises(ValidationError):
             data = 'foo'
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
 
         with pytest.raises(ValidationError):
             data = ['foo']
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
 
         with pytest.raises(ValidationError):
             data = [{'foo': [], 'bar': []}]
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
 
         with pytest.raises(ValidationError):
             data = [{'foo': 'bar'}]
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
 
-    def test_schema1_relations(self):
+    def test_schema1_sl_relations(self):
         data = [{'relations': self.relations}]
-        model = ExtractionModel.load(self.schema1, data)
+        model = ExtractionModel.load(self.schema1_sl, data)
         assert model.relations[0].table == self.relations[0]['table']
         assert model.relations[0].column == self.relations[0]['column']
         assert model.relations[0].name == self.relations[0]['name']
@@ -45,7 +45,13 @@ class TestExtractionModel(object):
         relation = dict(self.relations[0])
         del relation['name']
         data = [{'relations': [relation]}]
-        ExtractionModel.load(self.schema1, data)
+        ExtractionModel.load(self.schema1_sl, data)
+
+        # A null name is ok
+        relation = dict(self.relations[0])
+        relation['name'] = None
+        data = [{'relations': [relation]}]
+        ExtractionModel.load(self.schema1_sl, data)
 
         # A missing table or column key is not OK
         for key in ['table', 'column']:
@@ -53,36 +59,36 @@ class TestExtractionModel(object):
             del relation[key]
             data = [{'relations': [relation]}]
             with pytest.raises(ValidationError):
-                ExtractionModel.load(self.schema1, data)
+                ExtractionModel.load(self.schema1_sl, data)
 
         # Unknown key
         relation = dict(self.relations[0])
         relation['foo'] = 'bar'
         data = [{'relations': [relation]}]
         with pytest.raises(ValidationError):
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
 
         # A relation can be disabled
         relation = dict(self.relations[0])
         relation['disabled'] = True
         data = [{'relations': [relation]}]
-        model = ExtractionModel.load(self.schema1, data)
+        model = ExtractionModel.load(self.schema1_sl, data)
         assert model.relations[0].disabled is True
         relation['disabled'] = False
-        model = ExtractionModel.load(self.schema1, data)
+        model = ExtractionModel.load(self.schema1_sl, data)
         assert model.relations[0].disabled is False
         relation['disabled'] = 'foo'
         with pytest.raises(ValidationError):
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
 
     def test_subject_must_have_at_least_one_table(self):
         data = [{'subjects': [[{'relations': self.relations}]]}]
         with pytest.raises(Exception) as e:
-            ExtractionModel.load(self.schema1, data)
+            ExtractionModel.load(self.schema1_sl, data)
         assert 'A subject must have at least one table' in str(e)
 
     def test_subject_relation(self):
-        table = {'table': self.schema1.tables[0].name}
+        table = {'table': self.schema1_sl.tables[0].name}
 
         subject = [
             {'relations': self.relations},
@@ -90,7 +96,7 @@ class TestExtractionModel(object):
         ]
 
         data = [{'subjects': [subject]}]
-        model = ExtractionModel.load(self.schema1, data)
+        model = ExtractionModel.load(self.schema1_sl, data)
 
         # Test relation
         assert len(model.subjects) == 1
@@ -98,18 +104,18 @@ class TestExtractionModel(object):
             self.relations[0]['table']
 
     def test_subject_table_with_just_a_table_key(self):
-        table = {'table': self.schema1.tables[0].name}
+        table = {'table': self.schema1_sl.tables[0].name}
         subject = [{'relations': self.relations}, {'tables': [table]}]
         data = [{'subjects': [subject]}]
-        model = ExtractionModel.load(self.schema1, data)
+        model = ExtractionModel.load(self.schema1_sl, data)
         assert len(model.subjects[0].tables) == 1
         assert model.subjects[0].tables[0].table == table['table']
 
     def test_subject_table_column_and_values_keys_both_set(self):
-        table = {'table': self.schema1.tables[0].name}
-        column = table['column'] = self.schema1.tables[0].cols[0].name
+        table = {'table': self.schema1_sl.tables[0].name}
+        column = table['column'] = self.schema1_sl.tables[0].cols[0].name
         for key in ['column', 'values']:
-            table = {'table': self.schema1.tables[0].name}
+            table = {'table': self.schema1_sl.tables[0].name}
             if key == 'column':
                 table['column'] = column
             if key == 'values':
@@ -117,19 +123,19 @@ class TestExtractionModel(object):
             subject = [{'relations': self.relations}, {'tables': [table]}]
             data = [{'subjects': [subject]}]
             with pytest.raises(Exception) as e:
-                ExtractionModel.load(self.schema1, data)
+                ExtractionModel.load(self.schema1_sl, data)
             if key == 'column':
                 assert 'A table with a column must have values' in str(e)
             if key == 'values':
                 assert 'A table with values must have a column' in str(e)
 
     def test_subject_table_values_types(self):
-        table = {'table': self.schema1.tables[0].name}
-        column = table['column'] = self.schema1.tables[0].cols[0].name
+        table = {'table': self.schema1_sl.tables[0].name}
+        column = table['column'] = self.schema1_sl.tables[0].cols[0].name
         for values in [1, '1', [1, 2], ['1', '2']]:
-            table = {'table': self.schema1.tables[0].name, 'column': column,
+            table = {'table': self.schema1_sl.tables[0].name, 'column': column,
                      'values': values}
             subject = [{'relations': self.relations}, {'tables': [table]}]
             data = [{'subjects': [subject]}]
-            model = ExtractionModel.load(self.schema1, data)
+            model = ExtractionModel.load(self.schema1_sl, data)
             assert model.subjects[0].tables[0].values == values

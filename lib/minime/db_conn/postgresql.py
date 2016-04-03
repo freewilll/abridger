@@ -1,8 +1,8 @@
 import psycopg2
-import yaml
+from . import DbConn
 
 
-class DbConn(object):
+class PostgresqlDbConn(DbConn):
     def __init__(self, host=None, port=None, dbname=None, user=None,
                  password=None):
         if dbname is None:
@@ -15,16 +15,6 @@ class DbConn(object):
         self.dbname = dbname
         self.user = user
         self.password = password
-
-    @staticmethod
-    def load(path):
-        data = yaml.load(open(path))
-        return DbConn(
-            host=data.get('host'),
-            port=data.get('port'),
-            dbname=data.get('dbname'),
-            user=data.get('user'),
-            password=data.get('password'))
 
     def connect(self):
         self.connection = psycopg2.connect(

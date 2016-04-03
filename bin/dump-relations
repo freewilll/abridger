@@ -3,8 +3,8 @@
 import argparse
 from signal import signal, SIGPIPE, SIG_DFL
 import sys
-from minime.db_conn import DbConn
-from minime.schema import Schema
+from minime.db_conn.postgresql import PostgresqlDbConn
+from minime.schema.postgresql import PostgresqlSchema
 
 
 def main():
@@ -15,9 +15,9 @@ def main():
         help="database config path")
 
     args = parser.parse_args()
-    dbconn = DbConn.load(args.db_config_path)
+    dbconn = PostgresqlDbConn.load(args.db_config_path)
     conn = dbconn.connect()
-    schema = Schema.create_from_conn(conn)
+    schema = PostgresqlSchema.create_from_conn(conn)
     conn.close()
 
     # Ignore SIG_PIPE and don't throw exceptions on it

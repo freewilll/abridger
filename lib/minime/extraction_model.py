@@ -29,7 +29,7 @@ class ExtractionModel(object):
         'properties': {
             'table': {'type': 'string'},
             'column': {'type': 'string'},
-            'name': {'type': 'string'},
+            'name': {'type': ['string', 'null']},
             'disabled': {'type': ['boolean']},
         },
         'additionalProperties': False,

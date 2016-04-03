@@ -1,38 +1,38 @@
 import tempfile
 import yaml
-from minime.schema import Schema
+from minime.schema.postgresql import PostgresqlSchema
 
 
-class TestSchema(object):
+class TestPostgresqlSchema(object):
     test_relations_sql = '''
         CREATE TABLE test1 (
-            id serial PRIMARY KEY
+            id SERIAL PRIMARY KEY
         );
 
         CREATE TABLE test2 (
-            id serial PRIMARY KEY,
-            fk1 integer REFERENCES test1,
-            fk2 integer CONSTRAINT test_constraint REFERENCES test1
+            id SERIAL PRIMARY KEY,
+            fk1 INTEGER REFERENCES test1,
+            fk2 INTEGER CONSTRAINT test_constraint REFERENCES test1
         );
     '''
 
-    def test_schema_tables(self, conn):
-        with conn.cursor() as cur:
+    def test_schema_tables(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (id serial PRIMARY KEY);
                 CREATE TABLE test2 (id serial PRIMARY KEY);
             ''')
         cur.close()
 
-        schema = Schema.create_from_conn(conn)
+        schema = PostgresqlSchema.create_from_conn(postgresql_conn)
         assert 'test1' in schema.tables_by_name
         assert 'test2' in schema.tables_by_name
         assert len(schema.tables) == 2
         assert len(schema.tables_by_name.keys()) == 2
         assert len(schema.tables_by_oid.keys()) == 2
 
-    def test_schema_columns(self, conn):
-        with conn.cursor() as cur:
+    def test_schema_columns(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (
                     id serial PRIMARY KEY,
@@ -42,7 +42,7 @@ class TestSchema(object):
             ''')
         cur.close()
 
-        schema = Schema.create_from_conn(conn)
+        schema = PostgresqlSchema.create_from_conn(postgresql_conn)
         assert len(schema.tables) == 1
         table = schema.tables[0]
         assert len(table.cols) == 3
@@ -59,12 +59,12 @@ class TestSchema(object):
         assert not_null_col.notnull is True
         assert nullable_col.notnull is False
 
-    def test_schema_foreign_key_constraints(self, conn):
-        with conn.cursor() as cur:
+    def test_schema_foreign_key_constraints(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
             cur.execute(self.test_relations_sql)
         cur.close()
 
-        schema = Schema.create_from_conn(conn)
+        schema = PostgresqlSchema.create_from_conn(postgresql_conn)
         table1 = schema.tables[0]
         table2 = schema.tables[1]
 
@@ -82,8 +82,8 @@ class TestSchema(object):
         assert str(fkc1) is not None
         assert str(fkc2) is not None
 
-    def test_schema_primary_key_constraints(self, conn):
-        with conn.cursor() as cur:
+    def test_schema_primary_key_constraints(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (id1 serial PRIMARY KEY, name text);
                 CREATE TABLE test2 (name text, id2 serial PRIMARY KEY);
@@ -91,18 +91,18 @@ class TestSchema(object):
             ''')
         cur.close()
 
-        schema = Schema.create_from_conn(conn)
+        schema = PostgresqlSchema.create_from_conn(postgresql_conn)
 
         assert schema.tables[0].pk == schema.tables[0].cols[0]
         assert schema.tables[1].pk == schema.tables[1].cols[1]
         assert schema.tables[2].pk is None
 
-    def test_dump_relations(self, conn):
-        with conn.cursor() as cur:
+    def test_dump_relations(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
             cur.execute(self.test_relations_sql)
         cur.close()
 
-        schema = Schema.create_from_conn(conn)
+        schema = PostgresqlSchema.create_from_conn(postgresql_conn)
 
         temp = tempfile.NamedTemporaryFile(mode='wb', delete=False)
         schema.dump_relations(temp)

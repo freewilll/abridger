@@ -12,18 +12,16 @@ CREATE TABLE user_states (
     name TEXT NOT NULL
 );
 
-INSERT INTO user_states (id, name) VALUES
-    (DEFAULT, 'active'),
-    (DEFAULT, 'disabled');
+INSERT INTO user_states (name) VALUES
+    ('active'),
+    ('disabled');
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY REFERENCES people,
     name TEXT NOT NULL,
     state INT NOT NULL REFERENCES user_states,
     office INT REFERENCES offices
 );
-
-ALTER TABLE users ADD CONSTRAINT users_people_fkey FOREIGN KEY (id) REFERENCES people;
 
 CREATE TABLE groups (
     id SERIAL PRIMARY KEY,

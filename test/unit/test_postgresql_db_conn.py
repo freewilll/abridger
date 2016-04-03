@@ -2,7 +2,7 @@ import pytest
 import tempfile
 import yaml
 
-from minime.db_conn import DbConn
+from minime.db_conn.postgresql import PostgresqlDbConn
 
 
 class TestDbConn(object):
@@ -16,7 +16,7 @@ class TestDbConn(object):
                 temp = tempfile.NamedTemporaryFile(mode='wb', delete=False)
                 temp.write(yaml.dump(data, default_flow_style=False))
                 temp.close()
-                return DbConn.load(temp.name)
+                return PostgresqlDbConn.load(temp.name)
 
             if expect_exception:
                 with pytest.raises(Exception):
@@ -35,10 +35,3 @@ class TestDbConn(object):
         create_conn(data)
         create_conn(data, 'dbname', expect_exception=True)
         create_conn(data, 'user', expect_exception=True)
-
-    def test_dbconn_fixture(self, dbconn):
-        conn = dbconn.connect()
-        with conn.cursor() as cur:
-            cur.execute("SELECT * FROM pg_class;")
-            cur.fetchone()
-        conn.close()

@@ -1,67 +1,31 @@
-class ForeignKeyConstraint(object):
-    def __init__(self, name, src_col, dst_col):
-        self.name = name
-        self.src_col = src_col
-        self.dst_col = dst_col
-
-    @staticmethod
-    def create_and_add_to_tables(name, src_table, src_col, dst_table, dst_col):
-        fkc = ForeignKeyConstraint(name, src_col, dst_col)
-        src_table.fks.append(fkc)
-        src_table.fks_by_col[src_col] = fkc
-        dst_table.incoming_fks.append(fkc)
-        return fkc
-
-    def __str__(self):
-        return '%s: %s:%s -> %s:%s' % (
-            self.name,
-            self.src_col.table.name, self.src_col.name,
-            self.dst_col.table.name, self.dst_col.name)
+from . import Schema, Table, Column, ForeignKeyConstraint
 
 
-class Table(object):
+class PostgresqlColumn(Column):
+    def __init__(self, table, name, notnull, attrnum):
+        super(PostgresqlColumn, self).__init__(table, name, notnull)
+        self.attrnum = attrnum
+
+
+class PostgresqlTable(Table):
     def __init__(self, name, oid):
-        self.name = name
-        self.oid = oid
-        self.cols = []
-        self.cols_by_name = {}
+        super(PostgresqlTable, self).__init__(name)
         self.cols_by_attrnum = {}
-        self.pk = None
-        self.fks = []
-        self.fks_by_col = {}
-        self.incoming_fks = []
 
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return '<Table %s>' % self.name
-
-    def add_column(self, name, attrnum, notnull):
-        col = Column(self, name, attrnum, notnull)
+    def add_column(self, name, notnull, attrnum):
+        col = PostgresqlColumn(self, name, notnull, attrnum)
         self.cols.append(col)
         self.cols_by_name[name] = col
         self.cols_by_attrnum[attrnum] = col
         return col
 
 
-class Column(object):
-    def __init__(self, table, name, attrnum, notnull):
-        self.table = table
-        self.name = name
-        self.attrnum = attrnum
-        self.notnull = notnull
+class PostgresqlSchema(Schema):
+    @classmethod
+    def create_from_conn(cls, conn):
+        schema = cls()
+        schema.tables_by_oid = {}
 
-
-class Schema(object):
-    def __init__(self):
-        self.tables = []
-        self.tables_by_name = {}
-        self.tables_by_oid = {}
-
-    @staticmethod
-    def create_from_conn(conn):
-        schema = Schema()
         schema.add_tables_from_conn(conn)
         schema.add_columns_from_conn(conn)
         schema.add_foreign_key_constraints_from_conn(conn)
@@ -69,7 +33,7 @@ class Schema(object):
         return schema
 
     def add_table(self, name, oid):
-        table = Table(name, oid)
+        table = PostgresqlTable(name, oid)
         self.tables.append(table)
         self.tables_by_name[name] = table
         self.tables_by_oid[oid] = table
@@ -114,7 +78,7 @@ class Schema(object):
             cur.execute(sql)
             for (oid, name, attrnum, notnull) in cur.fetchall():
                 table = self.tables_by_oid[oid]
-                table.add_column(name, attrnum, notnull)
+                table.add_column(name, notnull, attrnum)
 
     def add_foreign_key_constraints_from_conn(self, conn):
         sql = '''
@@ -165,21 +129,3 @@ class Schema(object):
 
                 col = table.cols_by_attrnum[attrnum[0]]
                 table.pk = col
-
-    def relations(self):
-        results = []
-        for table in self.tables:
-            for fkc in table.fks:
-                results.append({
-                    'name': fkc.name,
-                    'table': table.name,
-                    'column': fkc.src_col.name,
-                })
-        return results
-
-    def dump_relations(self, f):
-        f.write('relations:\n')
-        for relation in self.relations():
-            f.write('  - table: %s\n' % relation['table'])
-            f.write('    column: %s\n' % relation['column'])
-            f.write('    name: %s\n' % relation['name'])
