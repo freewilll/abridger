@@ -47,19 +47,25 @@ class TestExtractionModel(object):
         data = [{'relations': [relation]}]
         ExtractionModel.load(self.schema1_sl, data)
 
+        # A missing column is ok
+        relation = dict(self.relations[0])
+        del relation['column']
+        data = [{'relations': [relation]}]
+        ExtractionModel.load(self.schema1_sl, data)
+
         # A null name is ok
         relation = dict(self.relations[0])
         relation['name'] = None
         data = [{'relations': [relation]}]
         ExtractionModel.load(self.schema1_sl, data)
 
-        # A missing table or column key is not OK
-        for key in ['table', 'column']:
-            relation = dict(self.relations[0])
-            del relation[key]
-            data = [{'relations': [relation]}]
-            with pytest.raises(ValidationError):
-                ExtractionModel.load(self.schema1_sl, data)
+        # A missing table key is not OK
+        key = 'table'
+        relation = dict(self.relations[0])
+        del relation[key]
+        data = [{'relations': [relation]}]
+        with pytest.raises(ValidationError):
+            ExtractionModel.load(self.schema1_sl, data)
 
         # Unknown key
         relation = dict(self.relations[0])
@@ -80,6 +86,12 @@ class TestExtractionModel(object):
         relation['disabled'] = 'foo'
         with pytest.raises(ValidationError):
             ExtractionModel.load(self.schema1_sl, data)
+
+        # A relation is disabled by default
+        relation = dict(self.relations[0])
+        data = [{'relations': [relation]}]
+        model = ExtractionModel.load(self.schema1_sl, data)
+        assert model.relations[0].disabled is False
 
     def test_subject_must_have_at_least_one_table(self):
         data = [{'subjects': [[{'relations': self.relations}]]}]

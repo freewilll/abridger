@@ -25,7 +25,7 @@ class Table(object):
 class ExtractionModel(object):
     relation_definition = {
         'type': 'object',
-        'required': ['table', 'column'],
+        'required': ['table'],
         'properties': {
             'table': {'type': 'string'},
             'column': {'type': 'string'},
@@ -141,9 +141,9 @@ class ExtractionModel(object):
             self.relation_validator.validate(relation_data)
             target.append(Relation(
                 table=relation_data['table'],
-                column=relation_data['column'],
+                column=relation_data.get('column'),
                 name=relation_data.get('name'),
-                disabled=relation_data.get('disabled')))
+                disabled=relation_data.get('disabled', False)))
 
     def _add_tables(self, target, data):
         for table_data in data:
