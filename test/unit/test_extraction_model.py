@@ -151,3 +151,41 @@ class TestExtractionModel(object):
             data = [{'subjects': [subject]}]
             model = ExtractionModel.load(self.schema1_sl, data)
             assert model.subjects[0].tables[0].values == values
+
+    def test_always_follow_columns_must_be_toplevel(self):
+        always_follow_columns = [{'always-follow-columns': []}]
+        data = [{'relations': [always_follow_columns]}]
+        with pytest.raises(Exception) as e:
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'is not valid under any of the given schemas' in str(e)
+
+        data = [{'tables': [always_follow_columns]}]
+        with pytest.raises(Exception) as e:
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'is not valid under any of the given schemas' in str(e)
+
+    def test_always_follow_columns(self):
+        data = [{'always-follow-columns': []}]
+        ExtractionModel.load(self.schema1_sl, data)
+
+        data = [{'always-follow-columns': []}]
+        ExtractionModel.load(self.schema1_sl, data)
+
+        # It must have table and column keys
+        with pytest.raises(Exception) as e:
+            data = [{'always-follow-columns': [{}]}]
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'is not valid under any of the given schemas' in str(e)
+
+        with pytest.raises(Exception) as e:
+            data = [{'always-follow-columns': [{'table': 't'}]}]
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'is not valid under any of the given schemas' in str(e)
+
+        with pytest.raises(Exception) as e:
+            data = [{'always-follow-columns': [{'column': 'c'}]}]
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'is not valid under any of the given schemas' in str(e)
+
+        data = [{'always-follow-columns': [{'table': 't', 'column': 'c'}]}]
+        ExtractionModel.load(self.schema1_sl, data)

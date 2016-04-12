@@ -15,6 +15,12 @@ class Relation(object):
         self.disabled = disabled
 
 
+class AlwaysFollowColumn(object):
+    def __init__(self, table, column):
+        self.table = table
+        self.column = column
+
+
 class Table(object):
     def __init__(self, table, column, values):
         self.table = table
@@ -72,6 +78,19 @@ class ExtractionModel(object):
     subjects_arr = {'type': 'array',
                     'items': {'$ref': '#/definitions/subject'}}
 
+    always_follow_cols_definition = {
+        'type': 'object',
+        'required': ['table', 'column'],
+        'properties': {
+            'table': {'type': 'string'},
+            'column': {'type': 'string'},
+        },
+        'additionalProperties': False}
+
+    always_foll_cols_arr = {
+        'type': 'array',
+        'items': {'$ref': '#/definitions/always_follow_cols'}}
+
     root_definition = {
         'type': 'array',
         'items': {
@@ -82,15 +101,19 @@ class ExtractionModel(object):
                 {'type': 'object',
                  'properties': {'relations': rels_arr},
                  'additionalProperties': False},
+                {'type': 'object',
+                 'properties': {'always-follow-columns': always_foll_cols_arr},
+                 'additionalProperties': False},
             ],
         }
     }
 
     definitions = {
+        'root': root_definition,
         'relation': relation_definition,
         'table': table_definition,
         'subject': subject_definition,
-        'root': root_definition,
+        'always_follow_cols': always_follow_cols_definition,
     }
 
     relation_schema = {'$ref': '#/definitions/relation',
@@ -110,6 +133,7 @@ class ExtractionModel(object):
     def __init__(self):
         self.relations = []
         self.subjects = []
+        self.always_follow_cols = []
 
     @staticmethod
     def get_single_key_dict(data):
@@ -133,6 +157,8 @@ class ExtractionModel(object):
                 model._add_relations(model.relations, list_data)
             elif key == 'subjects':
                 model._add_subjects(model.relations, list_data)
+            elif key == 'always-follow-columns':
+                model._add_always_follow_cols(list_data)
 
         return model
 
@@ -176,3 +202,9 @@ class ExtractionModel(object):
 
             if len(subject.tables) == 0:
                 raise Exception('A subject must have at least one table')
+
+    def _add_always_follow_cols(self, data):
+        for row in data:
+            self.always_follow_cols.append(AlwaysFollowColumn(
+                row['table'],
+                row['column']))
