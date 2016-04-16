@@ -61,3 +61,17 @@ class TestConfigFileLoader(object):
             }
         ])
         assert load(filename1) == [{'fetch': [{'relations': []}]}]
+
+    def test_include_deep_unknown_file(self):
+        '''Test: - fetch: [{include: foo.yaml}]'''
+
+        filename1 = self.make_temp_file([
+            {
+                'fetch': [{
+                    'include': 'unknown.yaml'
+                }]
+            }
+        ])
+        with pytest.raises(Exception) as e:
+            assert load(filename1) == [{'fetch': [{'relations': []}]}]
+        assert 'Unable to locate' in str(e)

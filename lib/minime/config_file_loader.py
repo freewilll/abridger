@@ -23,14 +23,16 @@ def walk(node, process_include):
 
 def _load(filename, include_paths):
     full_filename = None
+    found_file = False
     for include_path in include_paths:
         full_filename = os.path.join(include_path, filename)
         if os.path.isfile(full_filename):
+            found_file = True
             break
 
-    if full_filename is None:
+    if not found_file:
         raise Exception('Unable to locate "%s" in include paths %s' %
-                        filename, ','.join(sorted(include_paths)))
+                        (filename, ','.join(sorted(include_paths))))
 
     data = yaml.load(open(full_filename))
     if not isinstance(data, list):
