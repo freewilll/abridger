@@ -74,24 +74,28 @@ class TestExtractionModel(object):
         with pytest.raises(ValidationError):
             ExtractionModel.load(self.schema1_sl, data)
 
-        # A relation can be disabled
-        relation = dict(self.relations[0])
-        relation['disabled'] = True
-        data = [{'relations': [relation]}]
-        model = ExtractionModel.load(self.schema1_sl, data)
-        assert model.relations[0].disabled is True
-        relation['disabled'] = False
-        model = ExtractionModel.load(self.schema1_sl, data)
-        assert model.relations[0].disabled is False
-        relation['disabled'] = 'foo'
-        with pytest.raises(ValidationError):
-            ExtractionModel.load(self.schema1_sl, data)
+        def check_bool(key, default_value):
+            # Test bool values
+            for value in (True, False):
+                relation = dict(self.relations[0])
+                relation[key] = value
+                data = [{'relations': [relation]}]
+                model = ExtractionModel.load(self.schema1_sl, data)
+                assert getattr(model.relations[0], key) is value
 
-        # A relation is disabled by default
-        relation = dict(self.relations[0])
-        data = [{'relations': [relation]}]
-        model = ExtractionModel.load(self.schema1_sl, data)
-        assert model.relations[0].disabled is False
+            # Test bad value exception
+            relation[key] = 'foo'
+            with pytest.raises(ValidationError):
+                ExtractionModel.load(self.schema1_sl, data)
+
+            # Check default value
+            relation = dict(self.relations[0])
+            data = [{'relations': [relation]}]
+            model = ExtractionModel.load(self.schema1_sl, data)
+            assert getattr(model.relations[0], key) is default_value
+
+        check_bool('disabled', False)
+        check_bool('sticky', False)
 
     def test_subject_must_have_at_least_one_table(self):
         data = [{'subjects': [[{'relations': self.relations}]]}]

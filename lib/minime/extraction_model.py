@@ -8,11 +8,12 @@ class Subject(object):
 
 
 class Relation(object):
-    def __init__(self, table, column, name, disabled):
+    def __init__(self, table, column, name, disabled, sticky):
         self.table = table
         self.column = column
         self.name = name
         self.disabled = disabled
+        self.sticky = sticky
 
 
 class AlwaysFollowColumn(object):
@@ -37,6 +38,7 @@ class ExtractionModel(object):
             'column': {'type': 'string'},
             'name': {'type': ['string', 'null']},
             'disabled': {'type': ['boolean']},
+            'sticky': {'type': ['boolean']},
         },
         'additionalProperties': False,
     }
@@ -169,7 +171,8 @@ class ExtractionModel(object):
                 table=relation_data['table'],
                 column=relation_data.get('column'),
                 name=relation_data.get('name'),
-                disabled=relation_data.get('disabled', False)))
+                disabled=relation_data.get('disabled', False),
+                sticky=relation_data.get('sticky', False)))
 
     def _add_tables(self, target, data):
         for table_data in data:
