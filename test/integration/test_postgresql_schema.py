@@ -1,4 +1,5 @@
 import tempfile
+import pytest
 import yaml
 from minime.schema.postgresql import PostgresqlSchema
 
@@ -82,6 +83,27 @@ class TestPostgresqlSchema(object):
         assert str(fkc1) is not None
         assert str(fkc2) is not None
 
+    def test_schema_compound_foreign_key_constraints(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
+            cur.execute('''
+                CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT,
+                    UNIQUE(id, name)
+                );
+
+                CREATE TABLE test2 (
+                    id SERIAL PRIMARY KEY,
+                    fk1 INTEGER,
+                    fk2 TEXT,
+                    FOREIGN KEY(fk1, fk2) REFERENCES test1(id, name)
+                );
+        ''')
+        cur.close()
+        with pytest.raises(Exception) as e:
+            PostgresqlSchema.create_from_conn(postgresql_conn)
+        assert 'Compound foreign keys are not supported on table' in str(e)
+
     def test_schema_primary_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
             cur.execute('''
@@ -96,6 +118,20 @@ class TestPostgresqlSchema(object):
         assert schema.tables[0].pk == schema.tables[0].cols[0]
         assert schema.tables[1].pk == schema.tables[1].cols[1]
         assert schema.tables[2].pk is None
+
+    def test_schema_compound_primary_key_constraints(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
+            cur.execute('''
+                CREATE TABLE test1 (
+                    id INTEGER,
+                    name TEXT,
+                    PRIMARY KEY(id, name)
+                );
+        ''')
+        cur.close()
+        with pytest.raises(Exception) as e:
+            PostgresqlSchema.create_from_conn(postgresql_conn)
+        assert 'Compound primary keys are not supported on table' in str(e)
 
     def test_dump_relations(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:

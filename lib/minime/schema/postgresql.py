@@ -100,7 +100,7 @@ class PostgresqlSchema(Schema):
                 assert type(dst_attrnum) is list
                 if len(src_attrnum) != 1 or len(dst_attrnum) != 1:
                     raise Exception(
-                        'Composite foreign keys are not supported '
+                        'Compound foreign keys are not supported '
                         'on table "%s"' % src_table.name)
 
                 src_col = src_table.cols_by_attrnum[src_attrnum[0]]
@@ -124,7 +124,7 @@ class PostgresqlSchema(Schema):
                 assert type(attrnum) is list
                 if len(attrnum) != 1:
                     raise Exception(
-                        'Composite primary keys are not supported '
+                        'Compound primary keys are not supported '
                         'on table "%s"' % table.name)
 
                 col = table.cols_by_attrnum[attrnum[0]]

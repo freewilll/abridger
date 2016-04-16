@@ -1,3 +1,4 @@
+import pytest
 from minime.schema.sqlite import SqliteSchema
 
 
@@ -103,3 +104,15 @@ class TestSqliteSchema(object):
         assert schema.tables[0].pk == schema.tables[0].cols[0]
         assert schema.tables[1].pk == schema.tables[1].cols[1]
         assert schema.tables[2].pk is None
+
+    def test_schema_compound_primary_key_constraints(self, sqlite_conn):
+        sqlite_conn.execute('''
+            CREATE TABLE test1 (
+                id INTEGER,
+                name TEXT,
+                PRIMARY KEY(id, name)
+            );
+        ''')
+        with pytest.raises(Exception) as e:
+            SqliteSchema.create_from_conn(sqlite_conn)
+        assert 'Compound primary keys are not supported on table' in str(e)
