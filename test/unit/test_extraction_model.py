@@ -34,8 +34,8 @@ class TestExtractionModel(object):
     def test_schema1_sl_relations(self):
         data = [{'relations': self.relations}]
         model = ExtractionModel.load(self.schema1_sl, data)
-        assert model.relations[0].table == self.relations[0]['table']
-        assert model.relations[0].column == self.relations[0]['column']
+        assert model.relations[0].table.name == self.relations[0]['table']
+        assert model.relations[0].column.name == self.relations[0]['column']
         assert model.relations[0].name == self.relations[0]['name']
 
     def test_non_existent_table_data(self):
@@ -151,7 +151,7 @@ class TestExtractionModel(object):
 
         # Test relation
         assert len(model.subjects) == 1
-        assert model.subjects[0].relations[0].table == \
+        assert model.subjects[0].relations[0].table.name == \
             self.relations[0]['table']
 
     def test_subject_table_with_just_a_table_key(self):
@@ -160,7 +160,7 @@ class TestExtractionModel(object):
         data = [{'subjects': [subject]}]
         model = ExtractionModel.load(self.schema1_sl, data)
         assert len(model.subjects[0].tables) == 1
-        assert model.subjects[0].tables[0].table == table['table']
+        assert model.subjects[0].tables[0].table.name == table['table']
 
     def test_subject_table_column_and_values_keys_both_set(self):
         table = {'table': self.schema1_sl.tables[0].name}
@@ -232,7 +232,11 @@ class TestExtractionModel(object):
 
         data = [
             {'always-follow-columns': [{'table': table, 'column': column}]}]
-        ExtractionModel.load(self.schema1_sl, data)
+        model = ExtractionModel.load(self.schema1_sl, data)
+        assert len(model.always_follow_cols) == 1
+        afc = model.always_follow_cols[0]
+        assert afc.table.name == table
+        assert afc.column.name == column
 
     def test_non_existent_always_follow_columns_data(self):
         relation = dict(self.relations[0])

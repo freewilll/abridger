@@ -174,8 +174,8 @@ class ExtractionModel(object):
                                                            column_name)
 
             target.append(Relation(
-                table=relation_data['table'],
-                column=relation_data.get('column'),
+                table=table,
+                column=column,
                 name=relation_data.get('name'),
                 disabled=relation_data.get('disabled', False),
                 sticky=relation_data.get('sticky', False)))
@@ -212,8 +212,8 @@ class ExtractionModel(object):
                                                            column_name)
 
             target.append(Table(
-                table=table_name,
-                column=column_name,
+                table=table,
+                column=column,
                 values=table_data.get('values')))
 
     def _add_subjects(self, schema, target, data):
