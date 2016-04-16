@@ -132,7 +132,8 @@ class ExtractionModel(object):
     relation_validator = Draft4Validator(relation_schema)
     root_validator = Draft4Validator(root_schema)
 
-    def __init__(self):
+    def __init__(self, schema):
+        self.schema = schema
         self.relations = []
         self.subjects = []
         self.always_follow_cols = []
@@ -148,7 +149,7 @@ class ExtractionModel(object):
 
     @staticmethod
     def load(schema, data):
-        model = ExtractionModel()
+        model = ExtractionModel(schema)
         ExtractionModel.root_validator.validate(data)
 
         for top_level_element in data:
@@ -156,34 +157,18 @@ class ExtractionModel(object):
                 top_level_element)
 
             if key == 'relations':
-                model._add_relations(schema, model.relations, list_data)
+                model._add_relations(model.relations, list_data)
             elif key == 'subjects':
-                model._add_subjects(schema, model.relations, list_data)
+                model._add_subjects(model.relations, list_data)
             elif key == 'always-follow-columns':
-                model._add_always_follow_cols(schema, list_data)
+                model._add_always_follow_cols(list_data)
 
         return model
 
-    def _add_relations(self, schema, target, data):
-        for relation_data in data:
-            self.relation_validator.validate(relation_data)
-
-            table_name = relation_data['table']
-            column_name = relation_data.get('column')
-            (table, column) = self._check_table_and_column(schema, table_name,
-                                                           column_name)
-
-            target.append(Relation(
-                table=table,
-                column=column,
-                name=relation_data.get('name'),
-                disabled=relation_data.get('disabled', False),
-                sticky=relation_data.get('sticky', False)))
-
-    def _check_table_and_column(self, schema, table_name, column_name):
+    def _check_table_and_column(self, table_name, column_name):
         '''Ensure the table exists and if not-None, column exists on the
            table'''
-        table = schema.tables_by_name.get(table_name)
+        table = self.schema.tables_by_name.get(table_name)
         if table is None:
             raise Exception('Unknown table: "%s"' % table_name)
 
@@ -197,7 +182,23 @@ class ExtractionModel(object):
 
         return (table, column)
 
-    def _add_tables(self, schema, target, data):
+    def _add_relations(self, target, data):
+        for relation_data in data:
+            self.relation_validator.validate(relation_data)
+
+            table_name = relation_data['table']
+            column_name = relation_data.get('column')
+            (table, column) = self._check_table_and_column(table_name,
+                                                           column_name)
+
+            target.append(Relation(
+                table=table,
+                column=column,
+                name=relation_data.get('name'),
+                disabled=relation_data.get('disabled', False),
+                sticky=relation_data.get('sticky', False)))
+
+    def _add_tables(self, target, data):
         for table_data in data:
             self.table_validator.validate(table_data)
 
@@ -208,7 +209,7 @@ class ExtractionModel(object):
 
             table_name = table_data['table']
             column_name = table_data.get('column')
-            (table, column) = self._check_table_and_column(schema, table_name,
+            (table, column) = self._check_table_and_column(table_name,
                                                            column_name)
 
             target.append(Table(
@@ -216,7 +217,7 @@ class ExtractionModel(object):
                 column=column,
                 values=table_data.get('values')))
 
-    def _add_subjects(self, schema, target, data):
+    def _add_subjects(self, target, data):
         for subject_data in data:
             self.subject_validator.validate(subject_data)
 
@@ -227,18 +228,18 @@ class ExtractionModel(object):
                 (key, list_data) = ExtractionModel.get_single_key_dict(
                     subject_data_row)
                 if key == 'relations':
-                    self._add_relations(schema, subject.relations, list_data)
+                    self._add_relations(subject.relations, list_data)
                 elif key == 'tables':
-                    self._add_tables(schema, subject.tables, list_data)
+                    self._add_tables(subject.tables, list_data)
 
             if len(subject.tables) == 0:
                 raise Exception('A subject must have at least one table')
 
-    def _add_always_follow_cols(self, schema, data):
+    def _add_always_follow_cols(self, data):
         for row in data:
             table_name = row['table']
             column_name = row['column']
-            (table, column) = self._check_table_and_column(schema, table_name,
+            (table, column) = self._check_table_and_column(table_name,
                                                            column_name)
 
             self.always_follow_cols.append(AlwaysFollowColumn(
