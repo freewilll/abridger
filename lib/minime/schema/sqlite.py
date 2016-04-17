@@ -1,6 +1,6 @@
 import re
 
-from . import Schema, Table, ForeignKeyConstraint
+from . import Schema, Table, ForeignKeyConstraint, UniqueIndex
 
 
 class SqliteSchema(Schema):
@@ -10,6 +10,7 @@ class SqliteSchema(Schema):
         schema.add_tables_from_conn(conn)
         schema.add_columns_from_conn(conn)
         schema.add_foreign_key_constraints_from_conn(conn)
+        schema.add_unique_indexes(conn)
         return schema
 
     def add_table(self, name):
@@ -26,9 +27,7 @@ class SqliteSchema(Schema):
 
         rs = conn.execute(sql)
         for (name,) in rs:
-            table = self.add_table(name)
-            assert str(table) is not None
-            assert repr(table) is not None
+            self.add_table(name)
 
     def add_columns_from_conn(self, conn):
         for table in self.tables:
@@ -110,3 +109,20 @@ class SqliteSchema(Schema):
                                   dst_col_name)
                     if t in fkcs:
                         fkcs[t].name = name
+
+    def add_unique_indexes(self, conn):
+        for table in self.tables:
+            sql = "PRAGMA index_list('%s')" % table.name
+            rs = conn.execute(sql)
+            for row in rs:
+                (index_name, is_unique) = (row[1], row[2])
+                if not is_unique:
+                    continue
+
+                sql = "PRAGMA index_info('%s')" % index_name
+                rs = conn.execute(sql)
+                columns = set()
+                for row in rs:
+                    column_name = row[2]
+                    columns.add(table.cols_by_name[column_name])
+                UniqueIndex.create_and_add_to_table(table, index_name, columns)

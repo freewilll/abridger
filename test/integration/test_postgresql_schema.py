@@ -48,6 +48,8 @@ class TestPostgresqlSchema(object):
         table = schema.tables[0]
         assert len(table.cols) == 3
         assert len(table.cols_by_name.keys()) == 3
+        assert str(table.cols[0]) is not None
+        assert repr(table.cols[0]) is not None
 
         names = [c.name for c in table.cols]
         assert 'id' in names
@@ -148,3 +150,51 @@ class TestPostgresqlSchema(object):
         assert data == {'relations': [
             {'column': 'fk1', 'table': 'test2', 'name': 'test2_fk1_fkey'},
             {'column': 'fk2', 'table': 'test2', 'name': 'test_constraint'}]}
+
+    def test_schema_unique_indexes(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
+            cur.execute('''
+                CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY,
+                    col1 TEXT UNIQUE,
+                    col2 TEXT UNIQUE,
+                    col3 TEXT UNIQUE,
+                    col4 TEXT UNIQUE,
+                    UNIQUE(col1, col2)
+                );
+
+                CREATE INDEX index1 ON test1(col1, col2);
+                CREATE UNIQUE INDEX uindex1 ON test1(col1, col2);
+                CREATE UNIQUE INDEX uindex2 ON test1(col3, col4);
+        ''')
+
+        schema = PostgresqlSchema.create_from_conn(postgresql_conn)
+        assert len(schema.tables[0].unique_indexes) == 8  # including PK
+        tuples = set()
+        named_tuples = set()
+        for ui in schema.tables[0].unique_indexes:
+            assert str(ui) is not None
+            assert repr(ui) is not None
+            col_names = sorted([c.name for c in ui.cols])
+            named_tuple_list = list(col_names)
+            named_tuple_list.insert(0, ui.name)
+            named_tuples.add(tuple(named_tuple_list))
+            tuples.add(tuple(col_names))
+
+        assert ('uindex1', 'col1', 'col2') in named_tuples
+        assert ('uindex2', 'col3', 'col4') in named_tuples
+
+        # One assertion for each index
+        assert('id',) in tuples
+        assert('col1',) in tuples
+        assert('col2',) in tuples
+        assert('col3',) in tuples
+        assert('col4',) in tuples
+        assert('col1', 'col2') in tuples
+        assert('col3', 'col4') in tuples
+
+        # Just because you're paranoid doesn't mean they aren't after you
+        assert('col1', 'col3') not in tuples
+        assert('col1', 'col4') not in tuples
+        assert('col2', 'col3') not in tuples
+        assert('col2', 'col4') not in tuples

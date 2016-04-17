@@ -1,4 +1,5 @@
-from . import Schema, Table, Column, ForeignKeyConstraint
+from collections import defaultdict
+from . import Schema, Table, Column, ForeignKeyConstraint, UniqueIndex
 
 
 class PostgresqlColumn(Column):
@@ -30,6 +31,7 @@ class PostgresqlSchema(Schema):
         schema.add_columns_from_conn(conn)
         schema.add_foreign_key_constraints_from_conn(conn)
         schema.add_primary_key_constraints(conn)
+        schema.add_unique_indexes(conn)
         return schema
 
     def add_table(self, name, oid):
@@ -126,3 +128,38 @@ class PostgresqlSchema(Schema):
                 for attrnum in attrnums:
                     primary_key.add(table.cols_by_attrnum[attrnum])
                 table.primary_key = primary_key
+
+    def add_unique_indexes(self, conn):
+        sql = '''
+            SELECT c1.oid, c2.relname, i.indisunique, i.indkey
+            FROM pg_class c1
+            JOIN pg_index i on c1.oid = i.indrelid
+            JOIN pg_class c2 on c2.oid = i.indexrelid
+            LEFT JOIN pg_constraint c ON (
+                i.indrelid = c.conrelid AND
+                i.indexrelid = c.conindid AND
+                c.contype in ('p', 'u'))
+            WHERE c1.relkind = 'r'
+        '''
+
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            unique_indexes = defaultdict(dict)
+            for row in cur.fetchall():
+                (table_oid, name, is_unique, attrs) = (
+                    row[0], row[1], bool(row[2]), row[3])
+                if not is_unique:
+                    continue
+
+                if table_oid not in self.tables_by_oid:
+                    continue
+
+                table = self.tables_by_oid[table_oid]
+                col_attrs = [int(a.strip()) for a in attrs.split()]
+                columns = set([table.cols_by_attrnum[a] for a in col_attrs])
+                unique_indexes[table][name] = columns
+
+        for table in unique_indexes:
+            for name in unique_indexes[table]:
+                columns = unique_indexes[table][name]
+                UniqueIndex.create_and_add_to_table(table, name, columns)

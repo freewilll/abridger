@@ -25,6 +25,31 @@ class Column(object):
         self.name = name
         self.notnull = notnull
 
+    def __repr__(self):
+        return '<Column %s.%s>' % (self.table.name, self.name)
+
+    def __str__(self):
+        return '%s.%s' % (self.table.name, self.name)
+
+
+class UniqueIndex(object):
+    def __init__(self, name, cols):
+        self.name = name
+        self.cols = cols
+
+    @staticmethod
+    def create_and_add_to_table(table, name, cols):
+        ui = UniqueIndex(name, cols)
+        table.unique_indexes.append(ui)
+        return ui
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        cols_str = ','.join(sorted([c.name for c in list(self.cols)]))
+        return '<UniqueIndex %s on (%s)>' % (self.name, cols_str)
+
 
 class Table(object):
     def __init__(self, name,):
@@ -35,6 +60,7 @@ class Table(object):
         self.fks = []
         self.fks_by_col = {}
         self.incoming_fks = []
+        self.unique_indexes = []
 
     def __str__(self):
         return self.name
