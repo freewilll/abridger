@@ -119,13 +119,10 @@ class PostgresqlSchema(Schema):
 
         with conn.cursor() as cur:
             cur.execute(sql)
-            for (name, oid, attrnum) in cur.fetchall():
+            for (name, oid, attrnums) in cur.fetchall():
                 table = self.tables_by_oid[oid]
-                assert type(attrnum) is list
-                if len(attrnum) != 1:
-                    raise Exception(
-                        'Compound primary keys are not supported '
-                        'on table "%s"' % table.name)
-
-                col = table.cols_by_attrnum[attrnum[0]]
-                table.pk = col
+                assert type(attrnums) is list
+                primary_key = set()
+                for attrnum in attrnums:
+                    primary_key.add(table.cols_by_attrnum[attrnum])
+                table.primary_key = primary_key

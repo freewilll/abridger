@@ -34,20 +34,16 @@ class SqliteSchema(Schema):
         for table in self.tables:
             sql = "PRAGMA table_info('%s')" % table.name
             rs = conn.execute(sql)
+
             primary_key = set()
             for row in rs:
                 (name, notnull, primary_key_index) = (
                     row[1], bool(row[3]), row[5])
-                is_primary_key = primary_key_index > 0
                 col = table.add_column(name, notnull)
-                if is_primary_key:
+                if primary_key_index > 0:
                     primary_key.add(col)
-                    table.pk = col
 
-            if len(primary_key) > 1:
-                raise Exception(
-                    'Compound primary keys are not supported '
-                    'on table "%s"' % table.name)
+            table.primary_key = None if len(primary_key) == 0 else primary_key
 
     def add_foreign_key_constraints_from_conn(self, conn):
         def fkc_tuple(src_table, dst_table_name, src_col_name, dst_col_name):
@@ -55,7 +51,8 @@ class SqliteSchema(Schema):
             src_col = src_table.cols_by_name[src_col_name]
 
             if dst_col_name is None:
-                dst_col = dst_table.pk
+                # Composite foreign keys aren't supported
+                dst_col = list(dst_table.primary_key)[0]
             else:
                 dst_col = dst_table.cols_by_name[dst_col_name]
 

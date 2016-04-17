@@ -31,7 +31,7 @@ class Table(object):
         self.name = name
         self.cols = []
         self.cols_by_name = {}
-        self.pk = None
+        self.primary_key = None
         self.fks = []
         self.fks_by_col = {}
         self.incoming_fks = []
