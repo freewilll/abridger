@@ -47,14 +47,22 @@ class SqliteSchema(Schema):
 
     def add_foreign_key_constraints_from_conn(self, conn):
         def fkc_tuple(src_table, dst_table_name, src_col_name, dst_col_name):
-            dst_table = self.tables_by_name[dst_table_name]
+            dst_table = self.tables_by_name.get(dst_table_name)
+            if dst_table is None:
+                raise Exception('Unknown table "%s"in foreign key '
+                                'constraint on table "%s", column "%s"' % (
+                                    dst_table_name, src_table, src_col_name))
+
             src_col = src_table.cols_by_name[src_col_name]
 
             if dst_col_name is None:
                 # Composite foreign keys aren't supported
                 dst_col = list(dst_table.primary_key)[0]
             else:
-                dst_col = dst_table.cols_by_name[dst_col_name]
+                dst_col = dst_table.cols_by_name.get(dst_col_name)
+                if dst_col is None:
+                    raise Exception('Unknown column "%s" on table "%s"' % (
+                        dst_table.name, dst_col_name))
 
             return (src_table, src_col, dst_table, dst_col)
 

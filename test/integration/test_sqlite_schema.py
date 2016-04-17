@@ -136,3 +136,35 @@ class TestSqliteSchema(object):
         with pytest.raises(Exception) as e:
             SqliteSchema.create_from_conn(sqlite_conn)
         assert 'Compound foreign keys are not supported on table' in str(e)
+
+    def test_schema_non_existent_foreign_key_unknown_column(self, sqlite_conn):
+        for sql in [
+            '''CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY
+                );''',
+            '''CREATE TABLE test2 (
+                    id SERIAL PRIMARY KEY,
+                    fk1 INTEGER,
+                    FOREIGN KEY(fk1) REFERENCES test1(name)
+                );''']:
+            sqlite_conn.execute(sql)
+
+        with pytest.raises(Exception) as e:
+            SqliteSchema.create_from_conn(sqlite_conn)
+        assert 'Unknown column' in str(e)
+
+    def test_schema_non_existent_foreign_key_unknown_table(self, sqlite_conn):
+        for sql in [
+            '''CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY
+                );''',
+            '''CREATE TABLE test2 (
+                    id SERIAL PRIMARY KEY,
+                    fk1 INTEGER,
+                    FOREIGN KEY(fk1) REFERENCES foo(id)
+                );''']:
+            sqlite_conn.execute(sql)
+
+        with pytest.raises(Exception) as e:
+            SqliteSchema.create_from_conn(sqlite_conn)
+        assert 'Unknown table' in str(e)
