@@ -156,6 +156,11 @@ class PostgresqlSchema(Schema):
 
                 table = self.tables_by_oid[table_oid]
                 col_attrs = [int(a.strip()) for a in attrs.split()]
+
+                # Ignore indexes that have an expression on one of the columns
+                if 0 in col_attrs:
+                    continue
+
                 columns = set([table.cols_by_attrnum[a] for a in col_attrs])
                 unique_indexes[table][name] = columns
 
