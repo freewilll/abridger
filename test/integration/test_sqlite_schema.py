@@ -1,3 +1,4 @@
+import pytest
 from minime.schema.sqlite import SqliteSchema
 
 
@@ -116,3 +117,22 @@ class TestSqliteSchema(object):
         schema = SqliteSchema.create_from_conn(sqlite_conn)
         pk = schema.tables[0].primary_key
         assert pk == set([schema.tables[0].cols[0], schema.tables[0].cols[1]])
+
+    def test_schema_compound_foreign_key_constraints(self, sqlite_conn):
+        for sql in [
+            '''CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT,
+                    UNIQUE(id, name)
+                );''',
+            '''CREATE TABLE test2 (
+                    id SERIAL PRIMARY KEY,
+                    fk1 INTEGER,
+                    fk2 TEXT,
+                    FOREIGN KEY(fk1, fk2) REFERENCES test1(id, name)
+                );''']:
+            sqlite_conn.execute(sql)
+
+        with pytest.raises(Exception) as e:
+            SqliteSchema.create_from_conn(sqlite_conn)
+        assert 'Compound foreign keys are not supported on table' in str(e)

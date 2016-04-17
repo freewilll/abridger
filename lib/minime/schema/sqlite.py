@@ -62,14 +62,21 @@ class SqliteSchema(Schema):
             fkcs = {}
             sql = "PRAGMA foreign_key_list('%s')" % src_table.name
             rs = conn.execute(sql)
+            foreign_keys = set()
             for row in rs:
-                (dst_table_name, src_col_name, dst_col_name) = (
-                    row[2], row[3], row[4])
+                (fk_col_index, dst_table_name, src_col_name,
+                 dst_col_name) = (row[1], row[2], row[3], row[4])
                 t = fkc_tuple(src_table, dst_table_name, src_col_name,
                               dst_col_name)
                 fkc = ForeignKeyConstraint.create_and_add_to_tables(
                     None, *t)
                 fkcs[t] = fkc
+                foreign_keys.add(fk_col_index)
+
+            if len(foreign_keys) > 1:
+                raise Exception(
+                    'Compound foreign keys are not supported '
+                    'on table "%s"' % src_table.name)
 
             # Find constraint names by parsing the schema SQL
             sql = '''
