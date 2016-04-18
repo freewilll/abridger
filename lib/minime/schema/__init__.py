@@ -1,22 +1,35 @@
 class ForeignKeyConstraint(object):
-    def __init__(self, name, src_col, dst_col):
+    def __init__(self, name, src_cols, dst_cols):
+        # Check table is the same within the src/dst columns & len matches
+        assert len(set([c.table.name for c in src_cols])) == 1
+        assert len(set([c.table.name for c in dst_cols])) == 1
+        assert len(src_cols) == len(dst_cols)
+
         self.name = name
-        self.src_col = src_col
-        self.dst_col = dst_col
+        self.src_cols = src_cols
+        self.dst_cols = dst_cols
 
     @staticmethod
-    def create_and_add_to_tables(name, src_table, src_col, dst_table, dst_col):
-        fkc = ForeignKeyConstraint(name, src_col, dst_col)
-        src_table.fks.append(fkc)
-        src_table.fks_by_col[src_col] = fkc
-        dst_table.incoming_fks.append(fkc)
-        return fkc
+    def create_and_add_to_tables(name, src_cols, dst_cols):
+        fk = ForeignKeyConstraint(name, src_cols, dst_cols)
+        src_table = src_cols[0].table
+        dst_table = dst_cols[0].table
+        src_table.foreign_keys.append(fk)
+        dst_table.incoming_foreign_keys.append(fk)
+        return fk
 
     def __str__(self):
-        return '%s: %s:%s -> %s:%s' % (
+        src_table = self.src_cols[0].table
+        dst_table = self.dst_cols[0].table
+        src_cols_csv = ','.join(sorted([str(c) for c in self.src_cols]))
+        dst_cols_csv = ','.join(sorted([str(c) for c in self.dst_cols]))
+        return '%s: %s:(%s) -> %s:(%s)' % (
             self.name,
-            self.src_col.table.name, self.src_col.name,
-            self.dst_col.table.name, self.dst_col.name)
+            src_table, src_cols_csv,
+            dst_table, dst_cols_csv)
+
+    def __repr__(self):
+        return '<ForeignKeyConstraint %s>' % str(self)
 
 
 class Column(object):
@@ -57,9 +70,8 @@ class Table(object):
         self.cols = []
         self.cols_by_name = {}
         self.primary_key = None
-        self.fks = []
-        self.fks_by_col = {}
-        self.incoming_fks = []
+        self.foreign_keys = []
+        self.incoming_foreign_keys = []
         self.unique_indexes = []
 
     def __str__(self):
@@ -80,20 +92,32 @@ class Schema(object):
         self.tables = []
         self.tables_by_name = {}
 
+    def _relation_fk_col_or_cols(self, fk):
+        if len(fk.src_cols) == 1:
+            return {'column': fk.src_cols[0].name}
+        else:
+            return {'columns':  [c.name for c in fk.src_cols]}
+
     def relations(self):
         results = []
         for table in self.tables:
-            for fkc in table.fks:
-                results.append({
-                    'name': fkc.name,
+            for fk in table.foreign_keys:
+                relation = {
+                    'name': fk.name,
                     'table': table.name,
-                    'column': fkc.src_col.name,
-                })
+                }
+                relation.update(self._relation_fk_col_or_cols(fk))
+                results.append(relation)
         return results
 
     def dump_relations(self, f):
         f.write('relations:\n')
         for relation in self.relations():
             f.write('  - table: %s\n' % relation['table'])
-            f.write('    column: %s\n' % relation['column'])
+            if 'column' in relation:
+                f.write('    column: %s\n' % relation['column'])
+            else:
+                f.write('    columns: %s\n')
+                for col in sorted(relation['columns']):
+                    f.write('    - %s\n' % col)
             f.write('    name: %s\n' % relation['name'])

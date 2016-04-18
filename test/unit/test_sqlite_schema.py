@@ -84,15 +84,23 @@ class TestSqliteSchema(object):
 
         assert len(table1.cols) == 1
         assert len(table2.cols) == 13
-        assert len(table1.incoming_fks) == 12
-        assert len(table2.fks) == 12
-        assert len(table2.fks_by_col) == 12
+        assert len(table1.incoming_foreign_keys) == 12
+        assert len(table2.foreign_keys) == 12
+
+        fks_by_col = {}
         for i in range(1, 13):
-            assert table2.cols[i] in table2.fks_by_col
-            fkc = table2.fks_by_col[table2.cols[i]]
-            assert fkc in table1.incoming_fks
-            if fkc.src_col.name in ('fk9', 'fk10'):
-                assert fkc.name == 'test_%s' % fkc.src_col.name
+            for fk in table2.foreign_keys:
+                assert len(fk.src_cols) == 1
+                assert len(fk.dst_cols) == 1
+                fks_by_col[fk.src_cols[0]] = fk
+
+        for i in range(1, 13):
+            assert table2.cols[i] in fks_by_col
+            assert fk in table1.incoming_foreign_keys
+            assert str(fk) is not None
+            assert repr(fk) is not None
+            if fk.src_cols[0].name in ('fk9', 'fk10'):
+                assert fk.name == 'test_%s' % fk.src_cols[0].name
 
     def test_schema_primary_key_constraints(self, sqlite_conn):
         sqls = [

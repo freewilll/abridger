@@ -71,19 +71,18 @@ class TestPostgresqlSchema(object):
         table1 = schema.tables[0]
         table2 = schema.tables[1]
 
-        assert len(table1.incoming_fks) == 2
-        assert len(table2.fks) == 2
-        assert len(table2.fks_by_col) == 2
-        assert table2.cols[1] in table2.fks_by_col
-        assert table2.cols[2] in table2.fks_by_col
-        fkc1 = table2.fks_by_col[table2.cols[1]]
-        fkc2 = table2.fks_by_col[table2.cols[2]]
-        assert fkc1 in table1.incoming_fks
-        assert fkc2 in table1.incoming_fks
-        assert fkc1.name is not None
-        assert fkc2.name == 'test_constraint'
-        assert str(fkc1) is not None
-        assert str(fkc2) is not None
+        assert len(table1.incoming_foreign_keys) == 2
+        assert len(table2.foreign_keys) == 2
+        fk1 = table2.foreign_keys[0]
+        fk2 = table2.foreign_keys[1]
+        assert fk1 in table1.incoming_foreign_keys
+        assert fk2 in table1.incoming_foreign_keys
+        assert fk1.name is not None
+        assert fk2.name == 'test_constraint'
+        assert str(fk1) is not None
+        assert str(fk2) is not None
+        assert repr(fk1) is not None
+        assert repr(fk2) is not None
 
     def test_schema_compound_foreign_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:

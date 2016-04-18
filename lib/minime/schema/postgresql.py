@@ -105,11 +105,15 @@ class PostgresqlSchema(Schema):
                         'Compound foreign keys are not supported '
                         'on table "%s"' % src_table.name)
 
-                src_col = src_table.cols_by_attrnum[src_attrnum[0]]
-                dst_col = dst_table.cols_by_attrnum[dst_attrnum[0]]
+                assert len(src_attrnum) == len(dst_attrnum)
+                src_cols = []
+                dst_cols = []
+                for i in range(0, len(src_attrnum)):
+                    src_cols.append(src_table.cols_by_attrnum[src_attrnum[i]])
+                    dst_cols.append(dst_table.cols_by_attrnum[dst_attrnum[i]])
 
                 ForeignKeyConstraint.create_and_add_to_tables(
-                    name, src_table, src_col, dst_table, dst_col)
+                    name, tuple(src_cols), tuple(dst_cols))
 
     def add_primary_key_constraints(self, conn):
         sql = '''
