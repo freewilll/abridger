@@ -165,6 +165,7 @@ class TestPostgresqlSchema(object):
                 CREATE INDEX index1 ON test1(col1, col2);
                 CREATE UNIQUE INDEX uindex1 ON test1(col1, col2);
                 CREATE UNIQUE INDEX uindex2 ON test1(col3, col4);
+                CREATE UNIQUE INDEX uindex3 ON test1(col3, SUBSTR(col4, 4));
         ''')
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
