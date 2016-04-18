@@ -6,7 +6,8 @@ class TestSqliteSchema(object):
     test_relations_sql = [
         '''
             CREATE TABLE test1 (
-                id INTEGER PRIMARY KEY
+                id INTEGER PRIMARY KEY,
+                alt_id INTEGER UNIQUE
             );
         ''',
 
@@ -17,21 +18,22 @@ class TestSqliteSchema(object):
                 fk2 INTEGER REFERENCES test1(id),
                 fk3 INTEGER REFERENCES "test1",
                 fk4 INTEGER REFERENCES test1("id"),
-                fk5 INTEGER CONSTRAINT test_constraint3 REFERENCES test1,
-                fk6 INTEGER CONSTRAINT test_constraint4 REFERENCES test1(id),
-                fk7 INTEGER,
+                fk5 INTEGER REFERENCES test1(alt_id),
+                fk6 INTEGER CONSTRAINT test_constraint3 REFERENCES test1,
+                fk7 INTEGER CONSTRAINT test_constraint4 REFERENCES test1(id),
                 fk8 INTEGER,
                 fk9 INTEGER,
                 fk10 INTEGER,
-                FOREIGN KEY(fk7) REFERENCES test1,
-                FOREIGN KEY(fk8) REFERENCES test1(id)
-                CONSTRAINT test_fk9 FOREIGN KEY(fk9) REFERENCES test1,
-                CONSTRAINT test_fk10 FOREIGN KEY(fk10) REFERENCES test1(id)
+                fk11 INTEGER,
+                FOREIGN KEY(fk8) REFERENCES test1,
+                FOREIGN KEY(fk9) REFERENCES test1(id)
+                CONSTRAINT test_fk10 FOREIGN KEY(fk10) REFERENCES test1,
+                CONSTRAINT test_fk11 FOREIGN KEY(fk11) REFERENCES test1(id)
             );
         ''',
 
-        'ALTER TABLE test2 ADD COLUMN fk11 INTEGER REFERENCES test1;',
-        'ALTER TABLE test2 ADD COLUMN fk12 INTEGER REFERENCES test1(id);',
+        'ALTER TABLE test2 ADD COLUMN fk12 INTEGER REFERENCES test1;',
+        'ALTER TABLE test2 ADD COLUMN fk13 INTEGER REFERENCES test1(id);',
     ]
 
     def test_schema_tables(self, sqlite_conn):
@@ -82,25 +84,32 @@ class TestSqliteSchema(object):
         table1 = schema.tables[0]
         table2 = schema.tables[1]
 
-        assert len(table1.cols) == 1
-        assert len(table2.cols) == 13
-        assert len(table1.incoming_foreign_keys) == 12
-        assert len(table2.foreign_keys) == 12
+        table1_id = table1.cols[0]
+        table1_alt_id = table1.cols[1]
+
+        assert len(table1.cols) == 2
+        assert len(table2.cols) == 14
+        assert len(table1.incoming_foreign_keys) == 13
+        assert len(table2.foreign_keys) == 13
 
         fks_by_col = {}
-        for i in range(1, 13):
+        for i in range(1, 14):
             for fk in table2.foreign_keys:
                 assert len(fk.src_cols) == 1
                 assert len(fk.dst_cols) == 1
                 fks_by_col[fk.src_cols[0]] = fk
 
-        for i in range(1, 13):
+        for i in range(1, 14):
             assert table2.cols[i] in fks_by_col
             assert fk in table1.incoming_foreign_keys
             assert str(fk) is not None
             assert repr(fk) is not None
-            if fk.src_cols[0].name in ('fk9', 'fk10'):
+            if fk.src_cols[0].name in ('fk10', 'fk11'):
                 assert fk.name == 'test_%s' % fk.src_cols[0].name
+            if fk.src_cols[0].name == 'fk5':
+                assert fk.dst_cols == (table1_alt_id,)
+            else:
+                assert fk.dst_cols == (table1_id,)
 
     def test_schema_primary_key_constraints(self, sqlite_conn):
         sqls = [

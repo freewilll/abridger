@@ -7,13 +7,15 @@ from minime.schema.postgresql import PostgresqlSchema
 class TestPostgresqlSchema(object):
     test_relations_sql = '''
         CREATE TABLE test1 (
-            id SERIAL PRIMARY KEY
+            id SERIAL PRIMARY KEY,
+            alt_id SERIAL UNIQUE
         );
 
         CREATE TABLE test2 (
             id SERIAL PRIMARY KEY,
             fk1 INTEGER REFERENCES test1,
-            fk2 INTEGER CONSTRAINT test_constraint REFERENCES test1
+            fk2 INTEGER CONSTRAINT test_constraint REFERENCES test1,
+            fk3 INTEGER CONSTRAINT test_alt_constraint REFERENCES test1(alt_id)
         );
     '''
 
@@ -71,18 +73,33 @@ class TestPostgresqlSchema(object):
         table1 = schema.tables[0]
         table2 = schema.tables[1]
 
-        assert len(table1.incoming_foreign_keys) == 2
-        assert len(table2.foreign_keys) == 2
+        table1_id = table1.cols[0]
+        table1_alt_id = table1.cols[1]
+        table2_fk1 = table2.cols[1]
+        table2_fk2 = table2.cols[2]
+        table2_fk3 = table2.cols[3]
+
+        assert len(table1.incoming_foreign_keys) == 3
+        assert len(table2.foreign_keys) == 3
+
         fk1 = table2.foreign_keys[0]
         fk2 = table2.foreign_keys[1]
+        fk3 = table2.foreign_keys[2]
         assert fk1 in table1.incoming_foreign_keys
         assert fk2 in table1.incoming_foreign_keys
+        assert fk3 in table1.incoming_foreign_keys
         assert fk1.name is not None
         assert fk2.name == 'test_constraint'
+        assert fk3.name == 'test_alt_constraint'
+        assert fk1.src_cols == (table2_fk1,)
+        assert fk2.src_cols == (table2_fk2,)
+        assert fk3.src_cols == (table2_fk3,)
+        assert fk1.dst_cols == (table1_id,)
+        assert fk2.dst_cols == (table1_id,)
+        assert fk3.dst_cols == (table1_alt_id,)
+
         assert str(fk1) is not None
-        assert str(fk2) is not None
         assert repr(fk1) is not None
-        assert repr(fk2) is not None
 
     def test_schema_compound_foreign_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
@@ -147,8 +164,16 @@ class TestPostgresqlSchema(object):
 
         data = yaml.load(open(temp.name).read())
         assert data == {'relations': [
-            {'column': 'fk1', 'table': 'test2', 'name': 'test2_fk1_fkey'},
-            {'column': 'fk2', 'table': 'test2', 'name': 'test_constraint'}]}
+            {'column': 'fk1',
+             'table': 'test2',
+             'name': 'test2_fk1_fkey'},
+            {'column': 'fk2',
+             'table': 'test2',
+             'name': 'test_constraint'},
+            {'column': 'fk3',
+             'table': 'test2',
+             'name': 'test_alt_constraint'},
+        ]}
 
     def test_schema_unique_indexes(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:

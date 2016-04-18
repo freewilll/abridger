@@ -97,7 +97,7 @@ class SqliteSchema(Schema):
                     dst_col_names.append(dst_col_name)
 
                 fk = ForeignKeyConstraint.create_and_add_to_tables(
-                    None, src_cols, dst_cols)
+                    None, tuple(src_cols), tuple(dst_cols))
                 fks[(tuple(src_col_names), tuple(dst_col_names))] = fk
 
                 assert len(dst_table_names) == 1
