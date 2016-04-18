@@ -1,5 +1,4 @@
 import tempfile
-import pytest
 import yaml
 from minime.schema.postgresql import PostgresqlSchema
 
@@ -8,14 +7,20 @@ class TestPostgresqlSchema(object):
     test_relations_sql = '''
         CREATE TABLE test1 (
             id SERIAL PRIMARY KEY,
-            alt_id SERIAL UNIQUE
+            alt_id SERIAL UNIQUE,
+            alt_id1 SERIAL,
+            alt_id2 SERIAL,
+            UNIQUE(alt_id1, alt_id2)
         );
 
         CREATE TABLE test2 (
             id SERIAL PRIMARY KEY,
             fk1 INTEGER REFERENCES test1,
             fk2 INTEGER CONSTRAINT test_constraint REFERENCES test1,
-            fk3 INTEGER CONSTRAINT test_alt_constraint REFERENCES test1(alt_id)
+            fk3 INTEGER REFERENCES test1(alt_id),
+            fk4 INTEGER,
+            fk5 INTEGER,
+            FOREIGN KEY (fk4, fk5) REFERENCES test1(alt_id1, alt_id2)
         );
     '''
 
@@ -75,52 +80,43 @@ class TestPostgresqlSchema(object):
 
         table1_id = table1.cols[0]
         table1_alt_id = table1.cols[1]
+        table1_alt_id1 = table1.cols[2]
+        table1_alt_id2 = table1.cols[3]
         table2_fk1 = table2.cols[1]
         table2_fk2 = table2.cols[2]
         table2_fk3 = table2.cols[3]
+        table2_fk4 = table2.cols[4]
+        table2_fk5 = table2.cols[5]
 
-        assert len(table1.incoming_foreign_keys) == 3
-        assert len(table2.foreign_keys) == 3
+        assert len(table1.incoming_foreign_keys) == 4
+        assert len(table2.foreign_keys) == 4
 
         fk1 = table2.foreign_keys[0]
         fk2 = table2.foreign_keys[1]
         fk3 = table2.foreign_keys[2]
+        fk4 = table2.foreign_keys[3]
+
         assert fk1 in table1.incoming_foreign_keys
         assert fk2 in table1.incoming_foreign_keys
         assert fk3 in table1.incoming_foreign_keys
+        assert fk4 in table1.incoming_foreign_keys
+
         assert fk1.name is not None
         assert fk2.name == 'test_constraint'
-        assert fk3.name == 'test_alt_constraint'
+        assert fk3.name is not None
+        assert fk4.name is not None
+
         assert fk1.src_cols == (table2_fk1,)
-        assert fk2.src_cols == (table2_fk2,)
-        assert fk3.src_cols == (table2_fk3,)
         assert fk1.dst_cols == (table1_id,)
+        assert fk2.src_cols == (table2_fk2,)
         assert fk2.dst_cols == (table1_id,)
+        assert fk3.src_cols == (table2_fk3,)
         assert fk3.dst_cols == (table1_alt_id,)
+        assert fk4.src_cols == (table2_fk4, table2_fk5)
+        assert fk4.dst_cols == (table1_alt_id1, table1_alt_id2)
 
         assert str(fk1) is not None
         assert repr(fk1) is not None
-
-    def test_schema_compound_foreign_key_constraints(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE test1 (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT,
-                    UNIQUE(id, name)
-                );
-
-                CREATE TABLE test2 (
-                    id SERIAL PRIMARY KEY,
-                    fk1 INTEGER,
-                    fk2 TEXT,
-                    FOREIGN KEY(fk1, fk2) REFERENCES test1(id, name)
-                );
-        ''')
-        cur.close()
-        with pytest.raises(Exception) as e:
-            PostgresqlSchema.create_from_conn(postgresql_conn)
-        assert 'Compound foreign keys are not supported on table' in str(e)
 
     def test_schema_primary_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
@@ -172,7 +168,10 @@ class TestPostgresqlSchema(object):
              'name': 'test_constraint'},
             {'column': 'fk3',
              'table': 'test2',
-             'name': 'test_alt_constraint'},
+             'name': 'test2_fk3_fkey'},
+            {'columns': ['fk4', 'fk5'],
+             'table': 'test2',
+             'name': 'test2_fk4_fkey'},
         ]}
 
     def test_schema_unique_indexes(self, postgresql_conn):

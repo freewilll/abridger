@@ -117,7 +117,7 @@ class Schema(object):
             if 'column' in relation:
                 f.write('    column: %s\n' % relation['column'])
             else:
-                f.write('    columns: %s\n')
+                f.write('    columns:\n')
                 for col in sorted(relation['columns']):
                     f.write('    - %s\n' % col)
             f.write('    name: %s\n' % relation['name'])

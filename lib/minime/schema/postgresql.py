@@ -100,12 +100,8 @@ class PostgresqlSchema(Schema):
 
                 assert type(src_attrnum) is list
                 assert type(dst_attrnum) is list
-                if len(src_attrnum) != 1 or len(dst_attrnum) != 1:
-                    raise Exception(
-                        'Compound foreign keys are not supported '
-                        'on table "%s"' % src_table.name)
-
                 assert len(src_attrnum) == len(dst_attrnum)
+
                 src_cols = []
                 dst_cols = []
                 for i in range(0, len(src_attrnum)):
