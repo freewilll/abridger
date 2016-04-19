@@ -124,10 +124,10 @@ class PostgresqlSchema(Schema):
             for (name, oid, attrnums) in cur.fetchall():
                 table = self.tables_by_oid[oid]
                 assert type(attrnums) is list
-                primary_key = set()
+                primary_key = list()
                 for attrnum in attrnums:
-                    primary_key.add(table.cols_by_attrnum[attrnum])
-                table.primary_key = primary_key
+                    primary_key.append(table.cols_by_attrnum[attrnum])
+                table.primary_key = tuple(primary_key)
 
     def add_unique_indexes(self, conn):
         sql = '''

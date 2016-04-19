@@ -35,15 +35,18 @@ class SqliteSchema(Schema):
             sql = "PRAGMA table_info('%s')" % table.name
             rs = conn.execute(sql)
 
-            primary_key = set()
+            primary_key = list()
             for row in rs:
                 (name, notnull, primary_key_index) = (
                     row[1], bool(row[3]), row[5])
                 col = table.add_column(name, notnull)
                 if primary_key_index > 0:
-                    primary_key.add(col)
+                    primary_key.append(col)
 
-            table.primary_key = None if len(primary_key) == 0 else primary_key
+            if len(primary_key) > 0:
+                table.primary_key = tuple(primary_key)
+            else:
+                table.primary_key = None
 
     def add_foreign_key_constraints_from_conn(self, conn):
         for src_table in self.tables:

@@ -129,8 +129,8 @@ class TestPostgresqlSchema(object):
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
 
-        assert schema.tables[0].primary_key == set([schema.tables[0].cols[0]])
-        assert schema.tables[1].primary_key == set([schema.tables[1].cols[1]])
+        assert schema.tables[0].primary_key == (schema.tables[0].cols[0],)
+        assert schema.tables[1].primary_key == (schema.tables[1].cols[1],)
         assert schema.tables[2].primary_key is None
 
     def test_schema_compound_primary_key_constraints(self, postgresql_conn):
@@ -145,7 +145,7 @@ class TestPostgresqlSchema(object):
         cur.close()
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
         pk = schema.tables[0].primary_key
-        assert pk == set([schema.tables[0].cols[0], schema.tables[0].cols[1]])
+        assert pk == (schema.tables[0].cols[0], schema.tables[0].cols[1])
 
     def test_dump_relations(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
