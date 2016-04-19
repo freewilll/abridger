@@ -4,7 +4,8 @@ CREATE TABLE offices (
 );
 
 CREATE TABLE people (
-    id SERIAL PRIMARY KEY
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL
 );
 
 CREATE TABLE user_states (
@@ -18,9 +19,9 @@ INSERT INTO user_states (name) VALUES
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY REFERENCES people,
-    name TEXT NOT NULL,
     state INT NOT NULL REFERENCES user_states,
-    office INT REFERENCES offices
+    office INT REFERENCES offices,
+    login TEXT UNIQUE
 );
 
 CREATE TABLE groups (
@@ -36,21 +37,15 @@ CREATE TABLE user_groups (
 
 CREATE TABLE customers (
     customer_id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
-);
-
-CREATE TABLE orders (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    customer INT NOT NULL REFERENCES customers,
-    created_by INT NOT NULL REFERENCES users
+    name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE services (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     customer INT NOT NULL REFERENCES customers,
-    created_by INT NOT NULL REFERENCES users
+    created_by INT NOT NULL REFERENCES users,
+    UNIQUE(customer, name)
 );
 
 CREATE TABLE servers (
@@ -58,13 +53,17 @@ CREATE TABLE servers (
     name TEXT NOT NULL,
     service INT NOT NULL REFERENCES services,
     parent INT REFERENCES servers,
-    poller INT REFERENCES servers,
-    created_by INT NOT NULL REFERENCES users
+    created_by INT NOT NULL REFERENCES users,
+    UNIQUE(name)
 );
 
 CREATE TABLE pollers (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     server INT NOT NULL REFERENCES servers,
-    created_by INT NOT NULL REFERENCES users
+    created_by INT NOT NULL REFERENCES users,
+    UNIQUE(name),
+    UNIQUE(server)
 );
+
+ALTER TABLE services ADD COLUMN poller INT REFERENCES pollers;
