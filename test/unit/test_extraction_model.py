@@ -40,9 +40,7 @@ class TestExtractionModel(object):
 
     def test_non_existent_table_data(self):
         # Check unknown table
-        table = {'table': 'foo'}
-        subject = [{'tables': [table]}]
-        data = [{'subjects': [subject]}]
+        data = [{'subject': [{'tables': [{'table': 'foo'}]}]}]
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Unknown table' in str(e)
@@ -51,7 +49,7 @@ class TestExtractionModel(object):
         table_name = self.schema1_sl.tables[0].name
         table = {'table': table_name, 'column': 'unknown', 'values': [1]}
         subject = [{'tables': [table]}]
-        data = [{'subjects': [subject]}]
+        data = [{'subject': subject}]
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Unknown column' in str(e)
@@ -133,7 +131,7 @@ class TestExtractionModel(object):
         check_bool('sticky', False)
 
     def test_subject_must_have_at_least_one_table(self):
-        data = [{'subjects': [[{'relations': self.relations}]]}]
+        data = [{'subject': [{'relations': self.relations}]}]
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'A subject must have at least one table' in str(e)
@@ -146,7 +144,7 @@ class TestExtractionModel(object):
             {'tables': [table]}
         ]
 
-        data = [{'subjects': [subject]}]
+        data = [{'subject': subject}]
         model = ExtractionModel.load(self.schema1_sl, data)
 
         # Test relation
@@ -157,7 +155,8 @@ class TestExtractionModel(object):
     def test_subject_table_with_just_a_table_key(self):
         table = {'table': self.schema1_sl.tables[0].name}
         subject = [{'relations': self.relations}, {'tables': [table]}]
-        data = [{'subjects': [subject]}]
+        data = [{'subject': subject}]
+
         model = ExtractionModel.load(self.schema1_sl, data)
         assert len(model.subjects[0].tables) == 1
         assert model.subjects[0].tables[0].table.name == table['table']
@@ -172,7 +171,7 @@ class TestExtractionModel(object):
             if key == 'values':
                 table['values'] = 1
             subject = [{'relations': self.relations}, {'tables': [table]}]
-            data = [{'subjects': [subject]}]
+            data = [{'subject': subject}]
             with pytest.raises(Exception) as e:
                 ExtractionModel.load(self.schema1_sl, data)
             if key == 'column':
@@ -187,7 +186,7 @@ class TestExtractionModel(object):
             table = {'table': self.schema1_sl.tables[0].name, 'column': column,
                      'values': values}
             subject = [{'relations': self.relations}, {'tables': [table]}]
-            data = [{'subjects': [subject]}]
+            data = [{'subject': subject}]
             model = ExtractionModel.load(self.schema1_sl, data)
             assert model.subjects[0].tables[0].values == values
 

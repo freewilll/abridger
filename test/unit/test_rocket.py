@@ -96,9 +96,9 @@ class TestRocket(object):
                      expected_fetch_count, relations=None,
                      global_relations=None, one_subject=True):
         if one_subject:
-            extraction_model_data = [{'subjects': [[{'tables': tables}]]}]
+            extraction_model_data = [{'subject': [{'tables': tables}]}]
             if relations is not None:
-                extraction_model_data[0]['subjects'][0].append(
+                extraction_model_data[0]['subject'].append(
                     {'relations': relations})
         else:
             extraction_model_data = []
@@ -106,7 +106,7 @@ class TestRocket(object):
                 subject = [{'tables': [t]}]
                 if relations is not None:
                     subject.append({'relations': relations})
-                extraction_model_data.append({'subjects': [subject]})
+                extraction_model_data.append({'subject': subject})
 
         if global_relations is not None:
             extraction_model_data.append({'relations': global_relations})

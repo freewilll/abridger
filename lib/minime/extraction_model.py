@@ -77,9 +77,6 @@ class ExtractionModel(object):
         }
     }
 
-    subjects_arr = {'type': 'array',
-                    'items': {'$ref': '#/definitions/subject'}}
-
     always_follow_cols_definition = {
         'type': 'object',
         'required': ['table', 'column'],
@@ -98,7 +95,7 @@ class ExtractionModel(object):
         'items': {
             'anyOf': [
                 {'type': 'object',
-                 'properties': {'subjects': subjects_arr},
+                 'properties': {'subject': subject_definition},
                  'additionalProperties': False},
                 {'type': 'object',
                  'properties': {'relations': rels_arr},
@@ -158,8 +155,8 @@ class ExtractionModel(object):
 
             if key == 'relations':
                 model._add_relations(model.relations, list_data)
-            elif key == 'subjects':
-                model._add_subjects(model.relations, list_data)
+            elif key == 'subject':
+                model._add_subject(model.relations, list_data)
             elif key == 'always-follow-columns':
                 model._add_always_follow_cols(list_data)
 
@@ -217,23 +214,22 @@ class ExtractionModel(object):
                 column=column,
                 values=table_data.get('values')))
 
-    def _add_subjects(self, target, data):
-        for subject_data in data:
-            self.subject_validator.validate(subject_data)
+    def _add_subject(self, target, subject_data):
+        self.subject_validator.validate(subject_data)
 
-            subject = Subject()
-            self.subjects.append(subject)
+        subject = Subject()
+        self.subjects.append(subject)
 
-            for subject_data_row in subject_data:
-                (key, list_data) = ExtractionModel.get_single_key_dict(
-                    subject_data_row)
-                if key == 'relations':
-                    self._add_relations(subject.relations, list_data)
-                elif key == 'tables':
-                    self._add_tables(subject.tables, list_data)
+        for subject_data_row in subject_data:
+            (key, list_data) = ExtractionModel.get_single_key_dict(
+                subject_data_row)
+            if key == 'relations':
+                self._add_relations(subject.relations, list_data)
+            elif key == 'tables':
+                self._add_tables(subject.tables, list_data)
 
-            if len(subject.tables) == 0:
-                raise Exception('A subject must have at least one table')
+        if len(subject.tables) == 0:
+            raise Exception('A subject must have at least one table')
 
     def _add_always_follow_cols(self, data):
         for row in data:
