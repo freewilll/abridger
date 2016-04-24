@@ -24,3 +24,24 @@ class PostgresqlDbConn(DbConn):
             host=self.host,
             port=self.port)
         return self.connection
+
+    def execute(self, *args, **kwargs):
+        with self.connection.cursor() as cur:
+            cur.execute(*args, **kwargs)
+            return cur.fetchall()
+
+    def fetch_rows(self, table, cols, values):
+        cols_csv = ', '.join([c.name for c in table.cols])
+        sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
+
+        if cols is None:
+            sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
+            values = ()
+        elif len(cols) == 1:
+            q = '%s, '.join([''] * len(values)) + '%s'
+            sql += ' WHERE %s IN (%s)' % (cols[0].name, q)
+            values = [v[0] for v in values]
+        else:
+            raise Exception('TODO: multi col where on postgresql')
+
+        return self.execute(sql, values)
