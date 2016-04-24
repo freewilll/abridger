@@ -257,3 +257,13 @@ class TestRocket(object):
         global_relations = [{'table': 'test2', 'column': 'test1'}]
         self.check_one_subject(schema2, [table], data2,
                                global_relations=global_relations)
+
+    def test_two_tables_double_overlapping_subject(self, schema2, data2):
+        extraction_model_data = [
+            {'relations': [{'table': 'test2', 'column': 'test1'}]},
+            {'subject': [{'tables': [{'table': 'test1'}]}]},
+            {'subject': [{'tables': [{'table': 'test2'}]}]},
+        ]
+        extraction_model = ExtractionModel.load(schema2, extraction_model_data)
+        rocket = Rocket(self.dbconn, extraction_model).launch()
+        assert rocket.flat_results() == data2

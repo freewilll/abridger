@@ -65,7 +65,7 @@ class Rocket(object):
             self._make_subject_table_relations(subject)
 
     def _make_subject_table_relations(self, subject):
-        table_relations = {}
+        table_relations = defaultdict(list)
 
         # Add foreign keys for all tables
         for table in subject.tables:
@@ -87,7 +87,7 @@ class Rocket(object):
                     found_fk = fk
             assert found_fk is not None
 
-            table_relations[table.table].append(
+            table_relations[found_fk.dst_cols[0].table].append(
                 (found_fk.dst_cols, found_fk.src_cols))
 
         self.subject_table_relations[subject] = table_relations
