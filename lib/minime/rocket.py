@@ -76,6 +76,11 @@ class Rocket(object):
         # Add subject and global relations
         for relation in self.extraction_model.relations + subject.relations:
             col = relation.column
+
+            # TODO process disabled relations
+            if col is None:
+                continue
+
             found_fk = None
             for fk in col.table.foreign_keys:
                 if len(fk.src_cols) == 1 and fk.src_cols[0] == col:
