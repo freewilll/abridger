@@ -34,7 +34,7 @@ class TestRocket(object):
             ''', '''
                 CREATE TABLE test2 (
                     id INTEGER PRIMARY KEY,
-                    test1 INTEGER NOT NULL REFERENCES test1
+                    test1_id INTEGER NOT NULL REFERENCES test1
                 );
             ''',
         ]:
@@ -67,7 +67,7 @@ class TestRocket(object):
             ''', '''
                 CREATE TABLE test2 (
                     id INTEGER PRIMARY KEY,
-                    alt_test1 INTEGER NOT NULL REFERENCES test1(alt_id)
+                    alt_test1_id INTEGER NOT NULL REFERENCES test1(alt_id)
                 );
             ''',
         ]:
@@ -245,7 +245,7 @@ class TestRocket(object):
         if values:
             table = {'table': 'test1', 'column': 'id', 'values': values}
         if with_relation:
-            relations = [{'table': 'test2', 'column': 'test1'}]
+            relations = [{'table': 'test2', 'column': 'test1_id'}]
         else:
             relations = []
         expected_data = [data2[r] for r in rows]
@@ -254,13 +254,13 @@ class TestRocket(object):
 
     def test_two_tables_global_relations(self, schema2, data2):
         table = {'table': 'test1'}
-        global_relations = [{'table': 'test2', 'column': 'test1'}]
+        global_relations = [{'table': 'test2', 'column': 'test1_id'}]
         self.check_one_subject(schema2, [table], data2,
                                global_relations=global_relations)
 
     def test_two_tables_double_overlapping_subject(self, schema2, data2):
         extraction_model_data = [
-            {'relations': [{'table': 'test2', 'column': 'test1'}]},
+            {'relations': [{'table': 'test2', 'column': 'test1_id'}]},
             {'subject': [{'tables': [{'table': 'test1'}]}]},
             {'subject': [{'tables': [{'table': 'test2'}]}]},
         ]
