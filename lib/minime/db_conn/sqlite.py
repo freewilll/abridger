@@ -8,6 +8,7 @@ class SqliteDbConn(DbConn):
 
     def connect(self):
         self.connection = sqlite3.connect(self.path)
+        self.connection.execute('pragma foreign_keys=ON')
         return self.connection
 
     def execute(self, *args, **kwargs):
