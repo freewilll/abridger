@@ -25,7 +25,7 @@ class SqliteDbConn(DbConn):
             sql += ' WHERE %s IN (%s)' % (cols[0].name, q)
             values = [v[0] for v in values]
         else:
-            raise Exception('TODO: multi col where on sqlite and postgres')
+            raise Exception('TODO: multi col where on sqlite')
 
         return self.connection.execute(sql, values)
 

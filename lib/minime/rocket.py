@@ -65,14 +65,25 @@ class Rocket(object):
             self._make_subject_table_relations(subject)
 
     def _make_subject_table_relations(self, subject):
-        # TODO add subject relations
         table_relations = {}
 
         # Add foreign keys for all tables
         for table in subject.tables:
             table_relations[table.table] = []
             for fk in table.table.foreign_keys:
-                table_relations[table.table].append(fk)
+                table_relations[table.table].append((fk.src_cols, fk.dst_cols))
+
+        # Add subject and global relations
+        for relation in self.extraction_model.relations + subject.relations:
+            col = relation.column
+            found_fk = None
+            for fk in col.table.foreign_keys:
+                if len(fk.src_cols) == 1 and fk.src_cols[0] == col:
+                    found_fk = fk
+            assert found_fk is not None
+
+            table_relations[table.table].append(
+                (found_fk.dst_cols, found_fk.src_cols))
 
         self.subject_table_relations[subject] = table_relations
 
@@ -111,10 +122,9 @@ class Rocket(object):
             table_relations = self.subject_table_relations[work_item.subject]
             if table in table_relations:
                 relations = table_relations[table]
-                for fk in relations:
-                    dst_table = fk.dst_cols[0].table
-                    src_col_indexes = [
-                        table.cols.index(c) for c in fk.src_cols]
+                for (src_cols, dst_cols) in relations:
+                    dst_table = dst_cols[0].table
+                    src_col_indexes = [table.cols.index(c) for c in src_cols]
 
                     dst_values = []
                     for row in rows:
@@ -122,7 +132,7 @@ class Rocket(object):
                         dst_values.append(value_tuple)
 
                     self.work_queue.put(WorkItem(
-                        work_item.subject, dst_table, fk.dst_cols, dst_values))
+                        work_item.subject, dst_table, dst_cols, dst_values))
 
         return self
 

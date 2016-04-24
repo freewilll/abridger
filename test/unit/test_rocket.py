@@ -92,15 +92,44 @@ class TestRocket(object):
         self.dbconn = sqlite_dbconn
         self.conn = sqlite_conn
 
-    def check_one_subject(self, schema, tables, expected_data,
-                          expected_fetch_count):
-        data = [{'subjects': [[{'tables': tables}]]}]
-        extraction_model = ExtractionModel.load(schema, data)
+    def check_launch(self, schema, tables, expected_data,
+                     expected_fetch_count, relations=None,
+                     global_relations=None, one_subject=True):
+        if one_subject:
+            extraction_model_data = [{'subjects': [[{'tables': tables}]]}]
+            if relations is not None:
+                extraction_model_data[0]['subjects'][0].append(
+                    {'relations': relations})
+        else:
+            extraction_model_data = []
+            for t in tables:
+                subject = [{'tables': [t]}]
+                if relations is not None:
+                    subject.append({'relations': relations})
+                extraction_model_data.append({'subjects': [subject]})
+
+        if global_relations is not None:
+            extraction_model_data.append({'relations': global_relations})
+
+        extraction_model = ExtractionModel.load(schema, extraction_model_data)
         rocket = Rocket(self.dbconn, extraction_model).launch()
         assert rocket.flat_results() == expected_data
-        assert rocket.fetched_row_count == len(expected_data)
-        assert rocket.fetch_count == expected_fetch_count
+        if expected_fetch_count is not None:
+            assert rocket.fetch_count == expected_fetch_count
         return rocket
+
+    def check_one_subject(self, schema, tables, expected_data,
+                          expected_fetch_count, relations=None,
+                          global_relations=None):
+        self.check_launch(schema, tables, expected_data,
+                          expected_fetch_count, relations=relations,
+                          global_relations=global_relations, one_subject=True)
+
+    def check_two_subjects(self, schema, tables, expected_data,
+                           expected_fetch_count, relations=None):
+        self.check_launch(schema, tables, expected_data,
+                          expected_fetch_count, relations=relations,
+                          one_subject=False)
 
     def test_one_subject_one_table(self, schema1, data1):
         table = {'table': 'test1'}
@@ -145,34 +174,23 @@ class TestRocket(object):
         ]
         self.check_one_subject(schema1, tables, data1[0:1], 1)
 
-    def check_two_subjects(self, schema1, data1,
-                           table1, table2, start, end, expected_fetch_count):
-        data = [
-            {'subjects': [[{'tables': [table1]}]]},
-            {'subjects': [[{'tables': [table2]}]]},
-        ]
-        extraction_model = ExtractionModel.load(schema1, data)
-        rocket = Rocket(self.dbconn, extraction_model).launch()
-        assert rocket.flat_results() == data1[start:end]
-        assert rocket.fetch_count == expected_fetch_count
-
     def test_two_subjects_row_cache1(self, schema1, data1):
         # The primary key is cached, so this should only result in one query
         table1 = {'table': 'test1', 'column': 'id', 'values': 1}
         table2 = {'table': 'test1', 'column': 'id', 'values': 1}
-        self.check_two_subjects(schema1, data1, table1, table2, 0, 1, 1)
+        self.check_two_subjects(schema1, [table1, table2], data1[0:1], 1)
 
     def test_two_subjects_row_cache2(self, schema1, data1):
         # Nothing can be cached for this one
         table1 = {'table': 'test1', 'column': 'id', 'values': 3}
         table2 = {'table': 'test1', 'column': 'id', 'values': 4}
-        self.check_two_subjects(schema1, data1, table1, table2, 2, 4, 2)
+        self.check_two_subjects(schema1, [table1, table2], data1[2:4], 2)
 
     def test_two_subjects_row_cache3(self, schema1, data1):
         # Nothing can be cached for this one
         table1 = {'table': 'test1', 'column': 'id', 'values': 3}
         table2 = {'table': 'test1', 'column': 'name', 'values': 'c'}
-        self.check_two_subjects(schema1, data1, table1, table2, 2, 4, 2)
+        self.check_two_subjects(schema1, [table1, table2], data1[2:4], 2)
 
     @pytest.mark.parametrize('values, rows', [
         ([], [0, 1, 2, 3, 4, 5]),
@@ -208,3 +226,31 @@ class TestRocket(object):
             table = {'table': 'test2', 'column': 'id', 'values': values}
         expected_data = [data3[r] for r in rows]
         self.check_one_subject(schema3, [table], expected_data, 2)
+
+    @pytest.mark.parametrize(
+        'values, rows, with_relation', [
+            ([], [0, 1], False),
+            ([], [0, 1, 2, 3, 4, 5], True),
+            ([1, 2], [0, 1, 2, 3, 4, 5], True),
+            ([1], [0, 2, 3], True),
+            ([2], [1, 4, 5], True),
+        ])
+    def test_two_tables_relations(self, schema2, data2, values, rows,
+                                  with_relation):
+        table = {'table': 'test1'}
+        if values:
+            table = {'table': 'test1', 'column': 'id', 'values': values}
+        if with_relation:
+            relations = [{'table': 'test2', 'column': 'test1'}]
+        else:
+            relations = []
+        expected_data = [data2[r] for r in rows]
+        self.check_one_subject(schema2, [table], expected_data,
+                               None, relations=relations)
+
+    def test_two_tables_global_relations(self, schema2, data2):
+        table = {'table': 'test1'}
+        table = {'table': 'test1'}
+        global_relations = [{'table': 'test2', 'column': 'test1'}]
+        self.check_one_subject(schema2, [table], data2,
+                               None, global_relations=global_relations)
