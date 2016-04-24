@@ -3,20 +3,18 @@ from collections import defaultdict
 
 
 class WorkItem(object):
-    def __init__(self, table, column, values):
-        assert (column is None) == (values is None)
+    def __init__(self, subject, table, cols, values):
+        assert (cols is None) == (values is None)
 
+        self.subject = subject
         self.table = table
-        self.column = column
-
-        if values is not None and not isinstance(values, list):
-            values = [values]
+        self.cols = cols
         self.values = values
 
     def prune(self, existing_results):
         '''Remove values that are in existing_results'''
 
-        if self.column is None:
+        if self.cols is None:
             return
 
         if self.table not in existing_results:
@@ -24,20 +22,20 @@ class WorkItem(object):
 
         table_results = existing_results[self.table]
 
-        if (self.column,) not in table_results:
+        if self.cols not in table_results:
             return
 
-        table_values = table_results[(self.column,)]
+        table_values = table_results[self.cols]
 
         new_values = []
         for value in self.values:
-            if (value,) not in table_values:
+            if value not in table_values:
                 new_values.append(value)
 
         self.values = new_values
 
     def fetch_rows(self, dbconn):
-        return dbconn.fetch_rows(self.table, self.column, self.values)
+        return dbconn.fetch_rows(self.table, self.cols, self.values)
 
 
 class Rocket(object):
@@ -51,10 +49,32 @@ class Rocket(object):
         self.fetched_row_count = 0
         self.fetched_row_count_per_table = defaultdict(int)
 
+        self.subject_table_relations = {}
         for subject in extraction_model.subjects:
             for table in subject.tables:
-                self.work_queue.put(WorkItem(table.table, table.column,
-                                             table.values))
+                if table.values is not None:
+                    if not isinstance(table.values, list):
+                        table.values = [table.values]
+                    value_tuples = [(v,) for v in table.values]
+                    cols = (table.column,)
+                else:
+                    value_tuples = None
+                    cols = None
+                self.work_queue.put(WorkItem(
+                    subject, table.table, cols, value_tuples))
+            self._make_subject_table_relations(subject)
+
+    def _make_subject_table_relations(self, subject):
+        # TODO add subject relations
+        table_relations = {}
+
+        # Add foreign keys for all tables
+        for table in subject.tables:
+            table_relations[table.table] = []
+            for fk in table.table.foreign_keys:
+                table_relations[table.table].append(fk)
+
+        self.subject_table_relations[subject] = table_relations
 
     def _lookup_row_values(self, table, row, keys):
         cols = table.cols
@@ -76,7 +96,7 @@ class Rocket(object):
             if work_item.values is not None and len(work_item.values) == 0:
                 continue  # All wanted have already been fetched
 
-            rows = work_item.fetch_rows(self.dbconn)
+            rows = list(work_item.fetch_rows(self.dbconn))
             self.fetch_count += 1
 
             keys = set([table.primary_key])
@@ -87,6 +107,22 @@ class Rocket(object):
                 values = self._lookup_row_values(table, row, keys)
                 for key, values in zip(keys, values):
                     self.results[table][key][values] = row
+
+            table_relations = self.subject_table_relations[work_item.subject]
+            if table in table_relations:
+                relations = table_relations[table]
+                for fk in relations:
+                    dst_table = fk.dst_cols[0].table
+                    src_col_indexes = [
+                        table.cols.index(c) for c in fk.src_cols]
+
+                    dst_values = []
+                    for row in rows:
+                        value_tuple = tuple([row[i] for i in src_col_indexes])
+                        dst_values.append(value_tuple)
+
+                    self.work_queue.put(WorkItem(
+                        work_item.subject, dst_table, fk.dst_cols, dst_values))
 
         return self
 

@@ -13,15 +13,19 @@ class SqliteDbConn(DbConn):
     def execute(self, *args, **kwargs):
         return self.connection.execute(*args, **kwargs)
 
-    def fetch_rows(self, table, column, values):
+    def fetch_rows(self, table, cols, values):
         cols_csv = ', '.join([c.name for c in table.cols])
         sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
 
-        if column is not None:
-            q = '?, '.join([''] * len(values)) + '?'
-            sql += ' WHERE %s IN (%s)' % (column.name, q)
-        else:
+        if cols is None:
+            sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
             values = ()
+        elif len(cols) == 1:
+            q = '?, '.join([''] * len(values)) + '?'
+            sql += ' WHERE %s IN (%s)' % (cols[0].name, q)
+            values = [v[0] for v in values]
+        else:
+            raise Exception('TODO: multi col where on sqlite and postgres')
 
         return self.connection.execute(sql, values)
 

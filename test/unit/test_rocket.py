@@ -24,6 +24,69 @@ class TestRocket(object):
         self.dbconn.insert_rows(rows)
         return rows
 
+    @pytest.fixture()
+    def schema2(self):
+        for sql in [
+            '''
+                CREATE TABLE test1 (
+                    id INTEGER PRIMARY KEY
+                );
+            ''', '''
+                CREATE TABLE test2 (
+                    id INTEGER PRIMARY KEY,
+                    test1 INTEGER NOT NULL REFERENCES test1
+                );
+            ''',
+        ]:
+            self.dbconn.execute(sql)
+        return SqliteSchema.create_from_conn(self.dbconn.connection)
+
+    @pytest.fixture()
+    def data2(self, schema2):
+        table1 = schema2.tables[0]
+        table2 = schema2.tables[1]
+        rows = [
+            (table1, (1,)),
+            (table1, (2,)),
+            (table2, (1, 1)),
+            (table2, (2, 1)),
+            (table2, (3, 2)),
+            (table2, (4, 2)),
+        ]
+        self.dbconn.insert_rows(rows)
+        return rows
+
+    @pytest.fixture()
+    def schema3(self):
+        for sql in [
+            '''
+                CREATE TABLE test1 (
+                    id INTEGER PRIMARY KEY,
+                    alt_id INTEGER UNIQUE
+                );
+            ''', '''
+                CREATE TABLE test2 (
+                    id INTEGER PRIMARY KEY,
+                    alt_test1 INTEGER NOT NULL REFERENCES test1(alt_id)
+                );
+            ''',
+        ]:
+            self.dbconn.execute(sql)
+        return SqliteSchema.create_from_conn(self.dbconn.connection)
+
+    @pytest.fixture()
+    def data3(self, schema3):
+        table1 = schema3.tables[0]
+        table2 = schema3.tables[1]
+        rows = [
+            (table1, (1, 100)),
+            (table1, (2, 200)),
+            (table2, (1, 100)),
+            (table2, (2, 200)),
+        ]
+        self.dbconn.insert_rows(rows)
+        return rows
+
     @pytest.fixture(autouse=True)
     def default_fixtures(self, sqlite_conn, sqlite_dbconn):
         self.dbconn = sqlite_dbconn
@@ -110,3 +173,38 @@ class TestRocket(object):
         table1 = {'table': 'test1', 'column': 'id', 'values': 3}
         table2 = {'table': 'test1', 'column': 'name', 'values': 'c'}
         self.check_two_subjects(schema1, data1, table1, table2, 2, 4, 2)
+
+    @pytest.mark.parametrize('values, rows', [
+        ([], [0, 1, 2, 3, 4, 5]),
+        ([1, 2, 3, 4], [0, 1, 2, 3, 4, 5]),
+        ([1], [0, 2]),
+        ([2], [0, 3]),
+        ([3], [1, 4]),
+        ([4], [1, 5]),
+        ([1, 2], [0, 2, 3]),
+        ([3, 4], [1, 4, 5]),
+        ([1, 3], [0, 1, 2, 4]),
+        ([2, 4], [0, 1, 3, 5]),
+    ])
+    def test_one_subject_two_tables_with_fk(self, schema2, data2, values,
+                                            rows):
+        table = {'table': 'test2'}
+        if values:
+            table = {'table': 'test2', 'column': 'id', 'values': values}
+        expected_data = [data2[r] for r in rows]
+        self.check_one_subject(schema2, [table], expected_data, 2)
+
+    @pytest.mark.parametrize('values, rows', [
+        ([], [0, 1, 2, 3]),
+        ([1, 2], [0, 1, 2, 3]),
+        ([1], [0, 2]),
+        ([2], [1, 3]),
+        ([1, 2], [0, 1, 2, 3]),
+    ])
+    def test_one_subject_two_tables_with_alt_fk(self, schema3, data3, values,
+                                                rows):
+        table = {'table': 'test2'}
+        if values:
+            table = {'table': 'test2', 'column': 'id', 'values': values}
+        expected_data = [data3[r] for r in rows]
+        self.check_one_subject(schema3, [table], expected_data, 2)
