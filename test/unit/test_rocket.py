@@ -3,9 +3,10 @@ import pytest
 from minime.schema.sqlite import SqliteSchema
 from minime.extraction_model import ExtractionModel
 from minime.rocket import Rocket
+from rocket_platform import TestRocketBase
 
 
-class TestRocket(object):
+class TestRocketMisc(TestRocketBase):
     @pytest.fixture()
     def schema1(self):
         self.dbconn.execute('''
@@ -86,50 +87,6 @@ class TestRocket(object):
         ]
         self.dbconn.insert_rows(rows)
         return rows
-
-    @pytest.fixture(autouse=True)
-    def default_fixtures(self, sqlite_conn, sqlite_dbconn):
-        self.dbconn = sqlite_dbconn
-        self.conn = sqlite_conn
-
-    def check_launch(self, schema, tables, expected_data,
-                     relations=None, global_relations=None,
-                     expected_fetch_count=None,
-                     one_subject=True):
-        if one_subject:
-            extraction_model_data = [{'subject': [{'tables': tables}]}]
-            if relations is not None:
-                extraction_model_data[0]['subject'].append(
-                    {'relations': relations})
-        else:
-            extraction_model_data = []
-            for t in tables:
-                subject = [{'tables': [t]}]
-                if relations is not None:
-                    subject.append({'relations': relations})
-                extraction_model_data.append({'subject': subject})
-
-        if global_relations is not None:
-            extraction_model_data.append({'relations': global_relations})
-
-        extraction_model = ExtractionModel.load(schema, extraction_model_data)
-        rocket = Rocket(self.dbconn, extraction_model).launch()
-        assert rocket.flat_results() == expected_data
-        if expected_fetch_count is not None:
-            assert rocket.fetch_count == expected_fetch_count
-        return rocket
-
-    def check_one_subject(self, schema, tables, expected_data,
-                          relations=None, global_relations=None,
-                          expected_fetch_count=None):
-        self.check_launch(schema, tables, expected_data, relations=relations,
-                          global_relations=global_relations, one_subject=True)
-
-    def check_two_subjects(self, schema, tables, expected_data,
-                           relations=None, global_relations=None,
-                           expected_fetch_count=None):
-        self.check_launch(schema, tables, expected_data, relations=relations,
-                          global_relations=global_relations, one_subject=False)
 
     def test_one_subject_one_table(self, schema1, data1):
         table = {'table': 'test1'}

@@ -67,11 +67,12 @@ class Rocket(object):
     def _make_subject_table_relations(self, subject):
         table_relations = defaultdict(list)
 
+        schema = self.extraction_model.schema
+
         # Add foreign keys for all tables
-        for table in subject.tables:
-            table_relations[table.table] = []
-            for fk in table.table.foreign_keys:
-                table_relations[table.table].append((fk.src_cols, fk.dst_cols))
+        for table in schema.tables:
+            for fk in table.foreign_keys:
+                table_relations[table].append((fk.src_cols, fk.dst_cols))
 
         # Add subject and global relations
         for relation in self.extraction_model.relations + subject.relations:
@@ -136,6 +137,7 @@ class Rocket(object):
                         value_tuple = tuple([row[i] for i in src_col_indexes])
                         dst_values.append(value_tuple)
 
+                    # FIXME don't process null foreign keys
                     self.work_queue.put(WorkItem(
                         work_item.subject, dst_table, dst_cols, dst_values))
 
