@@ -8,12 +8,17 @@ class Subject(object):
 
 
 class Relation(object):
-    def __init__(self, table, column, name, disabled, sticky):
+    TYPE_INCOMING = 'incoming'
+    TYPE_OUTGOING = 'outgoing'
+    TYPES = [TYPE_INCOMING, TYPE_OUTGOING]
+
+    def __init__(self, table, column, name, disabled, sticky, type):
         self.table = table
         self.column = column
         self.name = name
         self.disabled = disabled
         self.sticky = sticky
+        self.type = type
 
 
 class AlwaysFollowColumn(object):
@@ -39,6 +44,7 @@ class ExtractionModel(object):
             'name': {'type': ['string', 'null']},
             'disabled': {'type': ['boolean']},
             'sticky': {'type': ['boolean']},
+            'type': {'enum': Relation.TYPES},
         },
         'additionalProperties': False,
     }
@@ -188,12 +194,16 @@ class ExtractionModel(object):
             (table, column) = self._check_table_and_column(table_name,
                                                            column_name)
 
+            # Note: validation will ensure the type is valid
+            type = relation_data.get('type', Relation.TYPE_INCOMING)
+
             target.append(Relation(
                 table=table,
                 column=column,
                 name=relation_data.get('name'),
                 disabled=relation_data.get('disabled', False),
-                sticky=relation_data.get('sticky', False)))
+                sticky=relation_data.get('sticky', False),
+                type=type))
 
     def _add_tables(self, target, data):
         for table_data in data:

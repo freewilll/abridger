@@ -1,6 +1,6 @@
 import pytest
 from jsonschema.exceptions import ValidationError
-from minime.extraction_model import ExtractionModel
+from minime.extraction_model import ExtractionModel, Relation
 
 
 class TestExtractionModel(object):
@@ -129,6 +129,24 @@ class TestExtractionModel(object):
 
         check_bool('disabled', False)
         check_bool('sticky', False)
+
+        # Check type
+        relation = dict(self.relations[0])
+        relation['type'] = 'bar'
+        data = [{'relations': [relation]}]
+        with pytest.raises(ValidationError):
+            ExtractionModel.load(self.schema1_sl, data)
+
+        type_tests = [(Relation.TYPE_INCOMING, Relation.TYPE_INCOMING),
+                      (Relation.TYPE_OUTGOING, Relation.TYPE_OUTGOING),
+                      (None, Relation.TYPE_INCOMING)]
+        for (value, expected_value) in type_tests:
+            relation = dict(self.relations[0])
+            data = [{'relations': [relation]}]
+            if value is not None:
+                relation['type'] = value
+            model = ExtractionModel.load(self.schema1_sl, data)
+            assert model.relations[0].type == expected_value
 
     def test_subject_must_have_at_least_one_table(self):
         data = [{'subject': [{'relations': self.relations}]}]
