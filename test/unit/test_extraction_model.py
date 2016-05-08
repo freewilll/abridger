@@ -139,8 +139,8 @@ class TestExtractionModel(object):
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Either defaults or table must be set' in str(e)
 
-    def test_relation_defaults(self):
-        tests = [
+    @pytest.mark.parametrize(
+        'relation_defaults, expect_nullable, expect_incoming', [
             ([], True, False),  # The default is DEFAULT_OUTGOING_NULLABLE
             ([Relation.DEFAULT_OUTGOING_NULLABLE], True, False),
             ([Relation.DEFAULT_OUTGOING_NOTNULL], False, False),
@@ -148,34 +148,34 @@ class TestExtractionModel(object):
             ([Relation.DEFAULT_EVERYTHING], True, True),
             ([Relation.DEFAULT_OUTGOING_NULLABLE,
               Relation.DEFAULT_INCOMING], True, True),
-        ]
+        ])
+    def test_relation_defaults(self, relation_defaults, expect_nullable,
+                               expect_incoming):
+        relations = []
+        for relation_default in relation_defaults:
+            relations.append({'defaults': relation_default})
+        data = [{'relations': relations}]
+        model = ExtractionModel.load(self.schema1_sl, data)
 
-        for (relation_defaults, expect_nullable, expect_incoming) in tests:
-            relations = []
-            for relation_default in relation_defaults:
-                relations.append({'defaults': relation_default})
-            data = [{'relations': relations}]
-            model = ExtractionModel.load(self.schema1_sl, data)
+        got_outgoing_not_null = False
+        got_outgoing_nullable = False
+        got_incoming = False
+        got_outgoing = False
 
-            got_outgoing_not_null = False
-            got_outgoing_nullable = False
-            got_incoming = False
-            got_outgoing = False
-
-            for relation in model.relations:
-                if relation.type == Relation.TYPE_OUTGOING:
-                    got_outgoing = True
-                    if relation.column.notnull:
-                        got_outgoing_not_null = True
-                    else:
-                        got_outgoing_nullable = True
+        for relation in model.relations:
+            if relation.type == Relation.TYPE_OUTGOING:
+                got_outgoing = True
+                if relation.column.notnull:
+                    got_outgoing_not_null = True
                 else:
-                    got_incoming = True
+                    got_outgoing_nullable = True
+            else:
+                got_incoming = True
 
-            assert got_outgoing is True
-            assert got_outgoing_not_null is True
-            assert expect_nullable == got_outgoing_nullable
-            assert expect_incoming == got_incoming
+        assert got_outgoing is True
+        assert got_outgoing_not_null is True
+        assert expect_nullable == got_outgoing_nullable
+        assert expect_incoming == got_incoming
 
     def test_relation_type(self):
         # Check type

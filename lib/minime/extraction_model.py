@@ -160,7 +160,7 @@ class ExtractionModel(object):
         self.relations = []
         self.subjects = []
         self.always_follow_cols = []
-        self._default_relation_added = set()
+        self._got_relation_defaults = False
 
     @staticmethod
     def get_single_key_dict(data):
@@ -187,9 +187,15 @@ class ExtractionModel(object):
             elif key == 'always-follow-columns':
                 model._add_always_follow_cols(list_data)
 
-        if len(model._default_relation_added) == 0:
-            model._add_default_relations(model.relations, Relation.
-                                         DEFAULT_OUTGOING_NULLABLE)
+        # If no relations are specified, the default is to have:
+        # - outgoing nullable
+        # - outgoing not null
+        if not model._got_relation_defaults:
+                model._add_default_relations(
+                    model.relations, Relation.DEFAULT_OUTGOING_NULLABLE)
+
+        model._add_default_relations(
+            model.relations, Relation.DEFAULT_OUTGOING_NOTNULL)
 
         return model
 
@@ -242,27 +248,13 @@ class ExtractionModel(object):
         # Determine what we need based on the defaults setting and what
         # has already been previously added
 
-        # Outgoing not nulls are always processed, otherwise, referential
-        # integrity would be violated.
-        want_outgoing_notnulls = 'notnulls' not in self._default_relation_added
+        want_outgoing_nullables = defaults in [
+            Relation.DEFAULT_OUTGOING_NULLABLE,
+            Relation.DEFAULT_EVERYTHING]
 
-        want_outgoing_nullables = (
-            ('nullables' not in self._default_relation_added) and
-            defaults in [
-                Relation.DEFAULT_OUTGOING_NULLABLE,
-                Relation.DEFAULT_EVERYTHING])
-
-        want_incoming = (
-            ('incoming' not in self._default_relation_added) and defaults in [
-                Relation.DEFAULT_INCOMING,
-                Relation.DEFAULT_EVERYTHING])
-
-        # Register what is about to be added
-        self._default_relation_added.add('notnulls')
-        if want_outgoing_nullables:
-            self._default_relation_added.add('nullables')
-        if want_incoming:
-            self._default_relation_added.add('incoming')
+        want_incoming = defaults in [
+            Relation.DEFAULT_INCOMING,
+            Relation.DEFAULT_EVERYTHING]
 
         def _add_rel(table, column, type):
             self._add_relation(target, table=table, column=column, type=type)
@@ -270,12 +262,13 @@ class ExtractionModel(object):
         for table in self.schema.tables:
             for fk in table.foreign_keys:
                 first_fk_col = fk.src_cols[0]
-
-                if ((fk.notnull and want_outgoing_notnulls) or
+                if (fk.notnull or
                         (not fk.notnull and want_outgoing_nullables)):
                     _add_rel(table, first_fk_col, type=Relation.TYPE_OUTGOING)
                 if want_incoming:
                     _add_rel(table, first_fk_col, type=Relation.TYPE_INCOMING)
+
+        self._got_relation_defaults = True
 
     def _add_relations(self, target, data):
         for relation_data in data:
