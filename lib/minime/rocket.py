@@ -1,6 +1,6 @@
 import Queue
 from collections import defaultdict
-from minime.extraction_model import Relation
+from minime.extraction_model import Relation, merge_relations
 
 
 class WorkItem(object):
@@ -78,11 +78,13 @@ class Rocket(object):
     def _make_subject_table_relations(self, subject):
         table_relations = defaultdict(list)
 
+        relations = merge_relations(self.extraction_model.relations +
+                                    subject.relations)
+
         # Add subject and global relations
-        for relation in self.extraction_model.relations + subject.relations:
+        for relation in relations:
             col = relation.column
 
-            # TODO process disabled relations
             if col is None:
                 continue
 
@@ -131,25 +133,19 @@ class Rocket(object):
 
             keys = set([table.primary_key])
 
-            for row in rows:
-                self.fetched_row_count += 1
-                self.fetched_row_count_per_table[table] += 1
-                values = self._lookup_row_values(table, row, keys)
-                for key, values in zip(keys, values):
-                    self.results[table][key][values] = row
-
             table_relations = self.subject_table_relations[work_item.subject]
+            processed_outgoing_fk_cols = set()
+
             if table in table_relations:
                 relations = table_relations[table]
                 for (src_cols, dst_cols) in relations:
+                    processed_outgoing_fk_cols |= set(src_cols)
+
                     dst_table = dst_cols[0].table
                     src_col_indexes = [table.cols.index(c) for c in src_cols]
 
-                    table_results = self.results.get(dst_table)
-                    if table_results is not None:
-                        table_rows = table_results.get(dst_cols)
-                    else:
-                        table_rows = {}
+                    table_results = self.results.get(dst_table, {})
+                    table_rows = table_results.get(dst_cols, {})
 
                     dst_values = []
                     seen_dst_values = set()
@@ -169,6 +165,26 @@ class Rocket(object):
 
                     self.work_queue.put(WorkItem(
                         work_item.subject, dst_table, dst_cols, dst_values))
+
+            all_fk_cols = set()
+            for foreign_key in table.foreign_keys:
+                all_fk_cols |= set(foreign_key.src_cols)
+
+            cols_that_need_nulling = all_fk_cols - processed_outgoing_fk_cols
+            if len(cols_that_need_nulling) > 0:
+                indexes = [table.cols.index(c) for c in cols_that_need_nulling]
+                for i, row in enumerate(rows):
+                    row_list = list(row)
+                    for j in indexes:
+                        row_list[j] = None
+                    rows[i] = tuple(row_list)
+
+            for row in rows:
+                self.fetched_row_count += 1
+                self.fetched_row_count_per_table[table] += 1
+                values = self._lookup_row_values(table, row, keys)
+                for key, values in zip(keys, values):
+                    self.results[table][key][values] = row
 
         return self
 

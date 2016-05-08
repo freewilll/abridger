@@ -1,7 +1,7 @@
 from collections import defaultdict
 import pytest
 from jsonschema.exceptions import ValidationError
-from minime.extraction_model import ExtractionModel, Relation
+from minime.extraction_model import ExtractionModel, Relation, merge_relations
 
 
 class TestExtractionModel(object):
@@ -9,6 +9,13 @@ class TestExtractionModel(object):
     def self_schema1_sl(self, schema1_sl):
         self.schema1_sl = schema1_sl
         self.relations = schema1_sl.relations()
+
+    @pytest.fixture
+    def relation0(self):
+        relation = dict(self.relations[0])
+        data = [{'relations': [relation]}]
+        model = ExtractionModel.load(self.schema1_sl, data)
+        return model.relations[0]
 
     def test_unknown_directive(self):
         with pytest.raises(ValidationError):
@@ -327,3 +334,81 @@ class TestExtractionModel(object):
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Unknown column' in str(e)
+
+    def test_clone_relation(self, relation0):
+        r = relation0.clone()
+        assert r.table == relation0.table
+        assert r.column == relation0.column
+        assert r.disabled == relation0.disabled
+        assert r.sticky == relation0.sticky
+        assert r.type == relation0.type
+
+    def test_relation_equality(self, relation0):
+        relation1 = relation0.clone()
+        relation1.disabled = True
+        assert relation0 == relation0
+        assert relation1 == relation1
+        assert relation0 != relation1
+
+    def test_merge_relations_disabled(self, relation0):
+        relation1 = relation0.clone()
+        relation2 = relation0.clone()
+        relation2.disabled = True
+
+        # Check merging identical relations has no effect
+        assert len(merge_relations([relation1, relation1])) == 1
+
+        # Check that the disabled relation by itself has no effect
+        assert len(merge_relations([relation2])) == 0
+        assert len(merge_relations([relation2, relation2])) == 0
+
+        # Check the disabled relation removes the first
+        assert len(merge_relations([relation1, relation2])) == 0
+        assert len(merge_relations([relation1, relation2, relation2])) == 0
+
+    def test_merge_relations_sticky(self, relation0):
+        relation1 = relation0.clone()
+        relation2 = relation0.clone()
+        relation1.sticky = True
+        relation2.sticky = False
+
+        # Check merging identical relations has the same effect
+        merge = merge_relations([relation1, relation1])
+        assert len(merge) == 1
+        assert merge[0].sticky is True
+
+        merge = merge_relations([relation1, relation2])
+        assert len(merge) == 1
+        assert merge[0].sticky is True
+
+        merge = merge_relations([relation2, relation2])
+        assert len(merge) == 1
+        assert merge[0].sticky is False
+
+    def test_merge_relations_disabled_and_sticky(self, relation0):
+        relation1 = relation0.clone()
+        relation2 = relation0.clone()
+        relation3 = relation0.clone()
+        relation1.sticky = True
+        relation2.sticky = False
+        relation3.sticky = False
+        relation1.disabled = False
+        relation2.disabled = False
+        relation3.disabled = True
+
+        assert len(merge_relations([relation2, relation2, relation3])) == 0
+
+    def test_relation_repr(self, relation0):
+        relation1 = relation0.clone()
+        relation1.sticky = True
+        assert repr(relation1) is not None
+
+    def test_illegal_sticky_disabled_combination(self, relation0):
+        for sticky in [True, False]:
+            relation = dict(self.relations[0])
+            relation['sticky'] = sticky
+            relation['disabled'] = True
+            data = [{'relations': [relation]}]
+            with pytest.raises(Exception) as e:
+                ExtractionModel.load(self.schema1_sl, data)
+            assert 'The sticky flag is meaningless' in str(e)

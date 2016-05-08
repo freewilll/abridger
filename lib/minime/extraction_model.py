@@ -1,3 +1,4 @@
+from collections import defaultdict
 from jsonschema import Draft4Validator
 
 
@@ -47,14 +48,60 @@ class Relation(object):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-    def __hash__(self):
-        return hash('.'.join([
+    def _base_list(self):
+        return [
             self.table.name,
             self.column.name if self.column is not None else '-',
             self.name or '-',
+            self.type]
+
+    def _base_hash(self):
+        '''Returns a hash of everything except sticky and disabled'''
+        return hash('.'.join(self._base_list()))
+
+    def __hash__(self):
+        return hash('.'.join(self._base_list() + [
             str(self.disabled),
-            str(self.sticky),
-            self.type]))
+            str(self.sticky)]))
+
+    def clone(self):
+        return Relation(self.table, self.column, self.name, self.disabled,
+                        self.sticky, self.type)
+
+
+def dedupe_relations(relations):
+    # Dedupe relations, preserving ordering
+    new_relations = []
+    seen_relations = set()
+    for relation in relations:
+        if relation not in seen_relations:
+            new_relations.append(relation)
+            seen_relations.add(relation)
+    return new_relations
+
+
+def merge_relations(relations):
+    same_relations = defaultdict(list)
+    for relation in dedupe_relations(relations):
+        same_relations[relation._base_hash()].append(relation)
+
+    results = []
+    for related_relations in same_relations.values():
+        disabled = False
+        sticky = False
+        for relation in related_relations:
+            if relation.disabled:
+                disabled = True
+            if relation.sticky:
+                sticky = True
+
+        if not disabled:
+            relation = related_relations[0]
+            relation.disabled = False
+            relation.sticky = sticky
+            results.append(relation)
+
+    return results
 
 
 class AlwaysFollowColumn(object):
@@ -241,14 +288,26 @@ class ExtractionModel(object):
 
         # Note: validation will ensure the type is valid
         type = relation_data.get('type', Relation.TYPE_INCOMING)
+        disabled = relation_data.get('disabled', False)
+        sticky = relation_data.get('sticky', False)
+
+        if (disabled and column is not None and
+                type == Relation.TYPE_OUTGOING and column.notnull):
+            raise Exception(
+                'Cannot disable outgoing not null foreign keys on column '
+                '%s as this would lead to an integrity error' % column)
+
+        if disabled and 'sticky' in relation_data:
+            raise Exception(
+                'The sticky flag is meaningless on disabled relations')
 
         self._add_relation(
             target,
             table=table,
             column=column,
             name=relation_data.get('name'),
-            disabled=relation_data.get('disabled', False),
-            sticky=relation_data.get('sticky', False),
+            disabled=disabled,
+            sticky=sticky,
             type=type)
 
     def _finalize_default_relations(self):
@@ -262,14 +321,7 @@ class ExtractionModel(object):
         self._add_default_relations(
             self.relations, Relation.DEFAULT_OUTGOING_NOTNULL)
 
-        # Dedupe relations, preserving ordering
-        relations = []
-        seen_relations = set()
-        for relation in self.relations:
-            if relation not in seen_relations:
-                relations.append(relation)
-                seen_relations.add(relation)
-        self.relations = relations
+        self.relations = dedupe_relations(self.relations)
 
     def _add_default_relations(self, target, defaults):
         # Determine what we need based on the defaults setting and what
