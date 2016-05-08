@@ -1,3 +1,4 @@
+from collections import defaultdict
 import pytest
 from jsonschema.exceptions import ValidationError
 from minime.extraction_model import ExtractionModel, Relation
@@ -146,6 +147,8 @@ class TestExtractionModel(object):
             ([Relation.DEFAULT_OUTGOING_NOTNULL], False, False),
             ([Relation.DEFAULT_INCOMING], False, True),
             ([Relation.DEFAULT_EVERYTHING], True, True),
+            ([Relation.DEFAULT_EVERYTHING,
+              Relation.DEFAULT_EVERYTHING], True, True),
             ([Relation.DEFAULT_OUTGOING_NULLABLE,
               Relation.DEFAULT_INCOMING], True, True),
         ])
@@ -162,7 +165,12 @@ class TestExtractionModel(object):
         got_incoming = False
         got_outgoing = False
 
+        relation_counts = defaultdict(int)
         for relation in model.relations:
+            relation_counts[relation] += 1
+            if relation_counts[relation] > 1:
+                pytest.fail('Got duplicate relation "%s"' % relation)
+
             if relation.type == Relation.TYPE_OUTGOING:
                 got_outgoing = True
                 if relation.column.notnull:

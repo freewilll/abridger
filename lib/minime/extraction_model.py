@@ -34,11 +34,27 @@ class Relation(object):
         ]))
         if flags:
             flags = ' ' + flags
-        return '%s:%s name=%s type=%s%s' % (self.table.name, self.column.name,
-                                            self.name, self.type, flags)
+        return '%s:%s name=%s type=%s%s' % (
+            self.table.name,
+            self.column.name if self.column is not None else 'None',
+            self.name,
+            self.type,
+            flags)
 
     def __repr__(self):
         return '<Relation %s>' % str(self)
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __hash__(self):
+        return hash('.'.join([
+            self.table.name,
+            self.column.name if self.column is not None else '-',
+            self.name or '-',
+            str(self.disabled),
+            str(self.sticky),
+            self.type]))
 
 
 class AlwaysFollowColumn(object):
@@ -187,16 +203,7 @@ class ExtractionModel(object):
             elif key == 'always-follow-columns':
                 model._add_always_follow_cols(list_data)
 
-        # If no relations are specified, the default is to have:
-        # - outgoing nullable
-        # - outgoing not null
-        if not model._got_relation_defaults:
-                model._add_default_relations(
-                    model.relations, Relation.DEFAULT_OUTGOING_NULLABLE)
-
-        model._add_default_relations(
-            model.relations, Relation.DEFAULT_OUTGOING_NOTNULL)
-
+        model._finalize_default_relations()
         return model
 
     def _check_table_and_column(self, table_name, column_name):
@@ -243,6 +250,26 @@ class ExtractionModel(object):
             disabled=relation_data.get('disabled', False),
             sticky=relation_data.get('sticky', False),
             type=type)
+
+    def _finalize_default_relations(self):
+        # If no relations are specified, the default is to have:
+        # - outgoing nullable
+        # - outgoing not null
+        if not self._got_relation_defaults:
+                self._add_default_relations(
+                    self.relations, Relation.DEFAULT_OUTGOING_NULLABLE)
+
+        self._add_default_relations(
+            self.relations, Relation.DEFAULT_OUTGOING_NOTNULL)
+
+        # Dedupe relations, preserving ordering
+        relations = []
+        seen_relations = set()
+        for relation in self.relations:
+            if relation not in seen_relations:
+                relations.append(relation)
+                seen_relations.add(relation)
+        self.relations = relations
 
     def _add_default_relations(self, target, defaults):
         # Determine what we need based on the defaults setting and what
