@@ -37,6 +37,7 @@ class TestExtractionModel(object):
         assert model.relations[0].table.name == self.relations[0]['table']
         assert model.relations[0].column.name == self.relations[0]['column']
         assert model.relations[0].name == self.relations[0]['name']
+        assert repr(model.relations[0]) is not None
 
     def test_non_existent_table_data(self):
         # Check unknown table
@@ -92,14 +93,6 @@ class TestExtractionModel(object):
         data = [{'relations': [relation]}]
         ExtractionModel.load(self.schema1_sl, data)
 
-        # A missing table key is not OK
-        key = 'table'
-        relation = dict(self.relations[0])
-        del relation[key]
-        data = [{'relations': [relation]}]
-        with pytest.raises(ValidationError):
-            ExtractionModel.load(self.schema1_sl, data)
-
         # Unknown key
         relation = dict(self.relations[0])
         relation['foo'] = 'bar'
@@ -130,6 +123,61 @@ class TestExtractionModel(object):
         check_bool('disabled', False)
         check_bool('sticky', False)
 
+    def test_relation_defaults_keys(self):
+        # Test both None
+        relation = dict(self.relations[0])
+        table = relation.pop('table')
+        data = [{'relations': [relation]}]
+        with pytest.raises(Exception) as e:
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'Either defaults or table must be set' in str(e)
+
+        # Test both set
+        relation['table'] = table
+        relation['defaults'] = Relation.DEFAULT_EVERYTHING
+        with pytest.raises(Exception) as e:
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'Either defaults or table must be set' in str(e)
+
+    def test_relation_defaults(self):
+        tests = [
+            ([], True, False),  # The default is DEFAULT_OUTGOING_NULLABLE
+            ([Relation.DEFAULT_OUTGOING_NULLABLE], True, False),
+            ([Relation.DEFAULT_OUTGOING_NOTNULL], False, False),
+            ([Relation.DEFAULT_INCOMING], False, True),
+            ([Relation.DEFAULT_EVERYTHING], True, True),
+            ([Relation.DEFAULT_OUTGOING_NULLABLE,
+              Relation.DEFAULT_INCOMING], True, True),
+        ]
+
+        for (relation_defaults, expect_nullable, expect_incoming) in tests:
+            relations = []
+            for relation_default in relation_defaults:
+                relations.append({'defaults': relation_default})
+            data = [{'relations': relations}]
+            model = ExtractionModel.load(self.schema1_sl, data)
+
+            got_outgoing_not_null = False
+            got_outgoing_nullable = False
+            got_incoming = False
+            got_outgoing = False
+
+            for relation in model.relations:
+                if relation.type == Relation.TYPE_OUTGOING:
+                    got_outgoing = True
+                    if relation.column.notnull:
+                        got_outgoing_not_null = True
+                    else:
+                        got_outgoing_nullable = True
+                else:
+                    got_incoming = True
+
+            assert got_outgoing is True
+            assert got_outgoing_not_null is True
+            assert expect_nullable == got_outgoing_nullable
+            assert expect_incoming == got_incoming
+
+    def test_relation_type(self):
         # Check type
         relation = dict(self.relations[0])
         relation['type'] = 'bar'

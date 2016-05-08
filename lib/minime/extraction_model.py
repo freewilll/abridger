@@ -12,6 +12,13 @@ class Relation(object):
     TYPE_OUTGOING = 'outgoing'
     TYPES = [TYPE_INCOMING, TYPE_OUTGOING]
 
+    DEFAULT_OUTGOING_NOTNULL = 'all-outgoing-not-null'
+    DEFAULT_OUTGOING_NULLABLE = 'all-outgoing-nullable'
+    DEFAULT_INCOMING = 'all-incoming'
+    DEFAULT_EVERYTHING = 'everything'
+    DEFAULTS = [DEFAULT_OUTGOING_NOTNULL, DEFAULT_OUTGOING_NULLABLE,
+                DEFAULT_INCOMING, DEFAULT_EVERYTHING]
+
     def __init__(self, table, column, name, disabled, sticky, type):
         self.table = table
         self.column = column
@@ -19,6 +26,19 @@ class Relation(object):
         self.disabled = disabled
         self.sticky = sticky
         self.type = type
+
+    def __str__(self):
+        flags = ','.join(filter(lambda s: s is not None, [
+            'sticky' if self.sticky else None,
+            'disabled' if self.disabled else None
+        ]))
+        if flags:
+            flags = ' ' + flags
+        return '%s:%s name=%s type=%s%s' % (self.table.name, self.column.name,
+                                            self.name, self.type, flags)
+
+    def __repr__(self):
+        return '<Relation %s>' % str(self)
 
 
 class AlwaysFollowColumn(object):
@@ -37,8 +57,8 @@ class Table(object):
 class ExtractionModel(object):
     relation_definition = {
         'type': 'object',
-        'required': ['table'],
         'properties': {
+            'defaults': {'enum': Relation.DEFAULTS},
             'table': {'type': 'string'},
             'column': {'type': 'string'},
             'name': {'type': ['string', 'null']},
@@ -140,6 +160,7 @@ class ExtractionModel(object):
         self.relations = []
         self.subjects = []
         self.always_follow_cols = []
+        self._default_relation_added = set()
 
     @staticmethod
     def get_single_key_dict(data):
@@ -166,6 +187,10 @@ class ExtractionModel(object):
             elif key == 'always-follow-columns':
                 model._add_always_follow_cols(list_data)
 
+        if len(model._default_relation_added) == 0:
+            model._add_default_relations(model.relations, Relation.
+                                         DEFAULT_OUTGOING_NULLABLE)
+
         return model
 
     def _check_table_and_column(self, table_name, column_name):
@@ -185,25 +210,88 @@ class ExtractionModel(object):
 
         return (table, column)
 
+    def _add_relation(self, target, table=None, column=None, type=None,
+                      name=None, disabled=False, sticky=False):
+        target.append(Relation(
+            table=table,
+            column=column,
+            name=name,
+            disabled=disabled,
+            sticky=sticky,
+            type=type))
+
+    def _add_table_relation(self, target, relation_data):
+        table_name = relation_data.get('table')
+        column_name = relation_data.get('column')
+        (table, column) = self._check_table_and_column(table_name,
+                                                       column_name)
+
+        # Note: validation will ensure the type is valid
+        type = relation_data.get('type', Relation.TYPE_INCOMING)
+
+        self._add_relation(
+            target,
+            table=table,
+            column=column,
+            name=relation_data.get('name'),
+            disabled=relation_data.get('disabled', False),
+            sticky=relation_data.get('sticky', False),
+            type=type)
+
+    def _add_default_relations(self, target, defaults):
+        # Determine what we need based on the defaults setting and what
+        # has already been previously added
+
+        # Outgoing not nulls are always processed, otherwise, referential
+        # integrity would be violated.
+        want_outgoing_notnulls = 'notnulls' not in self._default_relation_added
+
+        want_outgoing_nullables = (
+            ('nullables' not in self._default_relation_added) and
+            defaults in [
+                Relation.DEFAULT_OUTGOING_NULLABLE,
+                Relation.DEFAULT_EVERYTHING])
+
+        want_incoming = (
+            ('incoming' not in self._default_relation_added) and defaults in [
+                Relation.DEFAULT_INCOMING,
+                Relation.DEFAULT_EVERYTHING])
+
+        # Register what is about to be added
+        self._default_relation_added.add('notnulls')
+        if want_outgoing_nullables:
+            self._default_relation_added.add('nullables')
+        if want_incoming:
+            self._default_relation_added.add('incoming')
+
+        def _add_rel(table, column, type):
+            self._add_relation(target, table=table, column=column, type=type)
+
+        for table in self.schema.tables:
+            for fk in table.foreign_keys:
+                first_fk_col = fk.src_cols[0]
+
+                if ((fk.notnull and want_outgoing_notnulls) or
+                        (not fk.notnull and want_outgoing_nullables)):
+                    _add_rel(table, first_fk_col, type=Relation.TYPE_OUTGOING)
+                if want_incoming:
+                    _add_rel(table, first_fk_col, type=Relation.TYPE_INCOMING)
+
     def _add_relations(self, target, data):
         for relation_data in data:
             self.relation_validator.validate(relation_data)
 
-            table_name = relation_data['table']
-            column_name = relation_data.get('column')
-            (table, column) = self._check_table_and_column(table_name,
-                                                           column_name)
+            defaults = relation_data.get('defaults')
+            table_name = relation_data.get('table')
 
-            # Note: validation will ensure the type is valid
-            type = relation_data.get('type', Relation.TYPE_INCOMING)
+            if (defaults is None) == (table_name is None):
+                raise Exception('Either defaults or table must be set')
 
-            target.append(Relation(
-                table=table,
-                column=column,
-                name=relation_data.get('name'),
-                disabled=relation_data.get('disabled', False),
-                sticky=relation_data.get('sticky', False),
-                type=type))
+            if table_name is not None:
+                self._add_table_relation(target, relation_data)
+            else:
+                defaults = relation_data.get('defaults')
+                self._add_default_relations(target, defaults)
 
     def _add_tables(self, target, data):
         for table_data in data:

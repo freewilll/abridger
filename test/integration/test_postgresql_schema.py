@@ -1,6 +1,8 @@
 import tempfile
 import yaml
+
 from minime.schema.postgresql import PostgresqlSchema
+from minime.extraction_model import Relation
 
 
 class TestPostgresqlSchema(object):
@@ -159,20 +161,28 @@ class TestPostgresqlSchema(object):
         temp.close()
 
         data = yaml.load(open(temp.name).read())
-        assert data == {'relations': [
-            {'column': 'fk1',
-             'table': 'test2',
-             'name': 'test2_fk1_fkey'},
-            {'column': 'fk2',
-             'table': 'test2',
-             'name': 'test_constraint'},
-            {'column': 'fk3',
-             'table': 'test2',
-             'name': 'test2_fk3_fkey'},
-            {'columns': ['fk4', 'fk5'],
-             'table': 'test2',
-             'name': 'test2_fk4_fkey'},
-        ]}
+
+        keys = [
+            (['fk1'], 'test2', 'test2_fk1_fkey'),
+            (['fk2'], 'test2', 'test_constraint'),
+            (['fk3'], 'test2', 'test2_fk3_fkey'),
+            (['fk4', 'fk5'], 'test2', 'test2_fk4_fkey'),
+        ]
+
+        expected_data = []
+        for (cols, table, name) in keys:
+            for is_incoming in [True, False]:
+                row = {'table': table, 'name': name}
+                if len(cols) == 1:
+                    row['column'] = cols[0]
+                else:
+                    row['columns'] = cols
+                if is_incoming:
+                    row['type'] = Relation.TYPE_INCOMING
+                expected_data.append(row)
+
+        expected_data = {'relations': expected_data}
+        assert data == expected_data
 
     def test_schema_unique_indexes(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:

@@ -1,3 +1,6 @@
+from minime.extraction_model import Relation
+
+
 class ForeignKeyConstraint(object):
     def __init__(self, name, src_cols, dst_cols):
         # Check table is the same within the src/dst columns & len matches
@@ -8,6 +11,7 @@ class ForeignKeyConstraint(object):
         self.name = name
         self.src_cols = src_cols
         self.dst_cols = dst_cols
+        self.notnull = all([s.notnull for s in src_cols])
 
     @staticmethod
     def create_and_add_to_tables(name, src_cols, dst_cols):
@@ -23,10 +27,11 @@ class ForeignKeyConstraint(object):
         dst_table = self.dst_cols[0].table
         src_cols_csv = ','.join(sorted([str(c) for c in self.src_cols]))
         dst_cols_csv = ','.join(sorted([str(c) for c in self.dst_cols]))
-        return '%s: %s:(%s) -> %s:(%s)' % (
+        return '%s: %s:(%s) -> %s:(%s) %s' % (
             self.name,
             src_table, src_cols_csv,
-            dst_table, dst_cols_csv)
+            dst_table, dst_cols_csv,
+            'not null' if self.notnull else 'nullable')
 
     def __repr__(self):
         return '<ForeignKeyConstraint %s>' % str(self)
@@ -105,8 +110,13 @@ class Schema(object):
                 relation = {
                     'name': fk.name,
                     'table': table.name,
+                    'type': Relation.TYPE_INCOMING,
                 }
                 relation.update(self._relation_fk_col_or_cols(fk))
+                results.append(relation)
+
+                relation = dict(relation)
+                relation['type'] = Relation.TYPE_OUTGOING
                 results.append(relation)
         return results
 
@@ -120,4 +130,6 @@ class Schema(object):
                 f.write('    columns:\n')
                 for col in sorted(relation['columns']):
                     f.write('    - %s\n' % col)
+            if relation['type'] == Relation.TYPE_INCOMING:
+                f.write('    type: %s\n' % Relation.TYPE_INCOMING)
             f.write('    name: %s\n' % relation['name'])

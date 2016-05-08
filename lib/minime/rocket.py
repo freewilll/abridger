@@ -1,5 +1,6 @@
 import Queue
 from collections import defaultdict
+from minime.extraction_model import Relation
 
 
 class WorkItem(object):
@@ -67,13 +68,6 @@ class Rocket(object):
     def _make_subject_table_relations(self, subject):
         table_relations = defaultdict(list)
 
-        schema = self.extraction_model.schema
-
-        # Add foreign keys for all tables
-        for table in schema.tables:
-            for fk in table.foreign_keys:
-                table_relations[table].append((fk.src_cols, fk.dst_cols))
-
         # Add subject and global relations
         for relation in self.extraction_model.relations + subject.relations:
             col = relation.column
@@ -88,8 +82,12 @@ class Rocket(object):
                     found_fk = fk
             assert found_fk is not None
 
-            table_relations[found_fk.dst_cols[0].table].append(
-                (found_fk.dst_cols, found_fk.src_cols))
+            if relation.type == Relation.TYPE_INCOMING:
+                table_relations[found_fk.dst_cols[0].table].append(
+                    (found_fk.dst_cols, found_fk.src_cols))
+            else:
+                table_relations[found_fk.src_cols[0].table].append(
+                    (found_fk.src_cols, found_fk.dst_cols))
 
         self.subject_table_relations[subject] = table_relations
 
