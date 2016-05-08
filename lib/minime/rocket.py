@@ -155,6 +155,10 @@ class Rocket(object):
                     seen_dst_values = set()
                     for row in rows:
                         value_tuple = tuple([row[i] for i in src_col_indexes])
+                        if any(s is None for s in value_tuple):
+                            # Don't process any foreign keys if any of the
+                            # values is None
+                            continue
 
                         if value_tuple in seen_dst_values:
                             continue
@@ -162,8 +166,6 @@ class Rocket(object):
 
                         if value_tuple not in table_rows:
                             dst_values.append(value_tuple)
-
-                    # FIXME don't process null foreign keys
 
                     self.work_queue.put(WorkItem(
                         work_item.subject, dst_table, dst_cols, dst_values))

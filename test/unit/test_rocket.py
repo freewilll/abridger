@@ -35,7 +35,7 @@ class TestRocketMisc(TestRocketBase):
             ''', '''
                 CREATE TABLE test2 (
                     id INTEGER PRIMARY KEY,
-                    test1_id INTEGER NOT NULL REFERENCES test1
+                    test1_id INTEGER REFERENCES test1
                 );
             ''',
         ]:
@@ -53,6 +53,7 @@ class TestRocketMisc(TestRocketBase):
             (table2, (2, 1)),
             (table2, (3, 2)),
             (table2, (4, 2)),
+            (table2, (5, None)),
         ]
         self.dbconn.insert_rows(rows)
         return rows
@@ -154,12 +155,14 @@ class TestRocketMisc(TestRocketBase):
                                 expected_fetch_count=2)
 
     @pytest.mark.parametrize('values, rows', [
-        ([], [0, 1, 2, 3, 4, 5]),
+        ([], [0, 1, 2, 3, 4, 5, 6]),
         ([1, 2, 3, 4], [0, 1, 2, 3, 4, 5]),
+        ([1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6]),
         ([1], [0, 2]),
         ([2], [0, 3]),
         ([3], [1, 4]),
         ([4], [1, 5]),
+        ([5], [6]),
         ([1, 2], [0, 2, 3]),
         ([3, 4], [1, 4, 5]),
         ([1, 3], [0, 1, 2, 4]),
@@ -212,7 +215,7 @@ class TestRocketMisc(TestRocketBase):
     def test_two_tables_global_relations(self, schema2, data2):
         table = {'table': 'test1'}
         global_relations = [{'table': 'test2', 'column': 'test1_id'}]
-        self.check_one_subject(schema2, [table], data2,
+        self.check_one_subject(schema2, [table], data2[0:6],
                                global_relations=global_relations)
 
     def test_two_tables_double_overlapping_subject(self, schema2, data2):
