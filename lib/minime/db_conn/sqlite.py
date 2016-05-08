@@ -28,7 +28,7 @@ class SqliteDbConn(DbConn):
         else:
             raise Exception('TODO: multi col where on sqlite')
 
-        return self.connection.execute(sql, values)
+        return list(self.connection.execute(sql, values))
 
     def insert_rows(self, rows):
         table_cols = {}

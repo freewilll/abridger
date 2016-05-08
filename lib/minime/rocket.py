@@ -12,31 +12,41 @@ class WorkItem(object):
         self.cols = cols
         self.values = values
 
-    def prune(self, existing_results):
+    def prune_cached_rows(self, existing_results):
         '''Remove values that are in existing_results'''
 
         if self.cols is None:
-            return
+            return []
 
         if self.table not in existing_results:
-            return
+            return []
 
         table_results = existing_results[self.table]
-
-        if self.cols not in table_results:
-            return
-
-        table_values = table_results[self.cols]
+        table_rows = table_results.get(self.cols)
+        if table_rows is None:
+            return []
 
         new_values = []
+        cached_rows = []
         for value in self.values:
-            if value not in table_values:
+            cached_row = table_rows.get(value)
+            if cached_row is None:
                 new_values.append(value)
+            else:
+                cached_rows.append(cached_row)
 
         self.values = new_values
+        return cached_rows
 
-    def fetch_rows(self, dbconn):
-        return dbconn.fetch_rows(self.table, self.cols, self.values)
+    def fetch_rows(self, dbconn, existing_results):
+        cached_rows = self.prune_cached_rows(existing_results)
+
+        if self.values is None or len(self.values) > 0:
+            fetched_rows = dbconn.fetch_rows(self.table, self.cols,
+                                             self.values)
+        else:
+            fetched_rows = []
+        return cached_rows + fetched_rows
 
 
 class Rocket(object):
@@ -106,13 +116,14 @@ class Rocket(object):
             work_item = self.work_queue.get()
             table = work_item.table
 
-            work_item.prune(self.results)
-
             if work_item.values is not None and len(work_item.values) == 0:
                 continue  # All wanted have already been fetched
 
-            rows = list(work_item.fetch_rows(self.dbconn))
+            rows = work_item.fetch_rows(self.dbconn, self.results)
             self.fetch_count += 1
+
+            if len(rows) == 0:
+                continue
 
             if table.primary_key is None:
                 # TODO tables without primary keys
@@ -134,12 +145,26 @@ class Rocket(object):
                     dst_table = dst_cols[0].table
                     src_col_indexes = [table.cols.index(c) for c in src_cols]
 
+                    table_results = self.results.get(dst_table)
+                    if table_results is not None:
+                        table_rows = table_results.get(dst_cols)
+                    else:
+                        table_rows = {}
+
                     dst_values = []
+                    seen_dst_values = set()
                     for row in rows:
                         value_tuple = tuple([row[i] for i in src_col_indexes])
-                        dst_values.append(value_tuple)
+
+                        if value_tuple in seen_dst_values:
+                            continue
+                        seen_dst_values.add(value_tuple)
+
+                        if value_tuple not in table_rows:
+                            dst_values.append(value_tuple)
 
                     # FIXME don't process null foreign keys
+
                     self.work_queue.put(WorkItem(
                         work_item.subject, dst_table, dst_cols, dst_values))
 

@@ -43,4 +43,4 @@ class PostgresqlDbConn(DbConn):
             values = [v[0] for v in values]
         else:
             raise Exception('TODO: multi col where on postgresql')
-        return self.execute(sql, values)
+        return list(self.execute(sql, values))
