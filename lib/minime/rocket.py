@@ -114,6 +114,10 @@ class Rocket(object):
             rows = list(work_item.fetch_rows(self.dbconn))
             self.fetch_count += 1
 
+            if table.primary_key is None:
+                # TODO tables without primary keys
+                continue
+
             keys = set([table.primary_key])
 
             for row in rows:
