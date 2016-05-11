@@ -7,6 +7,9 @@ class Subject(object):
         self.relations = []
         self.tables = []
 
+    def __repr__(self):
+        return '<Subject %s>' % id(self)
+
 
 class Relation(object):
     TYPE_INCOMING = 'incoming'

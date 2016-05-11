@@ -217,7 +217,7 @@ class TestExtractionModel(object):
             ExtractionModel.load(self.schema1_sl, data)
         assert 'A subject must have at least one table' in str(e)
 
-    def test_subject_relation(self):
+    def model_of_table0(self):
         table = {'table': self.schema1_sl.tables[0].name}
 
         subject = [
@@ -226,12 +226,19 @@ class TestExtractionModel(object):
         ]
 
         data = [{'subject': subject}]
-        model = ExtractionModel.load(self.schema1_sl, data)
+        return ExtractionModel.load(self.schema1_sl, data)
+
+    def test_subject_relation(self):
+        model = self.model_of_table0()
 
         # Test relation
         assert len(model.subjects) == 1
         assert model.subjects[0].relations[0].table.name == \
             self.relations[0]['table']
+
+    def test_subject_repr(self):
+        model = self.model_of_table0()
+        assert repr(model.subjects[0]) is not None
 
     def test_subject_table_with_just_a_table_key(self):
         table = {'table': self.schema1_sl.tables[0].name}
