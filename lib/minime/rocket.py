@@ -3,6 +3,23 @@ from collections import defaultdict
 from minime.extraction_model import Relation, merge_relations
 
 
+class ResultsRow(object):
+    def __init__(self, row, subjects=None):
+        if subjects is None:
+            subjects = set()
+        self.row = row
+        self.subjects = subjects
+
+    def __str__(self):
+        return 'row=%s subjects=%s' % (self.row, self.subjects)
+
+    def __repr__(self):
+        return '<ResultsRow %s>' % str(self)
+
+    def __cmp__(self, other):
+        return cmp(self.row, other.row)
+
+
 class WorkItem(object):
     def __init__(self, subject, table, cols, values):
         assert (cols is None) == (values is None)
@@ -46,6 +63,8 @@ class WorkItem(object):
                                              self.values)
         else:
             fetched_rows = []
+
+        fetched_rows = [ResultsRow(fr) for fr in fetched_rows]
         return cached_rows + fetched_rows
 
 
@@ -54,8 +73,7 @@ class Rocket(object):
         self.dbconn = dbconn
         self.extraction_model = extraction_model
         self.work_queue = Queue.Queue()
-        self.results = defaultdict(lambda: defaultdict(
-            lambda: defaultdict(list)))
+        self.results = defaultdict(lambda: defaultdict(dict))
         self.fetch_count = 0
         self.fetched_row_count = 0
         self.fetched_row_count_per_table = defaultdict(int)
@@ -103,13 +121,13 @@ class Rocket(object):
 
         self.subject_table_relations[subject] = table_relations
 
-    def _lookup_row_values(self, table, row, keys):
+    def _lookup_row_values(self, table, results_row, keys):
         cols = table.cols
         values = []
         for key_tuple in keys:
             value = []
             for key_column in key_tuple:
-                value.append(row[cols.index(key_column)])
+                value.append(results_row.row[cols.index(key_column)])
             values.append(tuple(value))
         return values
 
@@ -121,10 +139,10 @@ class Rocket(object):
             if work_item.values is not None and len(work_item.values) == 0:
                 continue  # All wanted have already been fetched
 
-            rows = work_item.fetch_rows(self.dbconn, self.results)
+            results_rows = work_item.fetch_rows(self.dbconn, self.results)
             self.fetch_count += 1
 
-            if len(rows) == 0:
+            if len(results_rows) == 0:
                 continue
 
             if table.primary_key is None:
@@ -149,8 +167,9 @@ class Rocket(object):
 
                     dst_values = []
                     seen_dst_values = set()
-                    for row in rows:
-                        value_tuple = tuple([row[i] for i in src_col_indexes])
+                    for results_row in results_rows:
+                        value_tuple = tuple(
+                            [results_row.row[i] for i in src_col_indexes])
                         if any(s is None for s in value_tuple):
                             # Don't process any foreign keys if any of the
                             # values is None
@@ -162,6 +181,10 @@ class Rocket(object):
 
                         if value_tuple not in table_rows:
                             dst_values.append(value_tuple)
+                        else:
+                            results_row = table_rows[value_tuple]
+                            if work_item.subject not in results_row.subjects:
+                                dst_values.append(value_tuple)
 
                     if len(dst_values) > 0:
                         self.work_queue.put(WorkItem(
@@ -175,18 +198,20 @@ class Rocket(object):
             cols_that_need_nulling = all_fk_cols - processed_outgoing_fk_cols
             if len(cols_that_need_nulling) > 0:
                 indexes = [table.cols.index(c) for c in cols_that_need_nulling]
-                for i, row in enumerate(rows):
-                    row_list = list(row)
+                for i, results_row in enumerate(results_rows):
+                    row_list = list(results_row.row)
                     for j in indexes:
                         row_list[j] = None
-                    rows[i] = tuple(row_list)
+                    results_rows[i] = ResultsRow(tuple(row_list),
+                                                 results_row.subjects)
 
-            for row in rows:
+            for results_row in results_rows:
+                results_row.subjects.add(work_item.subject)
                 self.fetched_row_count += 1
                 self.fetched_row_count_per_table[table] += 1
-                values = self._lookup_row_values(table, row, keys)
+                values = self._lookup_row_values(table, results_row, keys)
                 for key, values in zip(keys, values):
-                    self.results[table][key][values] = row
+                    self.results[table][key][values] = results_row
 
         return self
 
@@ -194,7 +219,7 @@ class Rocket(object):
         results = []
         for table in sorted(self.results, key=lambda r: r.name):
             primary_key = table.primary_key
-            rows = self.results[table][primary_key]
-            for values in sorted(rows.values()):
-                results.append((table, values))
+            results_rows = self.results[table][primary_key]
+            for results_row in sorted(results_rows.values()):
+                results.append((table, results_row.row))
         return results

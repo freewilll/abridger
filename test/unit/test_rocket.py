@@ -227,3 +227,14 @@ class TestRocketMisc(TestRocketBase):
         extraction_model = ExtractionModel.load(schema2, extraction_model_data)
         rocket = Rocket(self.dbconn, extraction_model).launch()
         assert rocket.flat_results() == data2
+
+    def test_results_row_str_and_repr(self, schema1, data1):
+        extraction_model_data = [
+            {'subject': [{'tables': [{'table': 'test1'}]}]},
+        ]
+        extraction_model = ExtractionModel.load(schema1, extraction_model_data)
+        rocket = Rocket(self.dbconn, extraction_model).launch()
+        table1 = schema1.tables[0]
+        result_rows = rocket.results[table1][table1.primary_key]
+        for result_row in result_rows.values():
+            assert repr(result_row) is not None
