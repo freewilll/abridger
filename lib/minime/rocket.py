@@ -163,8 +163,10 @@ class Rocket(object):
                         if value_tuple not in table_rows:
                             dst_values.append(value_tuple)
 
-                    self.work_queue.put(WorkItem(
-                        work_item.subject, dst_table, dst_cols, dst_values))
+                    if len(dst_values) > 0:
+                        self.work_queue.put(WorkItem(
+                            work_item.subject, dst_table, dst_cols,
+                            dst_values))
 
             all_fk_cols = set()
             for foreign_key in table.foreign_keys:
