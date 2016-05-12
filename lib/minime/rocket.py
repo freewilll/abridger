@@ -4,14 +4,16 @@ from minime.extraction_model import Relation, merge_relations
 
 
 class ResultsRow(object):
-    def __init__(self, row, subjects=None):
+    def __init__(self, row, subjects=None, sticky=False):
         if subjects is None:
             subjects = set()
         self.row = row
         self.subjects = subjects
+        self.sticky = sticky
 
     def __str__(self):
-        return 'row=%s subjects=%s' % (self.row, self.subjects)
+        return 'row=%s subjects=%s sticky=%s' % (
+            self.row, self.subjects, self.sticky)
 
     def __repr__(self):
         return '<ResultsRow %s>' % str(self)
@@ -21,13 +23,14 @@ class ResultsRow(object):
 
 
 class WorkItem(object):
-    def __init__(self, subject, table, cols, values):
+    def __init__(self, subject, table, cols, values, sticky):
         assert (cols is None) == (values is None)
 
         self.subject = subject
         self.table = table
         self.cols = cols
         self.values = values
+        self.sticky = sticky
 
     def prune_cached_rows(self, existing_results):
         '''Remove values that are in existing_results'''
@@ -90,7 +93,7 @@ class Rocket(object):
                     value_tuples = None
                     cols = None
                 self.work_queue.put(WorkItem(
-                    subject, table.table, cols, value_tuples))
+                    subject, table.table, cols, value_tuples, True))
             self._make_subject_table_relations(subject)
 
     def _make_subject_table_relations(self, subject):
@@ -114,10 +117,12 @@ class Rocket(object):
 
             if relation.type == Relation.TYPE_INCOMING:
                 table_relations[found_fk.dst_cols[0].table].append(
-                    (found_fk.dst_cols, found_fk.src_cols))
+                    (found_fk.dst_cols, found_fk.src_cols,
+                     relation.propagate_sticky, relation.only_if_sticky))
             else:
                 table_relations[found_fk.src_cols[0].table].append(
-                    (found_fk.src_cols, found_fk.dst_cols))
+                    (found_fk.src_cols, found_fk.dst_cols,
+                     relation.propagate_sticky, relation.only_if_sticky))
 
         self.subject_table_relations[subject] = table_relations
 
@@ -156,7 +161,14 @@ class Rocket(object):
 
             if table in table_relations:
                 relations = table_relations[table]
-                for (src_cols, dst_cols) in relations:
+
+                for (src_cols, dst_cols, propagate_sticky,
+                        only_if_sticky) in relations:
+                    if only_if_sticky and not work_item.sticky:
+                        continue
+
+                    sticky = work_item.sticky and propagate_sticky
+
                     processed_outgoing_fk_cols |= set(src_cols)
 
                     dst_table = dst_cols[0].table
@@ -189,7 +201,7 @@ class Rocket(object):
                     if len(dst_values) > 0:
                         self.work_queue.put(WorkItem(
                             work_item.subject, dst_table, dst_cols,
-                            dst_values))
+                            dst_values, sticky))
 
             all_fk_cols = set()
             for foreign_key in table.foreign_keys:
