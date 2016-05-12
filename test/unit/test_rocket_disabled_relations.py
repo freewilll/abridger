@@ -2,7 +2,7 @@ import pytest
 
 from minime.schema.sqlite import SqliteSchema
 from rocket_platform import TestRocketBase
-from minime.extraction_model import Relation, ExtractionModel
+from minime.extraction_model import Relation, ExtractionModel, merge_relations
 
 
 class TestRocketDisabledRelations(TestRocketBase):
@@ -122,3 +122,31 @@ class TestRocketDisabledRelations(TestRocketBase):
         with pytest.raises(Exception) as e:
             ExtractionModel.load(schema1, data)
         assert 'Cannot disable outgoing not null foreign keys' in str(e)
+
+    @pytest.mark.parametrize(
+        'type_, notnull, sticky, propagate_sticky, only_if_sticky', [
+            (Relation.TYPE_OUTGOING, True, True, True, False),
+            (Relation.TYPE_OUTGOING, True, False, False, False),
+            (Relation.TYPE_OUTGOING, False, True, True, True),
+            (Relation.TYPE_OUTGOING, False, False, False, False),
+            (Relation.TYPE_INCOMING, True, True, True, True),
+            (Relation.TYPE_INCOMING, True, False, False, False),
+            (Relation.TYPE_INCOMING, False, True, True, True),
+            (Relation.TYPE_INCOMING, False, False, False, False),
+        ])
+    def test_sticky_combinations(self, schema1, data1, type_,
+                                 notnull, sticky, propagate_sticky,
+                                 only_if_sticky):
+        column = 'test1_nn_id' if notnull else 'test1_id'
+        relation = {'table': 'test2', 'column': column,
+                    'type': type_, 'sticky': sticky}
+        data = [{'relations': [relation]}]
+        model = ExtractionModel.load(schema1, data)
+        relation = model.relations[0]
+        assert relation.propagate_sticky == propagate_sticky
+        assert relation.only_if_sticky == only_if_sticky
+
+        if type_ == Relation.TYPE_OUTGOING:
+            assert len(merge_relations(model.relations)) == 2
+        else:
+            assert len(merge_relations(model.relations)) == 3

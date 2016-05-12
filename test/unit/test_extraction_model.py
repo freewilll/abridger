@@ -4,7 +4,7 @@ from jsonschema.exceptions import ValidationError
 from minime.extraction_model import ExtractionModel, Relation, merge_relations
 
 
-class TestExtractionModel(object):
+class TestExtractionModelBase(object):
     @pytest.fixture(autouse=True)
     def self_schema1_sl(self, schema1_sl):
         self.schema1_sl = schema1_sl
@@ -17,6 +17,8 @@ class TestExtractionModel(object):
         model = ExtractionModel.load(self.schema1_sl, data)
         return model.relations[0]
 
+
+class TestExtractionModel(TestExtractionModelBase):
     def test_unknown_directive(self):
         with pytest.raises(ValidationError):
             data = [{'foo': []}]
@@ -108,14 +110,17 @@ class TestExtractionModel(object):
         with pytest.raises(ValidationError):
             ExtractionModel.load(self.schema1_sl, data)
 
-        def check_bool(key, default_value):
+        def check_bool(key, default_value, relation_key=None):
+            if relation_key is None:
+                relation_key = key
+
             # Test bool values
             for value in (True, False):
                 relation = dict(self.relations[0])
                 relation[key] = value
                 data = [{'relations': [relation]}]
                 model = ExtractionModel.load(self.schema1_sl, data)
-                assert getattr(model.relations[0], key) is value
+                assert getattr(model.relations[0], relation_key) is value
 
             # Test bad value exception
             relation[key] = 'foo'
@@ -126,10 +131,10 @@ class TestExtractionModel(object):
             relation = dict(self.relations[0])
             data = [{'relations': [relation]}]
             model = ExtractionModel.load(self.schema1_sl, data)
-            assert getattr(model.relations[0], key) is default_value
+            assert getattr(model.relations[0], relation_key) is default_value
 
         check_bool('disabled', False)
-        check_bool('sticky', False)
+        check_bool('sticky', False, relation_key='propagate_sticky')
 
     def test_relation_defaults_keys(self):
         # Test both None
@@ -347,8 +352,9 @@ class TestExtractionModel(object):
         assert r.table == relation0.table
         assert r.column == relation0.column
         assert r.disabled == relation0.disabled
-        assert r.sticky == relation0.sticky
         assert r.type == relation0.type
+        assert r.propagate_sticky == relation0.propagate_sticky
+        assert r.only_if_sticky == relation0.only_if_sticky
 
     def test_relation_equality(self, relation0):
         relation1 = relation0.clone()
@@ -357,60 +363,85 @@ class TestExtractionModel(object):
         assert relation1 == relation1
         assert relation0 != relation1
 
-    def test_merge_relations_disabled(self, relation0):
         relation1 = relation0.clone()
-        relation2 = relation0.clone()
-        relation2.disabled = True
+        relation1.propagate_sticky = True
+        assert relation0 == relation0
+        assert relation1 == relation1
+        assert relation0 != relation1
+
+        relation1 = relation0.clone()
+        relation1.only_if_sticky = True
+        assert relation0 == relation0
+        assert relation1 == relation1
+        assert relation0 != relation1
+
+
+class TestExtractionModelMergeRelations(TestExtractionModelBase):
+    @pytest.fixture(autouse=True)
+    def setup_fixtures(self, relation0):
+        self.rel1 = relation0.clone()
+        self.rel2 = relation0.clone()
+        self.rel3 = relation0.clone()
+
+    def test_merge_relations_disabled(self, relation0):
+        self.rel2.disabled = True
 
         # Check merging identical relations has no effect
-        assert len(merge_relations([relation1, relation1])) == 1
+        assert len(merge_relations([self.rel1, self.rel1])) == 1
 
         # Check that the disabled relation by itself has no effect
-        assert len(merge_relations([relation2])) == 0
-        assert len(merge_relations([relation2, relation2])) == 0
+        assert len(merge_relations([self.rel2])) == 0
+        assert len(merge_relations([self.rel2, self.rel2])) == 0
 
         # Check the disabled relation removes the first
-        assert len(merge_relations([relation1, relation2])) == 0
-        assert len(merge_relations([relation1, relation2, relation2])) == 0
+        assert len(merge_relations([self.rel1, self.rel2])) == 0
+        assert len(merge_relations([self.rel1, self.rel2, self.rel2])) == 0
 
-    def test_merge_relations_sticky(self, relation0):
-        relation1 = relation0.clone()
-        relation2 = relation0.clone()
-        relation1.sticky = True
-        relation2.sticky = False
+    @pytest.mark.parametrize('attr', ['propagate_sticky', 'only_if_sticky'])
+    def test_merge_relations_sticky(self, attr):
+        setattr(self.rel1, attr, True)
+        setattr(self.rel2, attr, False)
 
         # Check merging identical relations has the same effect
-        merge = merge_relations([relation1, relation1])
+        merge = merge_relations([self.rel1, self.rel1])
         assert len(merge) == 1
-        assert merge[0].sticky is True
+        assert getattr(merge[0], attr) is True
 
-        merge = merge_relations([relation1, relation2])
+        merge = merge_relations([self.rel1, self.rel2])
         assert len(merge) == 1
-        assert merge[0].sticky is True
+        assert getattr(merge[0], attr) is True
 
-        merge = merge_relations([relation2, relation2])
+        merge = merge_relations([self.rel2, self.rel2])
         assert len(merge) == 1
-        assert merge[0].sticky is False
+        assert getattr(merge[0], attr) is False
 
-    def test_merge_relations_disabled_and_sticky(self, relation0):
-        relation1 = relation0.clone()
-        relation2 = relation0.clone()
-        relation3 = relation0.clone()
-        relation1.sticky = True
-        relation2.sticky = False
-        relation3.sticky = False
-        relation1.disabled = False
-        relation2.disabled = False
-        relation3.disabled = True
+    def test_merge_relations_disabled_and_sticky1(self):
+        self.rel1.propagate_sticky = True
+        self.rel2.propagate_sticky = False
+        self.rel3.propagate_sticky = False
+        self.rel1.disabled = False
+        self.rel2.disabled = False
+        self.rel3.disabled = True
+        assert len(merge_relations([self.rel2, self.rel2, self.rel3])) == 0
 
-        assert len(merge_relations([relation2, relation2, relation3])) == 0
+    def test_merge_relations_disabled_and_sticky2(self):
+        self.rel1.only_if_sticky = True
+        self.rel2.only_if_sticky = False
+        self.rel3.only_if_sticky = False
+        self.rel1.disabled = False
+        self.rel2.disabled = False
+        self.rel3.disabled = True
+        assert len(merge_relations([self.rel2, self.rel2, self.rel3])) == 0
 
-    def test_relation_repr(self, relation0):
-        relation1 = relation0.clone()
-        relation1.sticky = True
-        assert repr(relation1) is not None
+    def test_relation_repr(self):
+        self.rel1.only_if_sticky = True
+        assert repr(self.rel1) is not None
 
-    def test_illegal_sticky_disabled_combination(self, relation0):
+        self.rel1.only_if_sticky = False
+        self.rel1.propagate_sticky = True
+        assert repr(self.rel1) is not None
+
+    def test_illegal_sticky_disabled_combination(self):
         for sticky in [True, False]:
             relation = dict(self.relations[0])
             relation['sticky'] = sticky

@@ -28,12 +28,16 @@ class Relation(object):
         self.column = column
         self.name = name
         self.disabled = disabled
-        self.sticky = sticky
+        self.propagate_sticky = sticky
+        self.only_if_sticky = \
+            (type == self.TYPE_OUTGOING and sticky and not column.notnull) or \
+            (type == self.TYPE_INCOMING and sticky)
         self.type = type
 
     def __str__(self):
         flags = ','.join(filter(lambda s: s is not None, [
-            'sticky' if self.sticky else None,
+            'propagate_sticky' if self.propagate_sticky else None,
+            'only_if_sticky' if self.only_if_sticky else None,
             'disabled' if self.disabled else None
         ]))
         if flags:
@@ -65,11 +69,15 @@ class Relation(object):
     def __hash__(self):
         return hash('.'.join(self._base_list() + [
             str(self.disabled),
-            str(self.sticky)]))
+            str(self.propagate_sticky),
+            str(self.only_if_sticky)]))
 
     def clone(self):
-        return Relation(self.table, self.column, self.name, self.disabled,
-                        self.sticky, self.type)
+        relation = Relation(self.table, self.column, self.name, self.disabled,
+                            False, self.type)
+        relation.propagate_sticky = self.propagate_sticky
+        relation.only_if_sticky = self.only_if_sticky
+        return relation
 
 
 def dedupe_relations(relations):
@@ -91,17 +99,21 @@ def merge_relations(relations):
     results = []
     for related_relations in same_relations.values():
         disabled = False
-        sticky = False
+        propagate_sticky = False
+        only_if_sticky = False
         for relation in related_relations:
             if relation.disabled:
                 disabled = True
-            if relation.sticky:
-                sticky = True
+            if relation.propagate_sticky:
+                propagate_sticky = True
+            if relation.only_if_sticky:
+                only_if_sticky = True
 
         if not disabled:
             relation = related_relations[0]
             relation.disabled = False
-            relation.sticky = sticky
+            relation.propagate_sticky = propagate_sticky
+            relation.only_if_sticky = only_if_sticky
             results.append(relation)
 
     return results
