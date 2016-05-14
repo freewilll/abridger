@@ -230,12 +230,14 @@ class Rocket(object):
                 self.fetched_row_count += 1
                 self.fetched_row_count_per_table[table] += 1
                 value = self._lookup_row_value(col_indexes, results_row, epk)
-                end_results_counts[value] += 1
+                if count_identical_rows:
+                    end_results_counts[value] += 1
                 table_epk_results[value] = results_row
 
-            for value in end_results_counts:
-                count = end_results_counts[value]
-                table_epk_results[value].count = count
+            if count_identical_rows:
+                for value in end_results_counts:
+                    count = end_results_counts[value]
+                    table_epk_results[value].count = count
 
         return self
 
