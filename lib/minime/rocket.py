@@ -127,11 +127,10 @@ class Rocket(object):
 
         self.subject_table_relations[subject] = table_relations
 
-    def _lookup_row_value(self, table, results_row, key_tuple):
-        cols = table.cols
+    def _lookup_row_value(self, col_indexes, results_row, key_tuple):
         value = []
-        for key_column in key_tuple:
-            value.append(results_row.row[cols.index(key_column)])
+        for col in key_tuple:
+            value.append(results_row.row[col_indexes[col]])
         return tuple(value)
 
     def _get_effective_pk(self, table):
@@ -225,11 +224,12 @@ class Rocket(object):
 
             end_results_counts = defaultdict(int)
             table_epk_results = self.results[table][epk]
+            col_indexes = {col: table.cols.index(col) for col in table.cols}
             for results_row in results_rows:
                 results_row.subjects.add(work_item.subject)
                 self.fetched_row_count += 1
                 self.fetched_row_count_per_table[table] += 1
-                value = self._lookup_row_value(table, results_row, epk)
+                value = self._lookup_row_value(col_indexes, results_row, epk)
                 end_results_counts[value] += 1
                 table_epk_results[value] = results_row
 
