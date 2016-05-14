@@ -4,12 +4,13 @@ from minime.extraction_model import Relation, merge_relations
 
 
 class ResultsRow(object):
-    def __init__(self, row, subjects=None, sticky=False):
+    def __init__(self, row, subjects=None, sticky=False, count=1):
         if subjects is None:
             subjects = set()
         self.row = row
         self.subjects = subjects
         self.sticky = sticky
+        self.count = 1
 
     def __str__(self):
         return 'row=%s subjects=%s sticky=%s' % (
@@ -126,15 +127,24 @@ class Rocket(object):
 
         self.subject_table_relations[subject] = table_relations
 
-    def _lookup_row_values(self, table, results_row, keys):
+    def _lookup_row_value(self, table, results_row, key_tuple):
         cols = table.cols
-        values = []
-        for key_tuple in keys:
-            value = []
-            for key_column in key_tuple:
-                value.append(results_row.row[cols.index(key_column)])
-            values.append(tuple(value))
-        return values
+        value = []
+        for key_column in key_tuple:
+            value.append(results_row.row[cols.index(key_column)])
+        return tuple(value)
+
+    def _get_effective_pk(self, table):
+        if table.primary_key is not None:
+            key = table.primary_key
+            count_identical_rows = False
+        elif table.alternate_primary_key is not None:
+            key = table.alternate_primary_key
+            count_identical_rows = False
+        else:
+            key = tuple(table.cols)
+            count_identical_rows = True
+        return (key, count_identical_rows)
 
     def launch(self):
         while not self.work_queue.empty():
@@ -150,11 +160,7 @@ class Rocket(object):
             if len(results_rows) == 0:
                 continue
 
-            if table.primary_key is None:
-                # TODO tables without primary keys
-                continue
-
-            keys = set([table.primary_key])
+            (epk, count_identical_rows) = self._get_effective_pk(table)
 
             table_relations = self.subject_table_relations[work_item.subject]
             processed_outgoing_fk_cols = set()
@@ -217,21 +223,28 @@ class Rocket(object):
                     results_rows[i] = ResultsRow(tuple(row_list),
                                                  results_row.subjects)
 
+            end_results_counts = defaultdict(int)
+            table_epk_results = self.results[table][epk]
             for results_row in results_rows:
                 results_row.subjects.add(work_item.subject)
                 self.fetched_row_count += 1
                 self.fetched_row_count_per_table[table] += 1
-                values = self._lookup_row_values(table, results_row, keys)
-                for key, values in zip(keys, values):
-                    self.results[table][key][values] = results_row
+                value = self._lookup_row_value(table, results_row, epk)
+                end_results_counts[value] += 1
+                table_epk_results[value] = results_row
+
+            for value in end_results_counts:
+                count = end_results_counts[value]
+                table_epk_results[value].count = count
 
         return self
 
     def flat_results(self):
         results = []
         for table in sorted(self.results, key=lambda r: r.name):
-            primary_key = table.primary_key
-            results_rows = self.results[table][primary_key]
+            (epk, count_identical_rows) = self._get_effective_pk(table)
+            results_rows = self.results[table][epk]
             for results_row in sorted(results_rows.values()):
-                results.append((table, results_row.row))
+                for i in range(results_row.count):
+                    results.append((table, results_row.row))
         return results
