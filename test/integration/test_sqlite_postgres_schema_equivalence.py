@@ -1,4 +1,4 @@
-class TestSqliteEqualsPostgresSchema(object):
+class TestSqlitePostgresSchemaEquivalence(object):
     def test_equality(self, schema1_sl, schema1_pg):
         sl_table_names = set([t.name for t in schema1_sl.tables])
         pg_table_names = set([t.name for t in schema1_pg.tables])
