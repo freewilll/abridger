@@ -103,6 +103,18 @@ class Schema(object):
         else:
             return {'columns':  [c.name for c in fk.src_cols]}
 
+    def add_alternate_primary_keys(self):
+        for table in self.tables:
+            table.alternate_primary_key = None
+            if table.primary_key is not None:
+                continue
+
+            for unique_index in table.unique_indexes:
+                pk_len = len(table.alternate_primary_key or [])
+                ui_len = len(unique_index.cols)
+                if table.alternate_primary_key is None or ui_len < pk_len:
+                    table.alternate_primary_key = unique_index.cols
+
     def relations(self):
         results = []
         for table in self.tables:

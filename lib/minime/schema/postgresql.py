@@ -32,6 +32,7 @@ class PostgresqlSchema(Schema):
         schema.add_foreign_key_constraints_from_conn(conn)
         schema.add_primary_key_constraints(conn)
         schema.add_unique_indexes(conn)
+        schema.add_alternate_primary_keys()
         return schema
 
     def add_table(self, name, oid):

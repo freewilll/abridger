@@ -12,6 +12,7 @@ class SqliteSchema(Schema):
         schema.add_columns_from_conn(conn)
         schema.add_foreign_key_constraints_from_conn(conn)
         schema.add_unique_indexes(conn)
+        schema.add_alternate_primary_keys()
         return schema
 
     def add_table(self, name):
