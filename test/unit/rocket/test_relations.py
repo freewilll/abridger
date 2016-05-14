@@ -5,7 +5,7 @@ from rocket_platform import TestRocketBase
 from minime.extraction_model import Relation, ExtractionModel, merge_relations
 
 
-class TestRocketDisabledRelations(TestRocketBase):
+class TestRocketRelations(TestRocketBase):
     REL_NOTNULL = [{'defaults': Relation.DEFAULT_OUTGOING_NOTNULL}]
     REL_EVERYTHING = [{'defaults': Relation.DEFAULT_EVERYTHING}]
 

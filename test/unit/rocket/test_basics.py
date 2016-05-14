@@ -6,7 +6,7 @@ from minime.rocket import Rocket
 from rocket_platform import TestRocketBase
 
 
-class TestRocketMisc(TestRocketBase):
+class TestRocketBasics(TestRocketBase):
     @pytest.fixture()
     def schema1(self):
         self.dbconn.execute('''
