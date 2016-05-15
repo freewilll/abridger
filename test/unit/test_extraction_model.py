@@ -283,66 +283,66 @@ class TestExtractionModel(TestExtractionModelBase):
             model = ExtractionModel.load(self.schema1_sl, data)
             assert model.subjects[0].tables[0].values == values
 
-    def test_always_follow_columns_must_be_toplevel(self):
-        always_follow_columns = [{'always-follow-columns': []}]
-        data = [{'relations': [always_follow_columns]}]
+    def test_not_null_columns_must_be_toplevel(self):
+        not_null_columns = [{'not-null-columns': []}]
+        data = [{'relations': [not_null_columns]}]
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'is not valid under any of the given schemas' in str(e)
 
-        data = [{'tables': [always_follow_columns]}]
+        data = [{'tables': [not_null_columns]}]
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'is not valid under any of the given schemas' in str(e)
 
-    def test_always_follow_columns(self):
+    def test_not_null_columns(self):
         relation = dict(self.relations[0])
         table = relation['table']
         column = relation['column']
 
-        data = [{'always-follow-columns': []}]
+        data = [{'not-null-columns': []}]
         ExtractionModel.load(self.schema1_sl, data)
 
-        data = [{'always-follow-columns': []}]
+        data = [{'not-null-columns': []}]
         ExtractionModel.load(self.schema1_sl, data)
 
         # It must have table and column keys
         with pytest.raises(Exception) as e:
-            data = [{'always-follow-columns': [{}]}]
+            data = [{'not-null-columns': [{}]}]
             ExtractionModel.load(self.schema1_sl, data)
         assert 'is not valid under any of the given schemas' in str(e)
 
         with pytest.raises(Exception) as e:
-            data = [{'always-follow-columns': [{'table': table}]}]
+            data = [{'not-null-columns': [{'table': table}]}]
             ExtractionModel.load(self.schema1_sl, data)
         assert 'is not valid under any of the given schemas' in str(e)
 
         with pytest.raises(Exception) as e:
-            data = [{'always-follow-columns': [{'column': column}]}]
+            data = [{'not-null-columns': [{'column': column}]}]
             ExtractionModel.load(self.schema1_sl, data)
         assert 'is not valid under any of the given schemas' in str(e)
 
         data = [
-            {'always-follow-columns': [{'table': table, 'column': column}]}]
+            {'not-null-columns': [{'table': table, 'column': column}]}]
         model = ExtractionModel.load(self.schema1_sl, data)
-        assert len(model.always_follow_cols) == 1
-        afc = model.always_follow_cols[0]
+        assert len(model.not_null_cols) == 1
+        afc = model.not_null_cols[0]
         assert afc.table.name == table
         assert afc.column.name == column
 
-    def test_non_existent_always_follow_columns_data(self):
+    def test_non_existent_not_null_columns_data(self):
         relation = dict(self.relations[0])
         table = relation['table']
         column = relation['column']
 
         data = [
-            {'always-follow-columns': [{'table': 'foo', 'column': column}]}]
+            {'not-null-columns': [{'table': 'foo', 'column': column}]}]
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Unknown table' in str(e)
 
         data = [
-            {'always-follow-columns': [{'table': table, 'column': 'unknown'}]}]
+            {'not-null-columns': [{'table': table, 'column': 'unknown'}]}]
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Unknown column' in str(e)

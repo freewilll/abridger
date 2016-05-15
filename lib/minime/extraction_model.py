@@ -119,7 +119,7 @@ def merge_relations(relations):
     return results
 
 
-class AlwaysFollowColumn(object):
+class NotNullColumn(object):
     def __init__(self, table, column):
         self.table = table
         self.column = column
@@ -181,7 +181,7 @@ class ExtractionModel(object):
         }
     }
 
-    always_follow_cols_definition = {
+    not_null_cols_definition = {
         'type': 'object',
         'required': ['table', 'column'],
         'properties': {
@@ -190,9 +190,9 @@ class ExtractionModel(object):
         },
         'additionalProperties': False}
 
-    always_foll_cols_arr = {
+    not_null_cols_arr = {
         'type': 'array',
-        'items': {'$ref': '#/definitions/always_follow_cols'}}
+        'items': {'$ref': '#/definitions/not_null_cols'}}
 
     root_definition = {
         'type': 'array',
@@ -205,7 +205,7 @@ class ExtractionModel(object):
                  'properties': {'relations': rels_arr},
                  'additionalProperties': False},
                 {'type': 'object',
-                 'properties': {'always-follow-columns': always_foll_cols_arr},
+                 'properties': {'not-null-columns': not_null_cols_arr},
                  'additionalProperties': False},
             ],
         }
@@ -216,7 +216,7 @@ class ExtractionModel(object):
         'relation': relation_definition,
         'table': table_definition,
         'subject': subject_definition,
-        'always_follow_cols': always_follow_cols_definition,
+        'not_null_cols': not_null_cols_definition,
     }
 
     relation_schema = {'$ref': '#/definitions/relation',
@@ -237,7 +237,7 @@ class ExtractionModel(object):
         self.schema = schema
         self.relations = []
         self.subjects = []
-        self.always_follow_cols = []
+        self.not_null_cols = []
         self._got_relation_defaults = False
 
     @staticmethod
@@ -262,8 +262,8 @@ class ExtractionModel(object):
                 model._add_relations(model.relations, list_data)
             elif key == 'subject':
                 model._add_subject(model.relations, list_data)
-            elif key == 'always-follow-columns':
-                model._add_always_follow_cols(list_data)
+            elif key == 'not-null-columns':
+                model._add_not_null_cols(list_data)
 
         model._finalize_default_relations()
         return model
@@ -416,12 +416,12 @@ class ExtractionModel(object):
         if len(subject.tables) == 0:
             raise Exception('A subject must have at least one table')
 
-    def _add_always_follow_cols(self, data):
+    def _add_not_null_cols(self, data):
         for row in data:
             table_name = row['table']
             column_name = row['column']
             (table, column) = self._check_table_and_column(table_name,
                                                            column_name)
 
-            self.always_follow_cols.append(AlwaysFollowColumn(
+            self.not_null_cols.append(NotNullColumn(
                 table, column))
