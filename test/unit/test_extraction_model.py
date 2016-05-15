@@ -329,6 +329,8 @@ class TestExtractionModel(TestExtractionModelBase):
         afc = model.not_null_cols[0]
         assert afc.table.name == table
         assert afc.column.name == column
+        assert afc.foreign_key.src_cols[0].table.name == table
+        assert column in [c.name for c in afc.foreign_key.src_cols]
 
     def test_non_existent_not_null_columns_data(self):
         relation = dict(self.relations[0])
@@ -346,6 +348,38 @@ class TestExtractionModel(TestExtractionModelBase):
         with pytest.raises(Exception) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Unknown column' in str(e)
+
+    def test_not_null_columns_must_be_a_foreign_key(self):
+        # The assumption there is that the first table doesn't have any
+        # foreign keys.
+        non_fk_column = self.schema1_sl.tables[0].cols[0]
+        fk_column = None
+
+        # Let's check that assumption, just to be paranoid that the starting
+        # conditions of this test are valid.
+        for table in self.schema1_sl.tables:
+            for fk in table.foreign_keys:
+                for fk_column in fk.src_cols:
+                    assert non_fk_column != fk_column
+                    if fk_column is None:
+                        fk_column = fk_column
+
+        assert fk_column is not None
+
+        # Test for a valid foreign key
+        data = [
+            {'not-null-columns': [{'table': fk_column.table.name,
+                                   'column': fk_column.name}]}]
+        model = ExtractionModel.load(self.schema1_sl, data)
+        assert len(model.not_null_cols) == 1
+
+        # Test for a non foreign key
+        data = [
+            {'not-null-columns': [{'table': non_fk_column.table.name,
+                                   'column': non_fk_column.name}]}]
+        with pytest.raises(Exception) as e:
+            ExtractionModel.load(self.schema1_sl, data)
+        assert 'not-null-columns can only be used on foreign keys' in str(e)
 
     def test_clone_relation(self, relation0):
         r = relation0.clone()

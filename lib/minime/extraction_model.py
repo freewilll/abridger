@@ -120,9 +120,10 @@ def merge_relations(relations):
 
 
 class NotNullColumn(object):
-    def __init__(self, table, column):
+    def __init__(self, table, column, foreign_key):
         self.table = table
         self.column = column
+        self.foreign_key = foreign_key
 
 
 class Table(object):
@@ -423,5 +424,17 @@ class ExtractionModel(object):
             (table, column) = self._check_table_and_column(table_name,
                                                            column_name)
 
+            # Check it's a foreign key
+            found_fk = False
+            for foreign_key in table.foreign_keys:
+                for fk_col in foreign_key.src_cols:
+                    if column == fk_col:
+                        found_fk = foreign_key
+            if not found_fk:
+                raise Exception(
+                    "not-null-columns can only be used on foreign keys."
+                    "Column %s on table %s isn't a foreign key." % (
+                        column.name, table.name))
+
             self.not_null_cols.append(NotNullColumn(
-                table, column))
+                table, column, found_fk))
