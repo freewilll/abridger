@@ -2,8 +2,10 @@ class Generator(object):
     def __init__(self, schema, rocket):
         self.schema = schema
         self.extraction_model = rocket.extraction_model
-        self.results = rocket.results
+        self.rocket = rocket
         self.make_table_order()
+        self.make_deferred_update_rules()
+        self.generate_statements()
 
     def not_null_tables_graph(self, tables):
         graph = {}
@@ -54,3 +56,56 @@ class Generator(object):
         for sublist in topologically_sorted:
             for table in sorted(sublist):
                 self.table_order.append(table)
+
+    def make_deferred_update_rules(self):
+        order_dict = {table: i for i, table in enumerate(self.table_order)}
+
+        self.deferred_update_rules = {}
+        for table in self.table_order:
+            src_index = order_dict[table]
+            columns = set()
+            for fk in table.foreign_keys:
+                for col in fk.src_cols:
+                    dst_index = order_dict[col.table]
+                    if not col.notnull and dst_index >= src_index:
+                        columns.add(col)
+
+            self.deferred_update_rules[table] = columns
+
+    def generate_statements(self):
+        self.insert_statements = []
+        self.update_statements = []
+        for table in self.table_order:
+            col_indexes = {col: table.cols.index(col) for col in table.cols}
+            if table not in self.rocket.results:
+                continue
+
+            (epk, count_identical_rows) = self.rocket.get_effective_pk(table)
+            results_rows = self.rocket.results[table][epk]
+            for results_row in sorted(results_rows.values()):
+                row = results_row.row
+                deferred_update_cols = self.deferred_update_rules[table]
+                deferred_update_cols = tuple(deferred_update_cols)
+
+                row = list(row)
+                final_update_cols = []
+                final_update_values = []
+                for col in deferred_update_cols:
+                    index = col_indexes[col]
+                    value = row[index]
+                    if value is not None:
+                        final_update_cols.append(col)
+                        final_update_values.append(value)
+                        row[index] = None
+
+                pk_values = []
+                for pk_col in epk:
+                    pk_values.append(row[col_indexes[pk_col]])
+
+                if len(final_update_cols) > 0:
+                    self.update_statements.append((table,
+                                                  epk,
+                                                  tuple(pk_values),
+                                                  tuple(final_update_cols),
+                                                  tuple(final_update_values)))
+                self.insert_statements.append((table, tuple(row)))

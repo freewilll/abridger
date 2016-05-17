@@ -133,7 +133,7 @@ class Rocket(object):
             value.append(results_row.row[col_indexes[col]])
         return tuple(value)
 
-    def _get_effective_pk(self, table):
+    def get_effective_pk(self, table):
         if table.primary_key is not None:
             key = table.primary_key
             count_identical_rows = False
@@ -159,7 +159,7 @@ class Rocket(object):
             if len(results_rows) == 0:
                 continue
 
-            (epk, count_identical_rows) = self._get_effective_pk(table)
+            (epk, count_identical_rows) = self.get_effective_pk(table)
 
             table_relations = self.subject_table_relations[work_item.subject]
             processed_outgoing_fk_cols = set()
@@ -181,6 +181,7 @@ class Rocket(object):
 
                     table_results = self.results.get(dst_table, {})
                     table_rows = table_results.get(dst_cols, {})
+                    table_rows
 
                     dst_values = []
                     seen_dst_values = set()
@@ -244,7 +245,7 @@ class Rocket(object):
     def flat_results(self):
         results = []
         for table in sorted(self.results, key=lambda r: r.name):
-            (epk, count_identical_rows) = self._get_effective_pk(table)
+            (epk, count_identical_rows) = self.get_effective_pk(table)
             results_rows = self.results[table][epk]
             for results_row in sorted(results_rows.values()):
                 for i in range(results_row.count):

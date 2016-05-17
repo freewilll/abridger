@@ -43,3 +43,41 @@ class SqliteDbConn(DbConn):
 
             sql = 'INSERT INTO %s (%s) VALUES(%s)' % (table.name, cols_csv, q)
             self.connection.execute(sql, values)
+
+    def update_rows(self, rows):
+        table_cols = {}
+
+        def get_col_names(table, cols):
+            if (table, cols) not in table_cols:
+                col_names = [c.name for c in cols]
+                table_cols[(table, cols)] = col_names
+            else:
+                col_names = table_cols[(table, cols)]
+            return col_names
+
+        for (table, pk_cols, pk_values, value_cols, values) in rows:
+            assert len(pk_cols) > 0
+
+            value_col_names = get_col_names(table, value_cols)
+            pk_col_names = get_col_names(table, pk_cols)
+
+            placeholder_values = []
+            sets = []
+            where = []
+            for i, col_name in enumerate(value_col_names):
+                value = values[i]
+                assert value is not None
+                sets.append("%s=?" % col_name)
+                placeholder_values.append(value)
+
+            for i, col_name in enumerate(pk_col_names):
+                pk_value = pk_values[i]
+                assert pk_value is not None
+                where.append("%s=?" % col_name)
+                placeholder_values.append(pk_value)
+
+            sql = 'UPDATE %s SET %s WHERE %s' % (
+                table.name,
+                ', '.join(sets),
+                ' AND '.join(where))
+            self.connection.execute(sql, placeholder_values)
