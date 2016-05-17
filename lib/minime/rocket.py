@@ -4,10 +4,12 @@ from minime.extraction_model import Relation, merge_relations
 
 
 class ResultsRow(object):
-    def __init__(self, row, subjects=None, sticky=False, count=1):
+    def __init__(self, table, row, subjects=None, sticky=False, count=1):
         if subjects is None:
             subjects = set()
+        self.table = table
         self.row = row
+        self.row_hash = table.row_hash(row)
         self.subjects = subjects
         self.sticky = sticky
         self.count = 1
@@ -22,6 +24,9 @@ class ResultsRow(object):
     def __cmp__(self, other):
         return cmp(self.row, other.row)
 
+    def __hash__(self):
+        return self.row_hash
+
 
 class WorkItem(object):
     def __init__(self, subject, table, cols, values, sticky):
@@ -33,43 +38,19 @@ class WorkItem(object):
         self.values = values
         self.sticky = sticky
 
-    def prune_cached_rows(self, existing_results):
-        '''Remove values that are in existing_results'''
+    def value_hash(self, value):
+        return hash(tuple([self.subject, self.table, self.cols, value,
+                          self.sticky]))
 
-        if self.cols is None:
-            return []
-
-        if self.table not in existing_results:
-            return []
-
-        table_results = existing_results[self.table]
-        table_rows = table_results.get(self.cols)
-        if table_rows is None:
-            return []
-
-        new_values = []
-        cached_rows = []
-        for value in self.values:
-            cached_row = table_rows.get(value)
-            if cached_row is None:
-                new_values.append(value)
-            else:
-                cached_rows.append(cached_row)
-
-        self.values = new_values
-        return cached_rows
-
-    def fetch_rows(self, dbconn, existing_results):
-        cached_rows = self.prune_cached_rows(existing_results)
-
+    def fetch_rows(self, dbconn):
         if self.values is None or len(self.values) > 0:
             fetched_rows = dbconn.fetch_rows(self.table, self.cols,
                                              self.values)
         else:
             fetched_rows = []
 
-        fetched_rows = [ResultsRow(fr) for fr in fetched_rows]
-        return cached_rows + fetched_rows
+        fetched_rows = [ResultsRow(self.table, fr) for fr in fetched_rows]
+        return fetched_rows
 
 
 class Rocket(object):
@@ -81,6 +62,8 @@ class Rocket(object):
         self.fetch_count = 0
         self.fetched_row_count = 0
         self.fetched_row_count_per_table = defaultdict(int)
+        self.seen_results_rows = {}
+        self.seen_work_items = set()
 
         self.subject_table_relations = {}
         for subject in extraction_model.subjects:
@@ -148,29 +131,27 @@ class Rocket(object):
             dst_table = dst_cols[0].table
             src_col_indexes = [table.cols.index(c) for c in src_cols]
 
-            table_results = self.results.get(dst_table, {})
-            table_rows = table_results.get(dst_cols, {})
-
             dst_values = []
             seen_dst_values = set()
             for results_row in results_rows:
+                if results_row in self.seen_results_rows:
+                    results_row = self.seen_results_rows[results_row]
+                    if work_item.subject in results_row.subjects:
+                        # This results row has already been processed for this
+                        # subject.
+                        continue
+
                 value_tuple = tuple(
                     [results_row.row[i] for i in src_col_indexes])
+
                 if any(s is None for s in value_tuple):
                     # Don't process any foreign keys if any of the
-                    # values is None
+                    # values is None.
                     continue
 
-                if value_tuple in seen_dst_values:
-                    continue
-                seen_dst_values.add(value_tuple)
-
-                if value_tuple not in table_rows:
+                if value_tuple not in seen_dst_values:
                     dst_values.append(value_tuple)
-                else:
-                    results_row = table_rows[value_tuple]
-                    if work_item.subject not in results_row.subjects:
-                        dst_values.append(value_tuple)
+                seen_dst_values.add(value_tuple)
 
             if len(dst_values) > 0:
                 self.work_queue.put(WorkItem(
@@ -194,12 +175,13 @@ class Rocket(object):
                 row_list = list(results_row.row)
                 for j in indexes:
                     row_list[j] = None
-                results_rows[i] = ResultsRow(tuple(row_list),
+                results_rows[i] = ResultsRow(table, tuple(row_list),
                                              results_row.subjects)
 
         end_results_counts = defaultdict(int)
         table_epk_results = self.results[table][epk]
         col_indexes = {col: table.cols.index(col) for col in table.cols}
+
         for results_row in results_rows:
             results_row.subjects.add(work_item.subject)
             self.fetched_row_count += 1
@@ -208,6 +190,7 @@ class Rocket(object):
             if count_identical_rows:
                 end_results_counts[value] += 1
             table_epk_results[value] = results_row
+            self.seen_results_rows[results_row] = results_row
 
         if count_identical_rows:
             for value in end_results_counts:
@@ -220,7 +203,7 @@ class Rocket(object):
         if work_item.values is not None and len(work_item.values) == 0:
             return  # All wanted have already been fetched
 
-        results_rows = work_item.fetch_rows(self.dbconn, self.results)
+        results_rows = work_item.fetch_rows(self.dbconn)
         self.fetch_count += 1
 
         if len(results_rows) == 0:
@@ -239,7 +222,24 @@ class Rocket(object):
     def launch(self):
         while not self.work_queue.empty():
             work_item = self.work_queue.get()
-            self._process_work_item(work_item)
+
+            # Filter values by what's already been processed
+            if work_item.cols is None:
+                self._process_work_item(work_item)
+            else:
+                new_values = []
+                for value in work_item.values:
+                    h = work_item.value_hash(value)
+                    if h not in self.seen_work_items:
+                        new_values.append(value)
+
+                if len(new_values) > 0:
+                    work_item.values = new_values
+                    self._process_work_item(work_item)
+
+                for value in work_item.values:
+                    h = work_item.value_hash(value)
+                    self.seen_work_items.add(h)
 
         return self
 

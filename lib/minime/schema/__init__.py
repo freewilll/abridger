@@ -105,6 +105,13 @@ class Table(object):
             self.effective_primary_key = tuple(self.cols)
             self.can_have_duplicated_rows = True
 
+        self.effective_primary_key_col_indexes = \
+            [self.cols.index(c) for c in self.effective_primary_key]
+
+    def row_hash(self, row):
+        r = [row[index] for index in self.effective_primary_key_col_indexes]
+        return hash(tuple([self.name] + r))
+
 
 class Schema(object):
     def __init__(self):
