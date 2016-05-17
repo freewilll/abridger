@@ -94,6 +94,17 @@ class Table(object):
         self.cols_by_name[name] = col
         return col
 
+    def set_effective_primary_key(self):
+        if self.primary_key is not None:
+            self.effective_primary_key = self.primary_key
+            self.can_have_duplicated_rows = False
+        elif self.alternate_primary_key is not None:
+            self.effective_primary_key = self.alternate_primary_key
+            self.can_have_duplicated_rows = False
+        else:
+            self.effective_primary_key = tuple(self.cols)
+            self.can_have_duplicated_rows = True
+
 
 class Schema(object):
     def __init__(self):
@@ -117,6 +128,9 @@ class Schema(object):
                 ui_len = len(unique_index.cols)
                 if table.alternate_primary_key is None or ui_len < pk_len:
                     table.alternate_primary_key = tuple(unique_index.cols)
+
+        for table in self.tables:
+            table.set_effective_primary_key()
 
     def relations(self):
         results = []

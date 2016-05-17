@@ -133,119 +133,120 @@ class Rocket(object):
             value.append(results_row.row[col_indexes[col]])
         return tuple(value)
 
-    def get_effective_pk(self, table):
-        if table.primary_key is not None:
-            key = table.primary_key
-            count_identical_rows = False
-        elif table.alternate_primary_key is not None:
-            key = table.alternate_primary_key
-            count_identical_rows = False
-        else:
-            key = tuple(table.cols)
-            count_identical_rows = True
-        return (key, count_identical_rows)
+    def _process_work_item_relations(self, work_item, results_rows,
+                                     relations, processed_outgoing_fk_cols):
+        table = work_item.table
+
+        for (src_cols, dst_cols, propagate_sticky,
+                only_if_sticky) in relations:
+            if only_if_sticky and not work_item.sticky:
+                continue
+
+            sticky = work_item.sticky and propagate_sticky
+            processed_outgoing_fk_cols |= set(src_cols)
+
+            dst_table = dst_cols[0].table
+            src_col_indexes = [table.cols.index(c) for c in src_cols]
+
+            table_results = self.results.get(dst_table, {})
+            table_rows = table_results.get(dst_cols, {})
+
+            dst_values = []
+            seen_dst_values = set()
+            for results_row in results_rows:
+                value_tuple = tuple(
+                    [results_row.row[i] for i in src_col_indexes])
+                if any(s is None for s in value_tuple):
+                    # Don't process any foreign keys if any of the
+                    # values is None
+                    continue
+
+                if value_tuple in seen_dst_values:
+                    continue
+                seen_dst_values.add(value_tuple)
+
+                if value_tuple not in table_rows:
+                    dst_values.append(value_tuple)
+                else:
+                    results_row = table_rows[value_tuple]
+                    if work_item.subject not in results_row.subjects:
+                        dst_values.append(value_tuple)
+
+            if len(dst_values) > 0:
+                self.work_queue.put(WorkItem(
+                    work_item.subject, dst_table, dst_cols,
+                    dst_values, sticky))
+
+    def _process_work_item_results_rows(self, work_item, results_rows,
+                                        processed_outgoing_fk_cols):
+        table = work_item.table
+        (epk, count_identical_rows) = (table.effective_primary_key,
+                                       table.can_have_duplicated_rows)
+
+        all_fk_cols = set()
+        for foreign_key in table.foreign_keys:
+            all_fk_cols |= set(foreign_key.src_cols)
+
+        cols_that_need_nulling = all_fk_cols - processed_outgoing_fk_cols
+        if len(cols_that_need_nulling) > 0:
+            indexes = [table.cols.index(c) for c in cols_that_need_nulling]
+            for i, results_row in enumerate(results_rows):
+                row_list = list(results_row.row)
+                for j in indexes:
+                    row_list[j] = None
+                results_rows[i] = ResultsRow(tuple(row_list),
+                                             results_row.subjects)
+
+        end_results_counts = defaultdict(int)
+        table_epk_results = self.results[table][epk]
+        col_indexes = {col: table.cols.index(col) for col in table.cols}
+        for results_row in results_rows:
+            results_row.subjects.add(work_item.subject)
+            self.fetched_row_count += 1
+            self.fetched_row_count_per_table[table] += 1
+            value = self._lookup_row_value(col_indexes, results_row, epk)
+            if count_identical_rows:
+                end_results_counts[value] += 1
+            table_epk_results[value] = results_row
+
+        if count_identical_rows:
+            for value in end_results_counts:
+                count = end_results_counts[value]
+                table_epk_results[value].count = count
+
+    def _process_work_item(self, work_item):
+        table = work_item.table
+
+        if work_item.values is not None and len(work_item.values) == 0:
+            return  # All wanted have already been fetched
+
+        results_rows = work_item.fetch_rows(self.dbconn, self.results)
+        self.fetch_count += 1
+
+        if len(results_rows) == 0:
+            return
+
+        table_relations = self.subject_table_relations[work_item.subject]
+        processed_outgoing_fk_cols = set()
+
+        self._process_work_item_relations(
+            work_item, results_rows,
+            table_relations.get(table, []), processed_outgoing_fk_cols)
+
+        self._process_work_item_results_rows(work_item, results_rows,
+                                             processed_outgoing_fk_cols)
 
     def launch(self):
         while not self.work_queue.empty():
             work_item = self.work_queue.get()
-            table = work_item.table
-
-            if work_item.values is not None and len(work_item.values) == 0:
-                continue  # All wanted have already been fetched
-
-            results_rows = work_item.fetch_rows(self.dbconn, self.results)
-            self.fetch_count += 1
-
-            if len(results_rows) == 0:
-                continue
-
-            (epk, count_identical_rows) = self.get_effective_pk(table)
-
-            table_relations = self.subject_table_relations[work_item.subject]
-            processed_outgoing_fk_cols = set()
-
-            if table in table_relations:
-                relations = table_relations[table]
-
-                for (src_cols, dst_cols, propagate_sticky,
-                        only_if_sticky) in relations:
-                    if only_if_sticky and not work_item.sticky:
-                        continue
-
-                    sticky = work_item.sticky and propagate_sticky
-
-                    processed_outgoing_fk_cols |= set(src_cols)
-
-                    dst_table = dst_cols[0].table
-                    src_col_indexes = [table.cols.index(c) for c in src_cols]
-
-                    table_results = self.results.get(dst_table, {})
-                    table_rows = table_results.get(dst_cols, {})
-                    table_rows
-
-                    dst_values = []
-                    seen_dst_values = set()
-                    for results_row in results_rows:
-                        value_tuple = tuple(
-                            [results_row.row[i] for i in src_col_indexes])
-                        if any(s is None for s in value_tuple):
-                            # Don't process any foreign keys if any of the
-                            # values is None
-                            continue
-
-                        if value_tuple in seen_dst_values:
-                            continue
-                        seen_dst_values.add(value_tuple)
-
-                        if value_tuple not in table_rows:
-                            dst_values.append(value_tuple)
-                        else:
-                            results_row = table_rows[value_tuple]
-                            if work_item.subject not in results_row.subjects:
-                                dst_values.append(value_tuple)
-
-                    if len(dst_values) > 0:
-                        self.work_queue.put(WorkItem(
-                            work_item.subject, dst_table, dst_cols,
-                            dst_values, sticky))
-
-            all_fk_cols = set()
-            for foreign_key in table.foreign_keys:
-                all_fk_cols |= set(foreign_key.src_cols)
-
-            cols_that_need_nulling = all_fk_cols - processed_outgoing_fk_cols
-            if len(cols_that_need_nulling) > 0:
-                indexes = [table.cols.index(c) for c in cols_that_need_nulling]
-                for i, results_row in enumerate(results_rows):
-                    row_list = list(results_row.row)
-                    for j in indexes:
-                        row_list[j] = None
-                    results_rows[i] = ResultsRow(tuple(row_list),
-                                                 results_row.subjects)
-
-            end_results_counts = defaultdict(int)
-            table_epk_results = self.results[table][epk]
-            col_indexes = {col: table.cols.index(col) for col in table.cols}
-            for results_row in results_rows:
-                results_row.subjects.add(work_item.subject)
-                self.fetched_row_count += 1
-                self.fetched_row_count_per_table[table] += 1
-                value = self._lookup_row_value(col_indexes, results_row, epk)
-                if count_identical_rows:
-                    end_results_counts[value] += 1
-                table_epk_results[value] = results_row
-
-            if count_identical_rows:
-                for value in end_results_counts:
-                    count = end_results_counts[value]
-                    table_epk_results[value].count = count
+            self._process_work_item(work_item)
 
         return self
 
     def flat_results(self):
         results = []
         for table in sorted(self.results, key=lambda r: r.name):
-            (epk, count_identical_rows) = self.get_effective_pk(table)
+            epk = table.effective_primary_key
             results_rows = self.results[table][epk]
             for results_row in sorted(results_rows.values()):
                 for i in range(results_row.count):
