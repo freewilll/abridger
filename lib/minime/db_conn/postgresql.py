@@ -44,3 +44,17 @@ class PostgresqlDbConn(DbConn):
         else:
             raise Exception('TODO: multi col where on postgresql')
         return list(self.execute(sql, values))
+
+    def insert_rows(self, cur, rows):
+        table_cols = {}
+
+        for (table, values) in rows:
+            if table not in table_cols:
+                cols_csv = ', '.join([c.name for c in table.cols])
+                q = '%s, '.join([''] * len(table.cols)) + '%s'
+                table_cols[table] = (cols_csv, q)
+            else:
+                (cols_csv, q) = table_cols[table]
+
+            sql = 'INSERT INTO %s (%s) VALUES(%s)' % (table.name, cols_csv, q)
+            cur.execute(sql, values)
