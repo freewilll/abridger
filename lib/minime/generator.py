@@ -80,7 +80,7 @@ class Generator(object):
             if table not in self.rocket.results:
                 continue
 
-            (epk, count_identical_rows) = self.rocket.get_effective_pk(table)
+            epk = table.effective_primary_key
             results_rows = self.rocket.results[table][epk]
             for results_row in sorted(results_rows.values()):
                 row = results_row.row
@@ -108,4 +108,6 @@ class Generator(object):
                                                   tuple(pk_values),
                                                   tuple(final_update_cols),
                                                   tuple(final_update_values)))
-                self.insert_statements.append((table, tuple(row)))
+
+                for i in range(results_row.count):
+                    self.insert_statements.append((table, tuple(row)))

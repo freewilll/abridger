@@ -208,7 +208,6 @@ class TestGenerator(TestRocketBase):
             schema6.tables[3]: set([schema6.tables[3].cols[1]]),  # test4
         }
 
-    @pytest.mark.skip
     def test_statements_self_ref(self, schema6):  # TODO fix circ dep
 
         table4 = schema6.tables[3]
@@ -224,7 +223,6 @@ class TestGenerator(TestRocketBase):
         print generator.insert_statements
         print generator.update_statements
 
-    @pytest.mark.skip
     def test_statements1(self, schema6):    # TODO fix circ dep
         table1 = schema6.tables[0]
         table2 = schema6.tables[1]
