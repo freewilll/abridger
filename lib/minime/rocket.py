@@ -43,12 +43,7 @@ class WorkItem(object):
                           self.sticky]))
 
     def fetch_rows(self, dbconn):
-        if self.values is None or len(self.values) > 0:
-            fetched_rows = dbconn.fetch_rows(self.table, self.cols,
-                                             self.values)
-        else:
-            fetched_rows = []
-
+        fetched_rows = dbconn.fetch_rows(self.table, self.cols, self.values)
         fetched_rows = [ResultsRow(self.table, fr) for fr in fetched_rows]
         return fetched_rows
 
