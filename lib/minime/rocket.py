@@ -195,9 +195,6 @@ class Rocket(object):
     def _process_work_item(self, work_item):
         table = work_item.table
 
-        if work_item.values is not None and len(work_item.values) == 0:
-            return  # All wanted have already been fetched
-
         results_rows = work_item.fetch_rows(self.dbconn)
         self.fetch_count += 1
 

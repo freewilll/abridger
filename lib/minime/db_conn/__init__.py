@@ -42,7 +42,7 @@ class DbConn(object):
             sql += ' WHERE %s IN (%s)' % (cols[0].name, q)
             values = [v[0] for v in values]
         else:
-            raise Exception('TODO: multi col where')
+            raise Exception('TODO: multi col where')  # pragma: no cover
 
         return list(self.execute_and_fetchall(sql, values))
 
