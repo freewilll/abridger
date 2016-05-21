@@ -241,6 +241,19 @@ class TestExtractionModel(TestExtractionModelBase):
         assert model.subjects[0].relations[0].table.name == \
             self.relations[0]['table']
 
+    def test_relation_without_a_column(self):
+        relation = dict(self.relations[0])
+        del relation['column']
+        table = {'table': self.schema1_sl.tables[0].name}
+        subject = [
+            {'relations': [relation]},
+            {'tables': [table]}
+        ]
+        data = [{'subject': subject}]
+        model = ExtractionModel.load(self.schema1_sl, data)
+        assert len(model.subjects) == 1
+        assert model.subjects[0].relations[0].column is None
+
     def test_subject_repr(self):
         model = self.model_of_table0()
         assert repr(model.subjects[0]) is not None

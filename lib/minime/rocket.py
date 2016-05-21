@@ -86,6 +86,8 @@ class Rocket(object):
             col = relation.column
 
             if col is None:
+                # TODO relations without a column on a subject
+                # Bear in mind that stickiness has to be transmitted.
                 continue
 
             found_fk = None
