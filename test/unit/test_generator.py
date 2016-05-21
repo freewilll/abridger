@@ -27,6 +27,17 @@ class TestGenerator(TestRocketBase):
         return SqliteSchema.create_from_conn(self.dbconn.connection)
 
     @pytest.fixture()
+    def data1(self, schema1):
+        table1 = schema1.tables[0]
+        rows = [
+            (table1, (1, 'a')),
+            (table1, (2, 'b')),
+            (table1, (3, 'c')),
+            (table1, (4, 'c'))]
+        self.dbconn.insert_rows(rows)
+        return rows
+
+    @pytest.fixture()
     # A single nullable dependency
     def schema2(self):
         for sql in [
@@ -134,17 +145,6 @@ class TestGenerator(TestRocketBase):
             self.dbconn.execute(sql)
 
         return SqliteSchema.create_from_conn(self.dbconn.connection)
-
-    @pytest.fixture()
-    def data1(self, schema1):
-        table1 = schema1.tables[0]
-        rows = [
-            (table1, (1, 'a')),
-            (table1, (2, 'b')),
-            (table1, (3, 'c')),
-            (table1, (4, 'c'))]
-        self.dbconn.insert_rows(rows)
-        return rows
 
     def get_generator_instance(self, schema, not_null_columns=None,
                                table='test1'):
