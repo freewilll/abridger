@@ -188,7 +188,8 @@ class TestGenerator(TestRocketBase):
         return Generator(schema, rocket)
 
     def check_table_order(self, schema, expected_table_order,
-                          not_null_columns=None):
+                          not_null_columns=None,
+                          expected_deferred_update_rules=None):
         generator = self.get_generator_instance(
             schema, not_null_columns=not_null_columns)
         table_order = [t.name for t in generator.table_order]
@@ -200,18 +201,38 @@ class TestGenerator(TestRocketBase):
             pprint(expected_table_order)
         assert table_order == expected_table_order
 
+        if (expected_deferred_update_rules is not None and
+                generator.deferred_update_rules !=
+                expected_deferred_update_rules):
+            print
+            print 'Got deferred update rules:'
+            pprint(generator.deferred_update_rules)
+            print 'Expected deferred update rules:'
+            pprint(expected_deferred_update_rules)
+
     def test_generator_table_order1(self, schema1):
         self.check_table_order(schema1, ['test1', 'test2'])
 
     def test_generator_table_order2a(self, schema2):
-        self.check_table_order(schema2, ['test1', 'test2'])
+        expected_deferred_update_rules = {
+            schema2.tables[0]: set([schema2.tables[0].cols[1]]),
+            schema2.tables[1]: set(),
+        }
+        self.check_table_order(
+            schema2, ['test1', 'test2'],
+            expected_deferred_update_rules=expected_deferred_update_rules)
 
     def test_generator_table_order2b(self, schema2):
         # The table order should be swapped because of the not-null-columns
         # rule.
+        expected_deferred_update_rules = {
+            schema2.tables[0]: set(),
+            schema2.tables[1]: set(),
+        }
         self.check_table_order(
             schema2, ['test2', 'test1'],
-            not_null_columns=[{'table': 'test1', 'column': 'test2_id'}])
+            not_null_columns=[{'table': 'test1', 'column': 'test2_id'}],
+            expected_deferred_update_rules=expected_deferred_update_rules)
 
     def test_generator_table_order3(self, schema3):
         self.check_table_order(schema3, ['test2', 'test1'])
