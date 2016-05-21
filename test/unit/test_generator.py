@@ -13,11 +13,11 @@ class TestGenerator(TestRocketBase):
     @pytest.fixture()
     def schema1(self):
         for sql in [
-            '''CREATE TABLE test2 (
+            '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT
             );''',
-            '''CREATE TABLE test1 (
+            '''CREATE TABLE test2 (
                 id INTEGER PRIMARY KEY,
                 name TEXT
             );''',
@@ -41,14 +41,14 @@ class TestGenerator(TestRocketBase):
     # A single nullable dependency
     def schema2(self):
         for sql in [
-            '''CREATE TABLE test2 (
-                id INTEGER PRIMARY KEY,
-                name TEXT
-            );''',
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 test2_id INTEGER REFERENCES test2
+            );''',
+            '''CREATE TABLE test2 (
+                id INTEGER PRIMARY KEY,
+                name TEXT
             );''',
         ]:
             self.dbconn.execute(sql)
@@ -59,14 +59,14 @@ class TestGenerator(TestRocketBase):
     # A single not null dependency
     def schema3(self):
         for sql in [
-            '''CREATE TABLE test2 (
-                id INTEGER PRIMARY KEY,
-                name TEXT
-            );''',
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 test2_id INTEGER NOT NULL REFERENCES test2
+            );''',
+            '''CREATE TABLE test2 (
+                id INTEGER PRIMARY KEY,
+                name TEXT
             );''',
         ]:
             self.dbconn.execute(sql)
@@ -77,19 +77,19 @@ class TestGenerator(TestRocketBase):
     # Two level dependency
     def schema4(self):
         for sql in [
-            '''CREATE TABLE test3 (
+            '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
-                name TEXT
+                name TEXT,
+                test2_id INTEGER NOT NULL REFERENCES test2
             );''',
             '''CREATE TABLE test2 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 test3_id INTEGER NOT NULL REFERENCES test3
             );''',
-            '''CREATE TABLE test1 (
+            '''CREATE TABLE test3 (
                 id INTEGER PRIMARY KEY,
-                name TEXT,
-                test2_id INTEGER NOT NULL REFERENCES test2
+                name TEXT
             );''',
         ]:
             self.dbconn.execute(sql)
@@ -100,20 +100,20 @@ class TestGenerator(TestRocketBase):
     # A cycle of not null keys
     def schema5(self):
         for sql in [
-            '''CREATE TABLE test3 (
+            '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
-                test1_id INTEGER NOT NULL REFERENCES test1
+                test2_id INTEGER NOT NULL REFERENCES test2
             );''',
             '''CREATE TABLE test2 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 test3_id INTEGER NOT NULL REFERENCES test3
             );''',
-            '''CREATE TABLE test1 (
+            '''CREATE TABLE test3 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
-                test2_id INTEGER NOT NULL REFERENCES test2
+                test1_id INTEGER NOT NULL REFERENCES test1
             );''',
         ]:
             self.dbconn.execute(sql)
@@ -124,18 +124,18 @@ class TestGenerator(TestRocketBase):
     # A cycle of not null keys, with one nullable
     def schema6(self):
         for sql in [
-            '''CREATE TABLE test3 (
+            '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
-                test1_id INTEGER REFERENCES test1
+                test2_id INTEGER NOT NULL REFERENCES test2
             );''',
             '''CREATE TABLE test2 (
                 id INTEGER PRIMARY KEY,
                 test1_id INTEGER REFERENCES test1,
                 test3_id INTEGER NOT NULL REFERENCES test3
             );''',
-            '''CREATE TABLE test1 (
+            '''CREATE TABLE test3 (
                 id INTEGER PRIMARY KEY,
-                test2_id INTEGER NOT NULL REFERENCES test2
+                test1_id INTEGER REFERENCES test1
             );''',
             '''CREATE TABLE test4 (
                 id INTEGER PRIMARY KEY,
