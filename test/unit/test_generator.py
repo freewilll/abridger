@@ -146,6 +146,34 @@ class TestGenerator(TestRocketBase):
 
         return SqliteSchema.create_from_conn(self.dbconn.connection)
 
+    # Tables without primary keys tests
+    @pytest.fixture()
+    def schema7(self):
+        for sql in [
+            # No primary key, no unique indexes
+            '''CREATE TABLE test1 (id INTEGER);''',
+
+            # No primary key, with a unique index
+            '''CREATE TABLE test2 (id INTEGER UNIQUE);''',
+        ]:
+            self.dbconn.execute(sql)
+
+        return SqliteSchema.create_from_conn(self.dbconn.connection)
+
+    @pytest.fixture()
+    def data7(self, schema7):
+        table1 = schema7.tables[0]
+        table2 = schema7.tables[1]
+        rows = [
+            (table1, (1,)),
+            (table1, (1,)),
+            (table1, (2,)),
+            (table2, (1,)),
+            (table2, (2,)),
+        ]
+        self.dbconn.insert_rows(rows)
+        return rows
+
     def get_generator_instance(self, schema, not_null_columns=None,
                                table='test1'):
         if not_null_columns is None:
@@ -222,7 +250,28 @@ class TestGenerator(TestRocketBase):
             (table4.cols[0],), (1,),
             (table4.cols[1],), (1,))]
 
-    def test_statements1(self, schema6):
+    def check_statements(self, generator, expected_insert_statements,
+                         expected_update_statments):
+        if generator.insert_statements != expected_insert_statements:
+            print
+            print 'Insert statements mismatch'
+            print 'Got:'
+            pprint(generator.insert_statements)
+            print 'Expected:'
+            pprint(expected_insert_statements)
+
+        if generator.update_statements != expected_update_statments:
+            print
+            print 'Update statements mismatch'
+            print 'Got:'
+            pprint(generator.update_statements)
+            print 'Expected:'
+            pprint(expected_update_statments)
+
+        assert generator.insert_statements == expected_insert_statements
+        assert generator.update_statements == expected_update_statments
+
+    def test_statements_deferred_updates(self, schema6):
         table1 = schema6.tables[0]
         table2 = schema6.tables[1]
         table3 = schema6.tables[2]
@@ -242,6 +291,15 @@ class TestGenerator(TestRocketBase):
         generator = self.get_generator_instance(schema6, table='test3')
         generator.rocket.launch()
         generator.generate_statements()
+        self.check_statements(generator, inserts, updates)
 
-        assert generator.insert_statements == inserts
-        assert generator.update_statements == updates
+    @pytest.mark.parametrize('table, start, end', [
+        ('test1', 0, 3),
+        ('test2', 3, 5),
+    ])
+    def test_statements_no_pk_no_index(self, schema7, data7, table, start,
+                                       end):
+        generator = self.get_generator_instance(schema7, table=table)
+        generator.rocket.launch()
+        generator.generate_statements()
+        self.check_statements(generator, data7[start:end], [])
