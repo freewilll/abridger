@@ -209,19 +209,18 @@ class TestGenerator(TestRocketBase):
         }
 
     def test_statements_self_ref(self, schema6):
-
         table4 = schema6.tables[3]
-
-        rows = [
-            (table4, (1, 1))
-        ]
+        rows = [(table4, (1, 1))]
         self.dbconn.insert_rows(rows)
-
         generator = self.get_generator_instance(schema6, table='test4')
         generator.rocket.launch()
-        print
-        print generator.insert_statements
-        print generator.update_statements
+        generator.generate_statements()
+
+        assert generator.insert_statements == [(table4, (1, None))]
+        assert generator.update_statements == [(
+            table4,
+            (table4.cols[0],), (1,),
+            (table4.cols[1],), (1,))]
 
     def test_statements1(self, schema6):
         table1 = schema6.tables[0]
