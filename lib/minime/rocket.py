@@ -9,7 +9,6 @@ class ResultsRow(object):
             subjects = set()
         self.table = table
         self.row = row
-        self.row_hash = table.row_hash(row)
         self.subjects = subjects
         self.sticky = sticky
         self.count = 1
@@ -23,9 +22,6 @@ class ResultsRow(object):
 
     def __cmp__(self, other):
         return cmp(self.row, other.row)
-
-    def __hash__(self):
-        return self.row_hash
 
     def merge(self, other):
         '''
@@ -72,7 +68,6 @@ class Rocket(object):
         self.fetch_count = 0
         self.fetched_row_count = 0
         self.fetched_row_count_per_table = defaultdict(int)
-        self.seen_results_rows = {}
         self.seen_work_items = set()
 
         self.subject_table_relations = {}
@@ -146,13 +141,6 @@ class Rocket(object):
             dst_values = []
             seen_dst_values = set()
             for results_row in results_rows:
-                if results_row in self.seen_results_rows:
-                    results_row = self.seen_results_rows[results_row]
-                    if work_item.subject in results_row.subjects:
-                        # This results row has already been processed for this
-                        # subject.
-                        continue
-
                 value_tuple = tuple(
                     [results_row.row[i] for i in src_col_indexes])
 
@@ -207,7 +195,6 @@ class Rocket(object):
                     results_row.merge(found_results_row)
 
             table_epk_results[value] = results_row
-            self.seen_results_rows[results_row] = results_row
 
         if count_identical_rows:
             for value in end_results_counts:
