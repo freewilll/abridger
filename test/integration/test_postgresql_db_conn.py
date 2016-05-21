@@ -3,9 +3,16 @@ import tempfile
 import yaml
 
 from minime.db_conn.postgresql import PostgresqlDbConn
+from minime.schema.postgresql import PostgresqlSchema
+from dbconn import DbConnTestBase
 
 
-class TestDbConn(object):
+class TestPostgresqlDbConn(DbConnTestBase):
+    @pytest.fixture(autouse=True)
+    def prepare(self, request, postgresql_dbconn):
+        self.dbconn = postgresql_dbconn
+        self.make_db(request, PostgresqlSchema)
+
     def test_load_database_conn_file(self):
         def create_conn(data, omit_key=None, expect_exception=False):
             def load_it(data):

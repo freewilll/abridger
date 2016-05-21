@@ -1,9 +1,10 @@
-class TestSqlitelDbConn(object):
-    def test_sqlite_db_conn_fixture(self, sqlite_dbconn):
-        conn = sqlite_dbconn.connect()
-        cur = conn.cursor()
-        cur.execute("CREATE TABLE table1 (id INTEGER PRIMARY KEY, name TEXT)")
-        cur.execute("INSERT INTO table1 (name) VALUES ('foo')")
-        conn.commit()
-        cur.execute('SELECT * FROM table1')
-        conn.close()
+import pytest
+from dbconn import DbConnTestBase
+from minime.schema.sqlite import SqliteSchema
+
+
+class TestSqliteDbConn(DbConnTestBase):
+    @pytest.fixture(autouse=True)
+    def prepare(self, request, sqlite_dbconn):
+        self.dbconn = sqlite_dbconn
+        self.make_db(request, SqliteSchema)
