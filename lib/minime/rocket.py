@@ -27,6 +27,21 @@ class ResultsRow(object):
     def __hash__(self):
         return self.row_hash
 
+    def merge(self, other):
+        '''
+            Merge two results rows. not-null values take precedence over nulls
+        '''
+
+        changed_row = None
+        for i, (self_val, other_val) in enumerate(zip(self.row, other.row)):
+            if (self_val is None) and (other_val is not None):
+                if not changed_row:
+                    changed_row = list(self.row)
+                changed_row[i] = other_val
+
+        if changed_row is not None:
+            self.row = tuple(changed_row)
+
 
 class WorkItem(object):
     def __init__(self, subject, table, cols, values, sticky):
@@ -186,6 +201,11 @@ class Rocket(object):
             value = self._lookup_row_value(col_indexes, results_row, epk)
             if count_identical_rows:
                 end_results_counts[value] += 1
+            if value in table_epk_results:
+                found_results_row = table_epk_results[value]
+                if results_row.row != found_results_row.row:
+                    results_row.merge(found_results_row)
+
             table_epk_results[value] = results_row
             self.seen_results_rows[results_row] = results_row
 
