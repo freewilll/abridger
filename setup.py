@@ -3,8 +3,8 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('lib'))
-from minime import __version__, __author__  # noqa
+sys.path.insert(0, os.path.abspath('lib'))  # noqa
+from minime import __version__, __author__
 
 try:
     from setuptools import setup, find_packages
@@ -27,4 +27,5 @@ setup(
     package_dir={'': 'lib'},
     packages=find_packages('lib'),
     data_files=[],
+    scripts=['bin/dump-relations'],
 )
