@@ -26,7 +26,7 @@ def postgresql_conn(request, postgresql_dbconn):
 @pytest.fixture(scope='function')
 def schema1_pg(request, postgresql_conn):
     test_sql_path = os.path.join(os.path.dirname(__file__),
-                                 os.pardir, os.pardir, 'data',
+                                 os.pardir, 'data',
                                  'schema1.sql')
     with postgresql_conn.cursor() as cur:
         cur.execute(open(test_sql_path).read())

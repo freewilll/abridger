@@ -19,7 +19,7 @@ def sqlite_conn(request, sqlite_dbconn):
 @pytest.fixture(scope='function')
 def schema1_sl(request, sqlite_conn):
     test_sql_path = os.path.join(os.path.dirname(__file__),
-                                 os.pardir, os.pardir, 'data',
+                                 os.pardir, 'data',
                                  'schema1.sql')
     for statement in open(test_sql_path).read().split(';'):
         sqlite_conn.execute(statement)
