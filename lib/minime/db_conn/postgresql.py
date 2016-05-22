@@ -1,6 +1,7 @@
 import psycopg2
 
 from base import DbConn
+from minime.schema import PostgresqlSchema
 
 
 class PostgresqlDbConn(DbConn):
@@ -17,6 +18,9 @@ class PostgresqlDbConn(DbConn):
         self.user = user
         self.password = password
         self.placeholder_symbol = '%s'
+        self.schema_class = PostgresqlSchema
+        self.connect()
+        self.create_schema(PostgresqlSchema)
 
     def connect(self):
         self.connection = psycopg2.connect(
