@@ -1,7 +1,7 @@
 import pytest
 from pprint import pprint
 
-from minime.schema.sqlite import SqliteSchema
+from minime.schema import SqliteSchema
 from minime.extraction_model import ExtractionModel, Relation
 from minime.rocket import Rocket
 from minime.generator import Generator

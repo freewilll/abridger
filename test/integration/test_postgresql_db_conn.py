@@ -2,8 +2,8 @@ import pytest
 import tempfile
 import yaml
 
-from minime.db_conn.postgresql import PostgresqlDbConn
-from minime.schema.postgresql import PostgresqlSchema
+from minime.db_conn import PostgresqlDbConn
+from minime.schema import PostgresqlSchema
 from dbconn import DbConnTestBase
 
 

@@ -2,8 +2,8 @@ import os.path
 import pytest
 import re
 
-from minime.db_conn.postgresql import PostgresqlDbConn
-from minime.schema.postgresql import PostgresqlSchema
+from minime.db_conn import PostgresqlDbConn
+from minime.schema import PostgresqlSchema
 from conftest_utils import generic_conn
 
 

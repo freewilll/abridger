@@ -1,5 +1,6 @@
 import sqlite3
-from . import DbConn
+
+from base import DbConn
 
 
 class SqliteDbConn(DbConn):

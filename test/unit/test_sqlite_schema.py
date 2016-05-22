@@ -1,5 +1,6 @@
 import pytest
-from minime.schema.sqlite import SqliteSchema
+
+from minime.schema import SqliteSchema
 
 
 class TestSqliteSchema(object):

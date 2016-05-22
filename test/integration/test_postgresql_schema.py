@@ -1,7 +1,7 @@
 import tempfile
 import yaml
 
-from minime.schema.postgresql import PostgresqlSchema
+from minime.schema import PostgresqlSchema
 from minime.extraction_model import Relation
 
 

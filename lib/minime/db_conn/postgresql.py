@@ -1,5 +1,6 @@
 import psycopg2
-from . import DbConn
+
+from base import DbConn
 
 
 class PostgresqlDbConn(DbConn):

@@ -1,6 +1,7 @@
 import pytest
+
 from dbconn import DbConnTestBase
-from minime.schema.sqlite import SqliteSchema
+from minime.schema import SqliteSchema
 
 
 class TestSqliteDbConn(DbConnTestBase):

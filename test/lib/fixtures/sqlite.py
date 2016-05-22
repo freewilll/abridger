@@ -2,7 +2,7 @@ import os.path
 import pytest
 
 from minime.db_conn.sqlite import SqliteDbConn
-from minime.schema.sqlite import SqliteSchema
+from minime.schema import SqliteSchema
 from conftest_utils import generic_conn
 
 

@@ -1,7 +1,7 @@
 from collections import defaultdict
 import re
 
-from . import Schema, Table, ForeignKeyConstraint, UniqueIndex
+from base import Schema, Table, ForeignKeyConstraint, UniqueIndex
 
 
 class SqliteSchema(Schema):

@@ -1,5 +1,6 @@
 from collections import defaultdict
-from . import Schema, Table, Column, ForeignKeyConstraint, UniqueIndex
+
+from base import Schema, Table, Column, ForeignKeyConstraint, UniqueIndex
 
 
 class PostgresqlColumn(Column):
