@@ -27,7 +27,6 @@ class Generator(object):
 
         return graph
 
-    # From http://code.activestate.com/recipes/577413-topological-sort/
     def topologically_sort(self, data):
         for k, v in list(data.items()):
             v.discard(k)  # Ignore self dependencies
