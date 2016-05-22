@@ -5,7 +5,7 @@ from minime.schema import SqliteSchema
 from minime.extraction_model import ExtractionModel, Relation
 from minime.rocket import Rocket
 from minime.generator import Generator
-from rocket_platform import TestRocketBase
+from test.unit.rocket.rocket_platform import TestRocketBase
 
 
 class TestGenerator(TestRocketBase):
@@ -194,20 +194,20 @@ class TestGenerator(TestRocketBase):
             schema, not_null_columns=not_null_columns)
         table_order = [t.name for t in generator.table_order]
         if table_order != expected_table_order:
-            print
-            print 'Got table order:'
+            print()
+            print('Got table order:')
             pprint(table_order)
-            print 'Expected table order:'
+            print('Expected table order:')
             pprint(expected_table_order)
         assert table_order == expected_table_order
 
         if (expected_deferred_update_rules is not None and
                 generator.deferred_update_rules !=
                 expected_deferred_update_rules):
-            print
-            print 'Got deferred update rules:'
+            print()
+            print('Got deferred update rules:')
             pprint(generator.deferred_update_rules)
-            print 'Expected deferred update rules:'
+            print('Expected deferred update rules:')
             pprint(expected_deferred_update_rules)
 
     def test_generator_table_order1(self, schema1):
@@ -274,19 +274,19 @@ class TestGenerator(TestRocketBase):
     def check_statements(self, generator, expected_insert_statements,
                          expected_update_statments):
         if generator.insert_statements != expected_insert_statements:
-            print
-            print 'Insert statements mismatch'
-            print 'Got:'
+            print()
+            print('Insert statements mismatch')
+            print('Got:')
             pprint(generator.insert_statements)
-            print 'Expected:'
+            print('Expected:')
             pprint(expected_insert_statements)
 
         if generator.update_statements != expected_update_statments:
-            print
-            print 'Update statements mismatch'
-            print 'Got:'
+            print()
+            print('Update statements mismatch')
+            print('Got:')
             pprint(generator.update_statements)
-            print 'Expected:'
+            print('Expected:')
             pprint(expected_update_statments)
 
         assert generator.insert_statements == expected_insert_statements

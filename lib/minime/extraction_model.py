@@ -35,11 +35,11 @@ class Relation(object):
         self.type = type
 
     def __str__(self):
-        flags = ','.join(filter(lambda s: s is not None, [
+        flags = ','.join([s for s in [
             'propagate_sticky' if self.propagate_sticky else None,
             'only_if_sticky' if self.only_if_sticky else None,
             'disabled' if self.disabled else None
-        ]))
+        ] if s is not None])
         if flags:
             flags = ' ' + flags
         return '%s:%s name=%s type=%s%s' % (
@@ -97,7 +97,7 @@ def merge_relations(relations):
         same_relations[relation._base_hash()].append(relation)
 
     results = []
-    for related_relations in same_relations.values():
+    for related_relations in list(same_relations.values()):
         disabled = False
         propagate_sticky = False
         only_if_sticky = False
@@ -244,8 +244,8 @@ class ExtractionModel(object):
     @staticmethod
     def get_single_key_dict(data):
         assert isinstance(data, dict)
-        assert len(data.keys()) == 1
-        key = data.keys()[0]
+        assert len(list(data.keys())) == 1
+        key = list(data.keys())[0]
         list_data = data[key]
         assert isinstance(list_data, list)
         return (key, list_data)

@@ -1,6 +1,6 @@
 import psycopg2
 
-from base import DbConn
+from .base import DbConn
 from minime.schema import PostgresqlSchema
 
 

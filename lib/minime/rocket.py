@@ -1,4 +1,5 @@
-import Queue
+from queue import Queue
+
 from collections import defaultdict
 from minime.extraction_model import Relation, merge_relations
 
@@ -20,8 +21,8 @@ class ResultsRow(object):
     def __repr__(self):
         return '<ResultsRow %s>' % str(self)
 
-    def __cmp__(self, other):
-        return cmp(self.row, other.row)
+    def __lt__(self, other):
+        return self.row < other.row
 
     def merge(self, other):
         '''
@@ -63,7 +64,7 @@ class Rocket(object):
     def __init__(self, dbconn, extraction_model):
         self.dbconn = dbconn
         self.extraction_model = extraction_model
-        self.work_queue = Queue.Queue()
+        self.work_queue = Queue()
         self.results = defaultdict(lambda: defaultdict(dict))
         self.fetch_count = 0
         self.fetched_row_count = 0

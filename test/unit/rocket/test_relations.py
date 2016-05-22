@@ -1,8 +1,8 @@
 import pytest
 
-from minime.schema import SqliteSchema
-from rocket_platform import TestRocketBase
 from minime.extraction_model import Relation, ExtractionModel, merge_relations
+from minime.schema import SqliteSchema
+from test.unit.rocket.rocket_platform import TestRocketBase
 
 
 class TestRocketRelations(TestRocketBase):

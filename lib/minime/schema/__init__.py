@@ -1,5 +1,5 @@
-from sqlite import SqliteSchema
-from postgresql import PostgresqlSchema
+from .sqlite import SqliteSchema
+from .postgresql import PostgresqlSchema
 
 
 __all__ = [

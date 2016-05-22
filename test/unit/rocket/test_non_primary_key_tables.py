@@ -1,8 +1,8 @@
 import pytest
 
-from minime.schema import SqliteSchema
 from minime.extraction_model import Relation
-from rocket_platform import TestRocketBase
+from minime.schema import SqliteSchema
+from test.unit.rocket.rocket_platform import TestRocketBase
 
 
 class TestRocketNonPrimaryKeyTables(TestRocketBase):

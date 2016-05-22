@@ -2,7 +2,7 @@ import os.path
 import pytest
 import tempfile
 from minime.config_file_loader import load
-from utils import make_temp_file
+from .utils import make_temp_file
 
 
 class TestConfigFileLoader(object):

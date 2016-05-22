@@ -23,7 +23,7 @@ setup(
     url='http://minime.example.com/',
     license='GPLv3',
     install_requires=['setuptools', 'pyyaml', 'psycopg2', 'six',
-                      'jsonschema', 'dj-database-url'],
+                      'jsonschema', 'dj-database-url', 'future'],
     package_dir={'': 'lib'},
     packages=find_packages('lib'),
     data_files=[],

@@ -1,6 +1,6 @@
 import sqlite3
 
-from base import DbConn
+from .base import DbConn
 from minime.schema import SqliteSchema
 
 

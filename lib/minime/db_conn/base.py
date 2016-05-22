@@ -1,10 +1,4 @@
-import abc
-
-
 class DbConn(object):
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
     def connect(self, input):  # pragma: no cover
         return
 

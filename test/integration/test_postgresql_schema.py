@@ -38,8 +38,8 @@ class TestPostgresqlSchema(object):
         assert 'test1' in schema.tables_by_name
         assert 'test2' in schema.tables_by_name
         assert len(schema.tables) == 2
-        assert len(schema.tables_by_name.keys()) == 2
-        assert len(schema.tables_by_oid.keys()) == 2
+        assert len(list(schema.tables_by_name.keys())) == 2
+        assert len(list(schema.tables_by_oid.keys())) == 2
 
     def test_schema_columns(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
@@ -56,7 +56,7 @@ class TestPostgresqlSchema(object):
         assert len(schema.tables) == 1
         table = schema.tables[0]
         assert len(table.cols) == 3
-        assert len(table.cols_by_name.keys()) == 3
+        assert len(list(table.cols_by_name.keys())) == 3
         assert str(table.cols[0]) is not None
         assert repr(table.cols[0]) is not None
 
@@ -64,9 +64,14 @@ class TestPostgresqlSchema(object):
         assert 'id' in names
         assert 'not_null' in names
         assert 'nullable' in names
-        id_col = filter(lambda r: r.name == 'id', table.cols)[0]
-        not_null_col = filter(lambda r: r.name == 'not_null', table.cols)[0]
-        nullable_col = filter(lambda r: r.name == 'nullable', table.cols)[0]
+
+        id_col = list(
+            filter(lambda r: r.name == 'id', table.cols))[0]
+        not_null_col = list(
+            filter(lambda r: r.name == 'not_null', table.cols))[0]
+        nullable_col = list(
+            filter(lambda r: r.name == 'nullable', table.cols))[0]
+
         assert id_col.notnull is True
         assert not_null_col.notnull is True
         assert nullable_col.notnull is False
@@ -156,7 +161,7 @@ class TestPostgresqlSchema(object):
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
 
-        temp = tempfile.NamedTemporaryFile(mode='wb', delete=False)
+        temp = tempfile.NamedTemporaryFile(mode='wt', delete=False)
         schema.dump_relations(temp)
         temp.close()
 

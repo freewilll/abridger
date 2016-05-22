@@ -22,10 +22,10 @@ class TestRocketBase(object):
         expected_data = sorted(expected_data, key=lambda t: t[0].name)
 
         if rocket.flat_results() != expected_data:
-            print
-            print 'Got results:'
+            print()
+            print('Got results:')
             pprint(rocket.flat_results())
-            print 'Expected results:'
+            print('Expected results:')
             pprint(expected_data)
         assert rocket.flat_results() == expected_data
         if expected_fetch_count is not None:

@@ -1,3 +1,6 @@
+from functools import reduce
+
+
 class Generator(object):
     def __init__(self, schema, rocket):
         self.schema = schema
@@ -26,22 +29,22 @@ class Generator(object):
 
     # From http://code.activestate.com/recipes/577413-topological-sort/
     def topologically_sort(self, data):
-        for k, v in data.items():
+        for k, v in list(data.items()):
             v.discard(k)  # Ignore self dependencies
-        extra_items_in_deps = reduce(set.union, data.values()) - \
+        extra_items_in_deps = reduce(set.union, list(data.values())) - \
             set(data.keys())
 
         for item in extra_items_in_deps:
             data[item] = set()
 
         while True:
-            ordered = set(item for item, dep in data.items() if not dep)
+            ordered = set(item for item, dep in list(data.items()) if not dep)
             if not ordered:
                 break
             yield sorted(ordered)
 
             new_data = {}
-            for item, dep in data.items():
+            for item, dep in list(data.items()):
                 if item not in ordered:
                     new_data[item] = (dep - ordered)
             data = new_data

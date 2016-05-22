@@ -1,7 +1,7 @@
 from collections import defaultdict
 import re
 
-from base import Schema, Table, ForeignKeyConstraint, UniqueIndex
+from .base import Schema, Table, ForeignKeyConstraint, UniqueIndex
 
 
 class SqliteSchema(Schema):
@@ -61,8 +61,7 @@ class SqliteSchema(Schema):
                 foreign_keys[fk_index].append((dst_table_name,
                                                src_col_name, dst_col_name))
 
-            for fk_index, fk_cols in foreign_keys.iteritems():
-
+            for fk_index, fk_cols in list(foreign_keys.items()):
                 if len(fk_cols) > 1:
                     raise Exception(
                         'Compound foreign keys are not supported '

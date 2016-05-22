@@ -1,7 +1,7 @@
 import dj_database_url
 
-from sqlite import SqliteDbConn
-from postgresql import PostgresqlDbConn
+from .sqlite import SqliteDbConn
+from .postgresql import PostgresqlDbConn
 
 
 __all__ = [

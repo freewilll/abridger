@@ -6,16 +6,17 @@ def walk(node, process_include):
     if isinstance(node, list):
         new_list = []
         for i, v in enumerate(node):
-            if isinstance(node[i], dict) and len(node[i].keys()) == 1 and \
-                    node[i].keys()[0] == 'include':
-                for new_node in process_include(node[i].values()[0]):
+            if isinstance(node[i], dict) and \
+                    len(list(node[i].keys())) == 1 and \
+                    list(node[i].keys())[0] == 'include':
+                for new_node in process_include(list(node[i].values())[0]):
                     new_list.append(new_node)
             else:
                 new_list.append(
                     walk(node[i], process_include))
         node[:] = new_list
     elif isinstance(node, dict):
-        for k, v in node.items():
+        for k, v in list(node.items()):
             walk(node[k], process_include)
 
     return node

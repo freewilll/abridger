@@ -1,9 +1,9 @@
 import pytest
 
-from minime.schema import SqliteSchema
 from minime.extraction_model import ExtractionModel
 from minime.rocket import Rocket
-from rocket_platform import TestRocketBase
+from minime.schema import SqliteSchema
+from test.unit.rocket.rocket_platform import TestRocketBase
 
 
 class TestRocketBasics(TestRocketBase):
@@ -236,7 +236,7 @@ class TestRocketBasics(TestRocketBase):
         rocket = Rocket(self.dbconn, extraction_model).launch()
         table1 = schema1.tables[0]
         result_rows = rocket.results[table1][table1.primary_key]
-        for result_row in result_rows.values():
+        for result_row in list(result_rows.values()):
             assert repr(result_row) is not None
 
     @pytest.mark.xfail  # TODO relations without a column on a subject

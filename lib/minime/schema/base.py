@@ -85,8 +85,8 @@ class Table(object):
     def __repr__(self):
         return '<Table %s>' % self.name
 
-    def __cmp__(self, other):
-        return cmp(self.name, other.name)
+    def __lt__(self, other):
+        return self.name < other.name
 
     def add_column(self, name, notnull):
         col = Column(self, name, notnull)

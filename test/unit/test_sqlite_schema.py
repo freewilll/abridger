@@ -45,7 +45,7 @@ class TestSqliteSchema(object):
         assert 'test1' in schema.tables_by_name
         assert 'test2' in schema.tables_by_name
         assert len(schema.tables) == 2
-        assert len(schema.tables_by_name.keys()) == 2
+        assert len(list(schema.tables_by_name.keys())) == 2
         assert str(schema.tables[0]) is not None
         assert repr(schema.tables[0]) is not None
 
@@ -62,7 +62,7 @@ class TestSqliteSchema(object):
         assert len(schema.tables) == 1
         table = schema.tables[0]
         assert len(table.cols) == 3
-        assert len(table.cols_by_name.keys()) == 3
+        assert len(list(table.cols_by_name.keys())) == 3
         assert str(table.cols[0]) is not None
         assert repr(table.cols[0]) is not None
 
@@ -70,9 +70,14 @@ class TestSqliteSchema(object):
         assert 'id' in names
         assert 'not_null' in names
         assert 'nullable' in names
-        id_col = filter(lambda r: r.name == 'id', table.cols)[0]
-        not_null_col = filter(lambda r: r.name == 'not_null', table.cols)[0]
-        nullable_col = filter(lambda r: r.name == 'nullable', table.cols)[0]
+
+        id_col = list(
+            filter(lambda r: r.name == 'id', table.cols))[0]
+        not_null_col = list(
+            filter(lambda r: r.name == 'not_null', table.cols))[0]
+        nullable_col = list(
+            filter(lambda r: r.name == 'nullable', table.cols))[0]
+
         assert id_col.notnull is False
         assert not_null_col.notnull is True
         assert nullable_col.notnull is False
