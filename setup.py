@@ -27,5 +27,5 @@ setup(
     package_dir={'': 'lib'},
     packages=find_packages('lib'),
     data_files=[],
-    scripts=['bin/dump-relations'],
+    scripts=['bin/minime-db', 'bin/dump-relations'],
 )
