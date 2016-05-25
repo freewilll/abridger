@@ -69,9 +69,9 @@ class WorkItem(object):
             if len(self.values[0]) > 1:
                 values_csv = '(%s)' % values_csv
                 cols_csv = '(%s)' % cols_csv
-            return (self.table, cols_csv, values_csv)
+            return (self.table, cols_csv, values_csv, self.sticky)
         else:
-            return (self.table, None, None)
+            return (self.table, None, None, self.sticky)
 
     def make_results_row_history(self, results_row):
         epk = results_row.table.effective_primary_key
@@ -83,7 +83,7 @@ class WorkItem(object):
         if len(values) > 1:
             values_csv = '(%s)' % values_csv
             cols_csv = '(%s)' % cols_csv
-        return (results_row.table, cols_csv, values_csv)
+        return (results_row.table, cols_csv, values_csv, self.sticky)
 
     def set_history(self, work_item, results_row):
         if work_item is None:
@@ -106,7 +106,7 @@ class WorkItem(object):
             return
 
         first = True
-        for (table, cols, values) in self.history:
+        for (table, cols, values, sticky) in self.history:
             if not first:
                 print '->',
             else:
@@ -116,6 +116,9 @@ class WorkItem(object):
                 print '%s.%s=%s' % (table, cols, values),
             else:
                 print table,
+
+            if sticky:
+                print '*',
         print
 
 
