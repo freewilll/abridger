@@ -1,6 +1,6 @@
 from queue import Queue
-
 from collections import defaultdict
+import sys
 from minime.extraction_model import Relation, merge_relations
 
 
@@ -118,7 +118,7 @@ class WorkItem(object):
                 print table,
 
             if sticky:
-                print '*',
+                sys.stdout.write('*')
         print
 
 
