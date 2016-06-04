@@ -1,1 +1,7 @@
-dump_relations.py
+#!/usr/bin/env python
+
+import sys
+from minime.dump_relations import main
+
+
+main(sys.argv[1:])

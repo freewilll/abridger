@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 from signal import signal, SIGPIPE, SIG_DFL
 import sys
@@ -18,7 +16,3 @@ def main(args):
     dbconn = load(args.url)
     dbconn.schema.dump_relations(sys.stdout)
     dbconn.disconnect()
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main(sys.argv[1:])

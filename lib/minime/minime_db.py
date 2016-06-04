@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-
 import argparse
 from signal import signal, SIGPIPE, SIG_DFL
-import sys
 from collections import defaultdict
 
 import minime.db_conn
@@ -86,7 +83,3 @@ def main(args):
             print("Some thing went wrong while trying a rollback: %s" % str(e))
 
         dst_dbconn.disconnect()
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main(sys.argv[1:])

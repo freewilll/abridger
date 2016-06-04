@@ -1,4 +1,4 @@
-from minime_db import main
+from minime.minime_db import main
 from test.unit.utils import make_temp_file
 
 
