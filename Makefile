@@ -23,3 +23,9 @@ clean:
 
 python:
 	$(PYTHON) setup.py build
+
+venv:
+	tox -e venv -v
+
+coverage:
+	py.test -vs --cov-report=term-missing --cov=abridger --cov=bin
