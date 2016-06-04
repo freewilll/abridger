@@ -5,7 +5,6 @@ PYTHON=python
 all: clean python
 
 tests:
-	@echo do stuff
 	PYTHONPATH=./lib py.test -vs
 
 pep8:
