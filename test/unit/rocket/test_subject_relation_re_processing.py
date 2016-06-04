@@ -31,8 +31,8 @@ class TestRocketSubjectRelationReProcessingIncoming(TestRocketBase):
                 );
             ''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data1(self, schema1):
@@ -46,7 +46,7 @@ class TestRocketSubjectRelationReProcessingIncoming(TestRocketBase):
             (table3, (1, 1)),
             (table4, (1, 1, 1)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     def test_subject_relation_re_processing(self, schema1, data1):
@@ -126,8 +126,8 @@ class TestRocketTwoSubjectTwoColumnNulling(TestRocketBase):
                 );
             ''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data1(self, schema1):
@@ -144,7 +144,7 @@ class TestRocketTwoSubjectTwoColumnNulling(TestRocketBase):
             (table2, (1, 1, 1, 1)),
             (table4, (1, 1, 1)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     @pytest.mark.parametrize('i, j, k, l', TEST_CASES)

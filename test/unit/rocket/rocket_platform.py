@@ -7,8 +7,8 @@ from minime.rocket import Rocket
 
 class TestRocketBase(object):
     @pytest.fixture(autouse=True)
-    def default_fixtures(self, sqlite_conn, sqlite_dbconn):
-        self.dbconn = sqlite_dbconn
+    def default_fixtures(self, sqlite_conn, sqlite_database):
+        self.database = sqlite_database
         self.conn = sqlite_conn
 
     def check_launch(self, schema, extraction_model_data,
@@ -18,7 +18,7 @@ class TestRocketBase(object):
             extraction_model_data.append({'relations': global_relations})
 
         extraction_model = ExtractionModel.load(schema, extraction_model_data)
-        rocket = Rocket(self.dbconn, extraction_model).launch()
+        rocket = Rocket(self.database, extraction_model).launch()
         expected_data = sorted(expected_data, key=lambda t: t[0].name)
 
         if rocket.flat_results() != expected_data:

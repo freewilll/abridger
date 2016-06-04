@@ -113,12 +113,12 @@ class TestRocketNonPrimaryKeyTables(TestRocketBase):
     @pytest.mark.parametrize('schema, data', test_cases)
     def test_non_primary_key_table(self, schema, data):
         for sql in schema:
-            self.dbconn.execute(sql)
-        schema = SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        schema = SqliteSchema.create_from_conn(self.database.connection)
         for i, datum in enumerate(data):
             (table_name, row_values) = datum
             table = schema.tables_by_name[table_name]
             data[i] = (table, row_values)
-        self.dbconn.insert_rows(data)
+        self.database.insert_rows(data)
         self.check_one_subject(schema, [{'table': 'test1'}], data,
                                global_relations=self.REL_EVERYTHING)

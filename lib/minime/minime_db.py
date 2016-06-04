@@ -2,7 +2,7 @@ import argparse
 from signal import signal, SIGPIPE, SIG_DFL
 from collections import defaultdict
 
-import minime.db_conn
+import minime.database
 from minime.extraction_model import ExtractionModel
 from minime.rocket import Rocket
 from minime.generator import Generator
@@ -28,26 +28,26 @@ def main(args):
     args = parser.parse_args(args)
 
     print('Connecting to', args.src_url)
-    src_dbconn = minime.db_conn.load(args.src_url)
+    src_database = minime.database.load(args.src_url)
 
     print('Querying...')
     extraction_model_data = minime.config_file_loader.load(args.config_path)
-    extraction_model = ExtractionModel.load(src_dbconn.schema,
+    extraction_model = ExtractionModel.load(src_database.schema,
                                             extraction_model_data)
-    rocket = Rocket(src_dbconn, extraction_model, explain=args.explain)
+    rocket = Rocket(src_database, extraction_model, explain=args.explain)
     rocket.launch()
 
     if args.explain:
         exit(0)
 
-    generator = Generator(src_dbconn.schema, rocket)
+    generator = Generator(src_database.schema, rocket)
     generator.generate_statements()
-    src_dbconn.disconnect()
+    src_database.disconnect()
 
     print('Connecting to', args.dst_url)
-    dst_dbconn = minime.db_conn.load(args.dst_url)
+    dst_database = minime.database.load(args.dst_url)
 
-    connection = dst_dbconn.connection
+    connection = dst_database.connection
 
     table_row_counts = defaultdict(int)
     table_update_counts = defaultdict(int)
@@ -62,7 +62,7 @@ def main(args):
             print("Inserting (%5d/%5d) row %5d into table %s" % (
                 insert_count, total_insert_count,
                 table_row_counts[table], table))
-            dst_dbconn.insert_rows([insert_statement], cursor=cur)
+            dst_database.insert_rows([insert_statement], cursor=cur)
 
         total_update_count = len(generator.update_statements)
         update_count = 0
@@ -73,7 +73,7 @@ def main(args):
             print("Updating (%5d/%5d) update %d on table %s" % (
                 update_count, total_update_count,
                 table_update_counts[table], table))
-            dst_dbconn.update_rows([update_statement], cursor=cur)
+            dst_database.update_rows([update_statement], cursor=cur)
 
         connection.commit()
     finally:
@@ -82,4 +82,4 @@ def main(args):
         except Exception as e:
             print("Some thing went wrong while trying a rollback: %s" % str(e))
 
-        dst_dbconn.disconnect()
+        dst_database.disconnect()

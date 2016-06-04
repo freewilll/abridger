@@ -9,10 +9,10 @@ from test.unit.rocket.rocket_platform import TestRocketBase
 class TestRocketBasics(TestRocketBase):
     @pytest.fixture()
     def schema1(self):
-        self.dbconn.execute('''
+        self.database.execute('''
             CREATE TABLE test1 (id INTEGER PRIMARY KEY, name TEXT);
         ''')
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data1(self, schema1):
@@ -22,7 +22,7 @@ class TestRocketBasics(TestRocketBase):
             (table1, (2, 'b')),
             (table1, (3, 'c')),
             (table1, (4, 'c'))]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     @pytest.fixture()
@@ -39,8 +39,8 @@ class TestRocketBasics(TestRocketBase):
                 );
             ''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data2(self, schema2):
@@ -55,7 +55,7 @@ class TestRocketBasics(TestRocketBase):
             (table2, (4, 2)),
             (table2, (5, None)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     @pytest.fixture()
@@ -73,8 +73,8 @@ class TestRocketBasics(TestRocketBase):
                 );
             ''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data3(self, schema3):
@@ -86,7 +86,7 @@ class TestRocketBasics(TestRocketBase):
             (table2, (1, 100)),
             (table2, (2, 200)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     def test_one_subject_one_table(self, schema1, data1):
@@ -225,7 +225,7 @@ class TestRocketBasics(TestRocketBase):
             {'subject': [{'tables': [{'table': 'test2'}]}]},
         ]
         extraction_model = ExtractionModel.load(schema2, extraction_model_data)
-        rocket = Rocket(self.dbconn, extraction_model).launch()
+        rocket = Rocket(self.database, extraction_model).launch()
         assert rocket.flat_results() == data2
 
     def test_results_row_str_and_repr(self, schema1, data1):
@@ -233,7 +233,7 @@ class TestRocketBasics(TestRocketBase):
             {'subject': [{'tables': [{'table': 'test1'}]}]},
         ]
         extraction_model = ExtractionModel.load(schema1, extraction_model_data)
-        rocket = Rocket(self.dbconn, extraction_model).launch()
+        rocket = Rocket(self.database, extraction_model).launch()
         table1 = schema1.tables[0]
         result_rows = rocket.results[table1][table1.primary_key]
         for result_row in list(result_rows.values()):
@@ -247,6 +247,6 @@ class TestRocketBasics(TestRocketBase):
                                       'column': 'id', 'values': 1}]}]},
         ]
         extraction_model = ExtractionModel.load(schema2, extraction_model_data)
-        rocket = Rocket(self.dbconn, extraction_model).launch()
+        rocket = Rocket(self.database, extraction_model).launch()
         # Everything in test 1 and one row in test2
         assert rocket.flat_results() == data2[0:2] + data2[2:3]

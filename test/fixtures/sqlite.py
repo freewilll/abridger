@@ -1,19 +1,19 @@
 import os.path
 import pytest
 
-from minime.db_conn.sqlite import SqliteDbConn
+from minime.database.sqlite import SqliteDatabase
 from minime.schema import SqliteSchema
 from conftest_utils import generic_conn
 
 
 @pytest.fixture(scope='function')
-def sqlite_dbconn(request):
-    return SqliteDbConn(':memory:')
+def sqlite_database(request):
+    return SqliteDatabase(':memory:')
 
 
 @pytest.fixture(scope='function')
-def sqlite_conn(request, sqlite_dbconn):
-    return generic_conn(request, sqlite_dbconn)
+def sqlite_conn(request, sqlite_database):
+    return generic_conn(request, sqlite_database)
 
 
 @pytest.fixture(scope='function')

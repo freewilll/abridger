@@ -15,14 +15,14 @@ class TestRocketCircularRelations(TestRocketBase):
                 test1_id INTEGER REFERENCES test1
             );''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     def test_one_table_self_referencing(self, schema1):
         table = schema1.tables[0]
 
         rows = [(table, (1, 1))]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
 
         extraction_model_data = [
             {'subject': [{'tables': [{'table': 'test1'}]}]},
@@ -43,8 +43,8 @@ class TestRocketCircularRelations(TestRocketBase):
                 manager_id INTEGER REFERENCES managers
             );''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     def test_staff_manager(self, schema2):
         managers = schema2.tables[0]
@@ -56,7 +56,7 @@ class TestRocketCircularRelations(TestRocketBase):
             (staff, (2, 1)),
             (staff, (3, 1)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
 
         table = {'table': 'staff', 'column': 'id', 'values': 2}
         extraction_model_data = [
@@ -80,8 +80,8 @@ class TestRocketCircularRelations(TestRocketBase):
                 manager_id INTEGER REFERENCES managers
             );''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     def test_alt_staff_manager(self, schema3):
         managers = schema3.tables[0]
@@ -93,7 +93,7 @@ class TestRocketCircularRelations(TestRocketBase):
             (staff, (2, 2, 1)),
             (staff, (3, 3, 1)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
 
         table = {'table': 'staff', 'column': 'id', 'values': 2}
         extraction_model_data = [

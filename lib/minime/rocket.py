@@ -58,8 +58,8 @@ class WorkItem(object):
         return hash(tuple([self.subject, self.table, self.cols, value,
                           self.sticky]))
 
-    def fetch_rows(self, dbconn):
-        fetched_rows = dbconn.fetch_rows(self.table, self.cols, self.values)
+    def fetch_rows(self, database):
+        fetched_rows = database.fetch_rows(self.table, self.cols, self.values)
         fetched_rows = [ResultsRow(self.table, fr) for fr in fetched_rows]
         return fetched_rows
 
@@ -124,8 +124,8 @@ class WorkItem(object):
 
 
 class Rocket(object):
-    def __init__(self, dbconn, extraction_model, explain=False):
-        self.dbconn = dbconn
+    def __init__(self, database, extraction_model, explain=False):
+        self.database = database
         self.extraction_model = extraction_model
 
         self.explain = explain
@@ -280,7 +280,7 @@ class Rocket(object):
 
         table = work_item.table
 
-        results_rows = work_item.fetch_rows(self.dbconn)
+        results_rows = work_item.fetch_rows(self.database)
         self.fetch_count += 1
 
         if len(results_rows) == 0:

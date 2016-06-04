@@ -24,8 +24,8 @@ class TestRocketRelations(TestRocketBase):
                 );
             ''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data1(self, schema1):
@@ -37,7 +37,7 @@ class TestRocketRelations(TestRocketBase):
             (table2, (1, 1, None)),
             (table2, (2, 1, 2)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     @pytest.mark.parametrize('table', ['test1', 'test2'])

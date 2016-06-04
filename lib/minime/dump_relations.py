@@ -1,7 +1,7 @@
 import argparse
 from signal import signal, SIGPIPE, SIG_DFL
 import sys
-from minime.db_conn import load
+from minime.database import load
 
 
 def main(args):
@@ -13,6 +13,6 @@ def main(args):
     signal(SIGPIPE, SIG_DFL)
 
     args = parser.parse_args(args)
-    dbconn = load(args.url)
-    dbconn.schema.dump_relations(sys.stdout)
-    dbconn.disconnect()
+    database = load(args.url)
+    database.schema.dump_relations(sys.stdout)
+    database.disconnect()

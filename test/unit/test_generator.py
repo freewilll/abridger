@@ -22,9 +22,9 @@ class TestGenerator(TestRocketBase):
                 name TEXT
             );''',
         ]:
-            self.dbconn.execute(sql)
+            self.database.execute(sql)
 
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data1(self, schema1):
@@ -34,7 +34,7 @@ class TestGenerator(TestRocketBase):
             (table1, (2, 'b')),
             (table1, (3, 'c')),
             (table1, (4, 'c'))]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     @pytest.fixture()
@@ -51,9 +51,9 @@ class TestGenerator(TestRocketBase):
                 name TEXT
             );''',
         ]:
-            self.dbconn.execute(sql)
+            self.database.execute(sql)
 
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # A single not null dependency
@@ -69,9 +69,9 @@ class TestGenerator(TestRocketBase):
                 name TEXT
             );''',
         ]:
-            self.dbconn.execute(sql)
+            self.database.execute(sql)
 
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # Two level dependency
@@ -92,9 +92,9 @@ class TestGenerator(TestRocketBase):
                 name TEXT
             );''',
         ]:
-            self.dbconn.execute(sql)
+            self.database.execute(sql)
 
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # A cycle of not null keys
@@ -116,9 +116,9 @@ class TestGenerator(TestRocketBase):
                 test1_id INTEGER NOT NULL REFERENCES test1
             );''',
         ]:
-            self.dbconn.execute(sql)
+            self.database.execute(sql)
 
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # A cycle of not null keys, with one nullable
@@ -142,9 +142,9 @@ class TestGenerator(TestRocketBase):
                 test4_id INTEGER REFERENCES test4
             );''',
         ]:
-            self.dbconn.execute(sql)
+            self.database.execute(sql)
 
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     # Tables without primary keys tests
     @pytest.fixture()
@@ -156,9 +156,9 @@ class TestGenerator(TestRocketBase):
             # No primary key, with a unique index
             '''CREATE TABLE test2 (id INTEGER UNIQUE);''',
         ]:
-            self.dbconn.execute(sql)
+            self.database.execute(sql)
 
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data7(self, schema7):
@@ -171,7 +171,7 @@ class TestGenerator(TestRocketBase):
             (table2, (1,)),
             (table2, (2,)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         return rows
 
     def get_generator_instance(self, schema, not_null_columns=None,
@@ -184,7 +184,7 @@ class TestGenerator(TestRocketBase):
             {'not-null-columns': not_null_columns},
         ]
         extraction_model = ExtractionModel.load(schema, extraction_model_data)
-        rocket = Rocket(self.dbconn, extraction_model)
+        rocket = Rocket(self.database, extraction_model)
         return Generator(schema, rocket)
 
     def check_table_order(self, schema, expected_table_order,
@@ -262,7 +262,7 @@ class TestGenerator(TestRocketBase):
     def test_statements_self_ref(self, schema6):
         table4 = schema6.tables[3]
         rows = [(table4, (1, 1))]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
         generator = self.get_generator_instance(schema6, table='test4')
         generator.rocket.launch()
         generator.generate_statements()
@@ -304,12 +304,12 @@ class TestGenerator(TestRocketBase):
             (table2, (1, None, 1)),
             (table1, (1, 1)),
         ]
-        self.dbconn.insert_rows(inserts)
+        self.database.insert_rows(inserts)
 
         updates = [
             (table3, (table3.cols[0],), (1,), (table3.cols[1],), (1,)),
         ]
-        self.dbconn.update_rows(updates)
+        self.database.update_rows(updates)
 
         generator = self.get_generator_instance(schema6, table='test3')
         generator.rocket.launch()

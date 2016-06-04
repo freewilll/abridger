@@ -1,5 +1,5 @@
-def generic_conn(request, dbconn):
-    result = dbconn.connection
+def generic_conn(request, database):
+    result = database.connection
 
     def fin():
         result.close()

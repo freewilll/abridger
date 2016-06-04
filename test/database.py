@@ -1,15 +1,15 @@
 import pytest
 
 
-class DbConnTestBase(object):
+class DatabaseTestBase(object):
     def make_db(self, request, schema_cls):
-        dbconn = self.dbconn
-        conn = dbconn.connection
-        dbconn.execute(
+        database = self.database
+        conn = database.connection
+        database.execute(
             "CREATE TABLE table1 (id SERIAL PRIMARY KEY, name TEXT)")
         conn.commit()
 
-        self.schema = schema_cls.create_from_conn(dbconn.connection)
+        self.schema = schema_cls.create_from_conn(database.connection)
         self.table1 = self.schema.tables[0]
 
         def fin():
@@ -17,14 +17,14 @@ class DbConnTestBase(object):
         request.addfinalizer(fin)
 
     def test_fetch_rows(self):
-        dbconn = self.dbconn
-        dbconn.execute("INSERT INTO table1 (id, name) VALUES (1, 'foo')")
-        dbconn.execute("INSERT INTO table1 (id, name) VALUES (2, 'bar')")
-        dbconn.connection.commit()
-        results = dbconn.execute_and_fetchall('SELECT * FROM table1')
+        database = self.database
+        database.execute("INSERT INTO table1 (id, name) VALUES (1, 'foo')")
+        database.execute("INSERT INTO table1 (id, name) VALUES (2, 'bar')")
+        database.connection.commit()
+        results = database.execute_and_fetchall('SELECT * FROM table1')
         inserts = [(1, 'foo'), (2, 'bar')]
         assert results == inserts
-        fetch_result = self.dbconn.fetch_rows(self.table1, None, None)
+        fetch_result = self.database.fetch_rows(self.table1, None, None)
         assert list(fetch_result) == inserts
 
     @pytest.mark.parametrize('cols, values, start, end', [
@@ -37,9 +37,9 @@ class DbConnTestBase(object):
         ([1], [['foo'], ['bar']], 0, 2),
     ])
     def test_insert_rows(self, cols, values, start, end):
-        dbconn = self.dbconn
-        dbconn.execute("DELETE FROM table1")
-        dbconn.insert_rows([
+        database = self.database
+        database.execute("DELETE FROM table1")
+        database.insert_rows([
             (self.table1, (1, 'foo')),
             (self.table1, (2, 'bar')),
         ])
@@ -47,7 +47,7 @@ class DbConnTestBase(object):
         if cols is not None:
             cols = [self.table1.cols[i] for i in cols]
 
-        fetch_result = self.dbconn.fetch_rows(self.table1, cols, values)
+        fetch_result = self.database.fetch_rows(self.table1, cols, values)
         inserts = [(1, 'foo'), (2, 'bar')]
         assert list(fetch_result) == inserts[start:end]
 
@@ -72,16 +72,16 @@ class DbConnTestBase(object):
         ([1], ['baz'], [0], [3], [(1, 'foo'), (2, 'bar')]),
     ])
     def test_update_rows(self, pk_cols, pk_values, cols, values, result):
-        dbconn = self.dbconn
-        dbconn.execute("DELETE FROM table1")
-        dbconn.insert_rows([
+        database = self.database
+        database.execute("DELETE FROM table1")
+        database.insert_rows([
             (self.table1, (1, 'foo')),
             (self.table1, (2, 'bar')),
         ])
 
         pk_cols = [self.table1.cols[i] for i in pk_cols]
         cols = [self.table1.cols[i] for i in cols]
-        dbconn.update_rows([(self.table1, tuple(pk_cols),
+        database.update_rows([(self.table1, tuple(pk_cols),
                              tuple(pk_values), tuple(cols), tuple(values))])
-        fetch_result = self.dbconn.fetch_rows(self.table1, None, None)
+        fetch_result = self.database.fetch_rows(self.table1, None, None)
         assert sorted(list(fetch_result)) == sorted(result)

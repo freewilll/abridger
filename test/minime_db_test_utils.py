@@ -27,7 +27,7 @@ class TestMinimeDbBase(object):
         cur.execute('UPDATE test1 SET test2_id = 2 WHERE id=2')
         conn.commit()
 
-    def run_main(self, src_url, dst_url, dst_dbconn, explain=False):
+    def run_main(self, src_url, dst_url, dst_database, explain=False):
         config_filename = make_temp_yaml_file([
             {'subject': [{'tables': [{'table': 'test1'}]}]}
         ])
@@ -38,8 +38,8 @@ class TestMinimeDbBase(object):
         main(args)
 
         # Check dst
-        dst_dbconn.connect()
-        dst_conn = dst_dbconn.connection
+        dst_database.connect()
+        dst_conn = dst_database.connection
         cur = dst_conn.cursor()
 
         cur.execute('SELECT id, test2_id FROM test1 ORDER BY id')
@@ -50,4 +50,4 @@ class TestMinimeDbBase(object):
         rows = list(cur.fetchall())
         assert rows == [(1, 1), (2, 2)]
 
-        dst_dbconn.disconnect()
+        dst_database.disconnect()

@@ -40,8 +40,8 @@ class TestRocketStickyRelations(TestRocketBase):
                 );
             ''',
         ]:
-            self.dbconn.execute(sql)
-        return SqliteSchema.create_from_conn(self.dbconn.connection)
+            self.database.execute(sql)
+        return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     def data_out(self, schema_out):
@@ -61,7 +61,7 @@ class TestRocketStickyRelations(TestRocketBase):
             (table1, (1, 1, None)),
             (table1, (2, None, 1)),
         ]
-        self.dbconn.insert_rows(rows)
+        self.database.insert_rows(rows)
 
         self.data_everything_except_table2 = (
             rows[0:2] +  # table 3

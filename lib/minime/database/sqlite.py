@@ -1,10 +1,10 @@
 import sqlite3
 
-from .base import DbConn
+from .base import Database
 from minime.schema import SqliteSchema
 
 
-class SqliteDbConn(DbConn):
+class SqliteDatabase(Database):
     def __init__(self, path):
         self.path = path
         self.placeholder_symbol = '?'
@@ -12,8 +12,8 @@ class SqliteDbConn(DbConn):
         self.create_schema(SqliteSchema)
 
     @staticmethod
-    def create_from_django_dbconn(dj_details):
-        return SqliteDbConn(dj_details['NAME'])
+    def create_from_django_database(dj_details):
+        return SqliteDatabase(dj_details['NAME'])
 
     def connect(self):
         self.connection = sqlite3.connect(self.path)

@@ -1,10 +1,10 @@
 import psycopg2
 
-from .base import DbConn
+from .base import Database
 from minime.schema import PostgresqlSchema
 
 
-class PostgresqlDbConn(DbConn):
+class PostgresqlDatabase(Database):
     def __init__(self, host=None, port=None, dbname=None, user=None,
                  password=None):
         if dbname is None:
@@ -23,8 +23,8 @@ class PostgresqlDbConn(DbConn):
         self.create_schema(PostgresqlSchema)
 
     @staticmethod
-    def create_from_django_dbconn(dj_details):
-        return PostgresqlDbConn(
+    def create_from_django_database(dj_details):
+        return PostgresqlDatabase(
             host=dj_details['HOST'],
             port=dj_details['PORT'] or 5432,
             dbname=dj_details['NAME'],

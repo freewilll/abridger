@@ -1,4 +1,4 @@
-class DbConn(object):
+class Database(object):
     def connect(self, input):  # pragma: no cover
         return
 
