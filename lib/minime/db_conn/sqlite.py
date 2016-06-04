@@ -14,3 +14,6 @@ class SqliteDbConn(DbConn):
     def connect(self):
         self.connection = sqlite3.connect(self.path)
         self.connection.execute('pragma foreign_keys=ON')
+
+    def url(self):
+        return 'sqlite:///%s' % (self.path)

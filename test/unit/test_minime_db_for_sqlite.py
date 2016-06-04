@@ -24,8 +24,8 @@ class TestMinimeDbForSqlite(TestMinimeDbBase):
         self.dst_dbconn.disconnect()
 
     def run_main(self, explain=False):
-        src_url = 'sqlite:///%s' % (self.src_dbconn.path)
-        dst_url = 'sqlite:///%s' % (self.dst_dbconn.path)
+        src_url = self.src_dbconn.url()
+        dst_url = self.dst_dbconn.url()
         super(TestMinimeDbForSqlite, self).run_main(
             src_url, dst_url, self.dst_dbconn, explain=explain)
 
