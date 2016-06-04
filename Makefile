@@ -21,8 +21,5 @@ clean:
 	find . -type f -regex ".*\.py[co]$$" -delete
 	find . -type f -name '*.pyc' -delete
 
-clean-tox:
-	rm -rf .tox
-
 python:
 	$(PYTHON) setup.py build
