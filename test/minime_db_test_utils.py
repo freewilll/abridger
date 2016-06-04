@@ -1,5 +1,5 @@
 from minime.minime_db import main
-from test.unit.utils import make_temp_file
+from test.unit.utils import make_temp_yaml_file
 
 
 class TestMinimeDbBase(object):
@@ -28,7 +28,7 @@ class TestMinimeDbBase(object):
         conn.commit()
 
     def run_main(self, src_url, dst_url, dst_dbconn, explain=False):
-        config_filename = make_temp_file([
+        config_filename = make_temp_yaml_file([
             {'subject': [{'tables': [{'table': 'test1'}]}]}
         ])
 
