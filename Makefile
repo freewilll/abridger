@@ -17,6 +17,7 @@ clean:
 	@echo "Cleaning up distutils stuff"
 	rm -rf build
 	rm -rf dist
+	rm -rf .tox
 	find . -type f -regex ".*\.py[co]$$" -delete
 	find . -type f -name '*.pyc' -delete
 
