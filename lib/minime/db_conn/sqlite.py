@@ -11,6 +11,10 @@ class SqliteDbConn(DbConn):
         self.connect()
         self.create_schema(SqliteSchema)
 
+    @staticmethod
+    def create_from_django_dbconn(dj_details):
+        return SqliteDbConn(dj_details['NAME'])
+
     def connect(self):
         self.connection = sqlite3.connect(self.path)
         self.connection.execute('pragma foreign_keys=ON')

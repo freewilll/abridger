@@ -22,6 +22,15 @@ class PostgresqlDbConn(DbConn):
         self.connect()
         self.create_schema(PostgresqlSchema)
 
+    @staticmethod
+    def create_from_django_dbconn(dj_details):
+        return PostgresqlDbConn(
+            host=dj_details['HOST'],
+            port=dj_details['PORT'] or 5432,
+            dbname=dj_details['NAME'],
+            user=dj_details['USER'],
+            password=dj_details['PASSWORD'])
+
     def connect(self):
         self.connection = psycopg2.connect(
             database=self.dbname,
