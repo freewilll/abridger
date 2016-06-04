@@ -6,7 +6,9 @@ class DbConn(object):
         self.schema = schema_cls.create_from_conn(self.connection)
 
     def disconnect(self):
-        self.connection.close()
+        if self.connection is not None:
+            self.connection.close()
+        self.connection = None
 
     def execute(self, *args, **kwargs):
         cursor = self.connection.cursor()

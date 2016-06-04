@@ -29,7 +29,6 @@ class PostgresqlDbConn(DbConn):
             password=self.password,
             host=self.host,
             port=self.port)
-        return self.connection
 
     def url(self):
         return 'postgresql://%s%s@%s:%s/%s' % (

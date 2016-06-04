@@ -47,7 +47,7 @@ def main(args):
     print('Connecting to', args.dst_url)
     dst_dbconn = minime.db_conn.load(args.dst_url)
 
-    connection = dst_dbconn.connect()
+    connection = dst_dbconn.connection
 
     table_row_counts = defaultdict(int)
     table_update_counts = defaultdict(int)

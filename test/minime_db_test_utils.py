@@ -38,7 +38,8 @@ class TestMinimeDbBase(object):
         main(args)
 
         # Check dst
-        dst_conn = dst_dbconn.connect()
+        dst_dbconn.connect()
+        dst_conn = dst_dbconn.connection
         cur = dst_conn.cursor()
 
         cur.execute('SELECT id, test2_id FROM test1 ORDER BY id')

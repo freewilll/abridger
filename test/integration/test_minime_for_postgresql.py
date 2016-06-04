@@ -23,7 +23,7 @@ class TestMinimeDbForPostgresql(TestMinimeDbBase):
     def test_main(self, capsys, postgresql, postgresql2):
         # Prepare src
         self.src_dbconn = make_postgresql_dbconn(postgresql)
-        self.src_conn = self.src_dbconn.connect()
+        self.src_conn = self.src_dbconn.connection
         self.create_schema(self.src_conn)
         self.create_data(self.src_conn)
         self.src_conn.commit()
@@ -31,7 +31,7 @@ class TestMinimeDbForPostgresql(TestMinimeDbBase):
 
         # Prepare dst
         self.dst_dbconn = make_postgresql_dbconn(postgresql2)
-        self.dst_conn = self.dst_dbconn.connect()
+        self.dst_conn = self.dst_dbconn.connection
         self.create_schema(self.dst_conn)
         self.dst_dbconn.disconnect()
 

@@ -9,7 +9,7 @@ class TestMinimeDbForSqlite(TestMinimeDbBase):
     def prepare_src(self):
         self.src = NamedTemporaryFile(mode='wt', suffix='.sqlite3')
         self.src_dbconn = SqliteDbConn(self.src.name)
-        src_conn = self.src_dbconn.connect()
+        src_conn = self.src_dbconn.connection
         self.create_schema(src_conn)
         self.create_data(src_conn)
         src_conn.commit()
@@ -18,7 +18,7 @@ class TestMinimeDbForSqlite(TestMinimeDbBase):
     def prepare_dst(self, with_schema=True):
         self.dst = NamedTemporaryFile(mode='wt', suffix='.sqlite3')
         self.dst_dbconn = SqliteDbConn(self.dst.name)
-        dst_conn = self.dst_dbconn.connect()
+        dst_conn = self.dst_dbconn.connection
         if with_schema:
             self.create_schema(dst_conn)
         self.dst_dbconn.disconnect()

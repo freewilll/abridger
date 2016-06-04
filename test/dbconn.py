@@ -4,7 +4,7 @@ import pytest
 class DbConnTestBase(object):
     def make_db(self, request, schema_cls):
         dbconn = self.dbconn
-        conn = dbconn.connect()
+        conn = dbconn.connection
         dbconn.execute(
             "CREATE TABLE table1 (id SERIAL PRIMARY KEY, name TEXT)")
         conn.commit()
