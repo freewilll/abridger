@@ -209,6 +209,8 @@ class TestGenerator(TestRocketBase):
             pprint(generator.deferred_update_rules)
             print('Expected deferred update rules:')
             pprint(expected_deferred_update_rules)
+            assert generator.deferred_update_rules == \
+                expected_deferred_update_rules
 
     def test_generator_table_order1(self, schema1):
         self.check_table_order(schema1, ['test1', 'test2'])
