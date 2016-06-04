@@ -1,7 +1,7 @@
 import sqlite3
 
 from .base import Database
-from minime.schema import SqliteSchema
+from abridger.schema import SqliteSchema
 
 
 class SqliteDatabase(Database):

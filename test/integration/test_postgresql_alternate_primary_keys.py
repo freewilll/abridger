@@ -1,5 +1,5 @@
 import pytest
-from minime.schema import PostgresqlSchema
+from abridger.schema import PostgresqlSchema
 from alternate_primary_keys import TestAlternatePrimaryKeysBase as Base
 
 

@@ -1,8 +1,8 @@
-from minime.minime_db import main
+from abridger.abridge_db import main
 from test.unit.utils import make_temp_yaml_file
 
 
-class TestMinimeDbBase(object):
+class TestAbridgeDbBase(object):
     def create_schema(self, conn):
         cur = conn.cursor()
         for sql in (

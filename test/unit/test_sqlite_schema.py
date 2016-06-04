@@ -1,6 +1,6 @@
 import pytest
 
-from minime.schema import SqliteSchema
+from abridger.schema import SqliteSchema
 
 
 class TestSqliteSchema(object):

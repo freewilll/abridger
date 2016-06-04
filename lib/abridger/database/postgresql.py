@@ -1,7 +1,7 @@
 import psycopg2
 
 from .base import Database
-from minime.schema import PostgresqlSchema
+from abridger.schema import PostgresqlSchema
 
 
 class PostgresqlDatabase(Database):

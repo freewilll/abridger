@@ -1,6 +1,6 @@
 import pytest
 
-from minime.schema import SqliteSchema
+from abridger.schema import SqliteSchema
 from alternate_primary_keys import TestAlternatePrimaryKeysBase as Base
 
 

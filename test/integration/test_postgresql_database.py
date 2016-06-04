@@ -1,6 +1,6 @@
 import pytest
 
-from minime.schema import PostgresqlSchema
+from abridger.schema import PostgresqlSchema
 from database import DatabaseTestBase
 
 

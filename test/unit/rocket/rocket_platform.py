@@ -1,8 +1,8 @@
 import pytest
 from pprint import pprint
 
-from minime.extraction_model import ExtractionModel
-from minime.rocket import Rocket
+from abridger.extraction_model import ExtractionModel
+from abridger.rocket import Rocket
 
 
 class TestRocketBase(object):

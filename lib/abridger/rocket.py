@@ -2,7 +2,7 @@ from __future__ import print_function
 from queue import Queue
 from collections import defaultdict
 import sys
-from minime.extraction_model import Relation, merge_relations
+from abridger.extraction_model import Relation, merge_relations
 
 
 class ResultsRow(object):

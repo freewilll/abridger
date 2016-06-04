@@ -1,7 +1,7 @@
 import argparse
 from signal import signal, SIGPIPE, SIG_DFL
 import sys
-from minime.database import load
+from abridger.database import load
 
 
 def main(args):

@@ -1,7 +1,8 @@
 from collections import defaultdict
 import pytest
 from jsonschema.exceptions import ValidationError
-from minime.extraction_model import ExtractionModel, Relation, merge_relations
+from abridger.extraction_model import (ExtractionModel, Relation,
+                                       merge_relations)
 
 
 class TestExtractionModelBase(object):

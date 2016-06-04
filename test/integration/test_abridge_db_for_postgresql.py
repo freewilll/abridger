@@ -1,6 +1,6 @@
 from pytest_dbfixtures import factories
 
-from test.minime_db_test_utils import TestMinimeDbBase
+from test.abridge_db_test_utils import TestAbridgeDbBase
 from test.fixtures.postgresql import make_postgresql_database
 
 
@@ -8,7 +8,7 @@ postgresql_proc2 = factories.postgresql_proc(port=5434)
 postgresql2 = factories.postgresql('postgresql_proc2')
 
 
-class TestMinimeDbForPostgresql(TestMinimeDbBase):
+class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
     def setup_method(self, method):
         self.src_database = None
         self.dst_database = None
@@ -35,7 +35,7 @@ class TestMinimeDbForPostgresql(TestMinimeDbBase):
         self.create_schema(self.dst_conn)
         self.dst_database.disconnect()
 
-        # Run minime
+        # Run abridger
         src_url = self.src_database.url()
         dst_url = self.dst_database.url()
         self.run_main(src_url, dst_url, self.dst_database)

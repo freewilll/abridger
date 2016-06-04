@@ -2,11 +2,11 @@ import argparse
 from signal import signal, SIGPIPE, SIG_DFL
 from collections import defaultdict
 
-import minime.database
-from minime.extraction_model import ExtractionModel
-from minime.rocket import Rocket
-from minime.generator import Generator
-import minime.config_file_loader
+import abridger.database
+from abridger.extraction_model import ExtractionModel
+from abridger.rocket import Rocket
+from abridger.generator import Generator
+import abridger.config_file_loader
 
 
 def main(args):
@@ -28,10 +28,10 @@ def main(args):
     args = parser.parse_args(args)
 
     print('Connecting to', args.src_url)
-    src_database = minime.database.load(args.src_url)
+    src_database = abridger.database.load(args.src_url)
 
     print('Querying...')
-    extraction_model_data = minime.config_file_loader.load(args.config_path)
+    extraction_model_data = abridger.config_file_loader.load(args.config_path)
     extraction_model = ExtractionModel.load(src_database.schema,
                                             extraction_model_data)
     rocket = Rocket(src_database, extraction_model, explain=args.explain)
@@ -45,7 +45,7 @@ def main(args):
     src_database.disconnect()
 
     print('Connecting to', args.dst_url)
-    dst_database = minime.database.load(args.dst_url)
+    dst_database = abridger.database.load(args.dst_url)
 
     connection = dst_database.connection
 

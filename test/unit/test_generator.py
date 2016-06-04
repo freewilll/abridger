@@ -1,10 +1,10 @@
 import pytest
 from pprint import pprint
 
-from minime.schema import SqliteSchema
-from minime.extraction_model import ExtractionModel, Relation
-from minime.rocket import Rocket
-from minime.generator import Generator
+from abridger.schema import SqliteSchema
+from abridger.extraction_model import ExtractionModel, Relation
+from abridger.rocket import Rocket
+from abridger.generator import Generator
 from test.unit.rocket.rocket_platform import TestRocketBase
 
 

@@ -1,8 +1,8 @@
 import tempfile
 import yaml
 
-from minime.schema import PostgresqlSchema
-from minime.extraction_model import Relation
+from abridger.schema import PostgresqlSchema
+from abridger.extraction_model import Relation
 
 
 class TestPostgresqlSchema(object):

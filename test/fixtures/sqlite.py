@@ -1,8 +1,8 @@
 import os.path
 import pytest
 
-from minime.database.sqlite import SqliteDatabase
-from minime.schema import SqliteSchema
+from abridger.database.sqlite import SqliteDatabase
+from abridger.schema import SqliteSchema
 from conftest_utils import generic_conn
 
 

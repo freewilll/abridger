@@ -1,11 +1,11 @@
 import pytest
 from tempfile import NamedTemporaryFile
 
-from minime.database.sqlite import SqliteDatabase
-from test.minime_db_test_utils import TestMinimeDbBase
+from test.abridge_db_test_utils import TestAbridgeDbBase
+from abridger.database.sqlite import SqliteDatabase
 
 
-class TestMinimeDbForSqlite(TestMinimeDbBase):
+class TestAbridgeDbForSqlite(TestAbridgeDbBase):
     def prepare_src(self):
         self.src = NamedTemporaryFile(mode='wt', suffix='.sqlite3')
         self.src_database = SqliteDatabase(self.src.name)
@@ -26,7 +26,7 @@ class TestMinimeDbForSqlite(TestMinimeDbBase):
     def run_main(self, explain=False):
         src_url = self.src_database.url()
         dst_url = self.dst_database.url()
-        super(TestMinimeDbForSqlite, self).run_main(
+        super(TestAbridgeDbForSqlite, self).run_main(
             src_url, dst_url, self.dst_database, explain=explain)
 
     def test_success(self, capsys):

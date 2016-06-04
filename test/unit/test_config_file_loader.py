@@ -1,7 +1,7 @@
 import os.path
 import pytest
 import tempfile
-from minime.config_file_loader import load
+from abridger.config_file_loader import load
 from .utils import make_temp_yaml_file
 
 

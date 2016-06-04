@@ -1,4 +1,4 @@
-from minime.dump_relations import main
+from abridger.dump_relations import main
 
 
 class TestDumpRelationsScriptForPostgresql(object):

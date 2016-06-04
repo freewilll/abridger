@@ -1,4 +1,4 @@
-from minime.extraction_model import Relation
+from abridger.extraction_model import Relation
 
 
 class ForeignKeyConstraint(object):

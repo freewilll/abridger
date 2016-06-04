@@ -1,7 +1,7 @@
 import pytest
 
 from database import DatabaseTestBase
-from minime.schema import SqliteSchema
+from abridger.schema import SqliteSchema
 
 
 class TestSqliteDatabase(DatabaseTestBase):
