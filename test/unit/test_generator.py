@@ -217,7 +217,7 @@ class TestGenerator(TestRocketBase):
 
     def test_generator_table_order2a(self, schema2):
         expected_deferred_update_rules = {
-            schema2.tables[0]: set([schema2.tables[0].cols[1]]),
+            schema2.tables[0]: set([schema2.tables[0].cols[2]]),
             schema2.tables[1]: set(),
         }
         self.check_table_order(
