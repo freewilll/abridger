@@ -31,6 +31,14 @@ class PostgresqlDbConn(DbConn):
             port=self.port)
         return self.connection
 
+    def url(self):
+        return 'postgresql://%s%s@%s:%s/%s' % (
+            self.user,
+            ':%s' % self.password if self.password is None else '',
+            self.host,
+            self.port,
+            self.dbname)
+
     def execute_and_fetchall(self, *args, **kwargs):
         with self.connection.cursor() as cur:
             cur.execute(*args, **kwargs)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from queue import Queue
 from collections import defaultdict
 import sys
@@ -108,18 +109,18 @@ class WorkItem(object):
         first = True
         for (table, cols, values, sticky) in self.history:
             if not first:
-                print '->',
+                print(' -> ', end='')
             else:
                 first = False
 
             if cols is not None:
-                print '%s.%s=%s' % (table, cols, values),
+                print('%s.%s=%s' % (table, cols, values), end='')
             else:
-                print table,
+                print(table, end='')
 
             if sticky:
                 sys.stdout.write('*')
-        print
+        print()
 
 
 class Rocket(object):

@@ -7,15 +7,19 @@ from minime.schema import PostgresqlSchema
 from conftest_utils import generic_conn
 
 
-@pytest.fixture(scope='function')
-def postgresql_dbconn(request, postgresql):
+def make_postgresql_dbconn(postgresql_fixture):
     m = re.match(r'user=(.+) host=(.+) port=(\d+) dbname=(.+)',
-                 postgresql.dsn)
+                 postgresql_fixture.dsn)
     assert m is not None
     (user, host, port, dbname) = (m.group(1), m.group(2), m.group(3),
                                   m.group(4))
 
     return PostgresqlDbConn(user=user, host=host, port=port, dbname=dbname)
+
+
+@pytest.fixture(scope='function')
+def postgresql_dbconn(request, postgresql):
+    return make_postgresql_dbconn(postgresql)
 
 
 @pytest.fixture(scope='function')
