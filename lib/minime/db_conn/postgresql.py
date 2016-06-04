@@ -37,8 +37,3 @@ class PostgresqlDbConn(DbConn):
             self.host,
             self.port,
             self.dbname)
-
-    def execute_and_fetchall(self, *args, **kwargs):
-        with self.connection.cursor() as cur:
-            cur.execute(*args, **kwargs)
-            return cur.fetchall()
