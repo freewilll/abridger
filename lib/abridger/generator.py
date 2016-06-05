@@ -1,4 +1,5 @@
 from functools import reduce
+from abridger.exc import CyclicDependencyError
 
 
 class Generator(object):
@@ -48,7 +49,9 @@ class Generator(object):
                     new_data[item] = (dep - ordered)
             data = new_data
 
-        assert not data, "A cyclic dependency exists amongst %r" % data
+        if data:
+            raise CyclicDependencyError(
+                "A cyclic dependency exists amongst %r" % data)
 
     def make_table_order(self):
         topologically_sorted = self.topologically_sort(

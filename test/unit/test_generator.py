@@ -6,6 +6,7 @@ from abridger.extraction_model import ExtractionModel, Relation
 from abridger.extractor import Extractor
 from abridger.generator import Generator
 from test.unit.extractor.base import TestExtractorBase
+from abridger.exc import CyclicDependencyError
 
 
 class TestGenerator(TestExtractorBase):
@@ -243,9 +244,8 @@ class TestGenerator(TestExtractorBase):
         self.check_table_order(schema4, ['test3', 'test2', 'test1'])
 
     def test_generator_table_order5(self, schema5):
-        with pytest.raises(Exception) as e:
+        with pytest.raises(CyclicDependencyError):
             self.check_table_order(schema5, ['test3', 'test2', 'test1'])
-        assert 'A cyclic dependency exists amongst' in str(e)
 
     def test_generator_table_order6(self, schema6):
         self.check_table_order(schema6, ['test3', 'test4', 'test2', 'test1'])

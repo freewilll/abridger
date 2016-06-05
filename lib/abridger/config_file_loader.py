@@ -1,5 +1,6 @@
 import os.path
 import yaml
+from abridger.exc import IncludeError, DataError, FileNotFoundError
 
 
 def walk(node, process_include):
@@ -32,13 +33,13 @@ def _load(filename, include_paths):
             break
 
     if not found_file:
-        raise Exception('Unable to locate "%s" in include paths %s' %
-                        (filename, ','.join(sorted(include_paths))))
+        raise IncludeError('Unable to locate "%s" in include paths %s' %
+                           (filename, ','.join(sorted(include_paths))))
 
     data = yaml.load(open(full_filename))
     if not isinstance(data, list):
-        raise Exception('The root data in "%s" must be a sequence' %
-                        full_filename)
+        raise DataError(
+            'The root data in "%s" must be a sequence' % full_filename)
 
     def process_include(filename_or_list):
         if isinstance(filename_or_list, list):
@@ -57,7 +58,7 @@ def load(path):
     '''Load a config file, processing includes along the way.'''
 
     if not os.path.isfile(path):
-        raise Exception('No such file: "%s"' % path)
+        raise FileNotFoundError('No such file: "%s"' % path)
     include_paths = [os.path.dirname(path)]
 
     return _load(os.path.basename(path), include_paths)

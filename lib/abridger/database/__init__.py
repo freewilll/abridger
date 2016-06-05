@@ -2,6 +2,7 @@ import dj_database_url
 
 from .sqlite import SqliteDatabase
 from .postgresql import PostgresqlDatabase
+from abridger.exc import DatabaseUrlError
 
 
 __all__ = [
@@ -18,5 +19,6 @@ def load(url):
     dj_details = dj_database_url.parse(url)
     database_cls = DJANGO_ENGINE_TO_DBCONN_MAP.get(dj_details['ENGINE'])
     if database_cls is None:
-        raise Exception('Unable to determine the database from the URL')
+        raise DatabaseUrlError(
+            'Unable to determine the database from the URL')
     return database_cls.create_from_django_database(dj_details)

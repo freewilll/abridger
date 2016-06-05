@@ -1,5 +1,6 @@
 import pytest
 from tempfile import NamedTemporaryFile
+from sqlite3 import OperationalError
 
 from test.abridge_db_test_utils import TestAbridgeDbBase
 from abridger.database.sqlite import SqliteDatabase
@@ -38,9 +39,8 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
     def test_failure_rollback(self, capsys):
         self.prepare_src()
         self.prepare_dst(with_schema=False)
-        with pytest.raises(Exception) as e:
+        with pytest.raises(OperationalError):
             self.run_main()
-        assert 'no such table' in str(e)
         out, err = capsys.readouterr()
 
     def test_explain(self, capsys):

@@ -1,5 +1,7 @@
 from collections import defaultdict
 from jsonschema import Draft4Validator
+from abridger.exc import (UnknownTableError, UnknownColumnError,
+                          InvalidConfigError, RelationIntegrityError)
 
 
 class Subject(object):
@@ -274,13 +276,14 @@ class ExtractionModel(object):
            table'''
         table = self.schema.tables_by_name.get(table_name)
         if table is None:
-            raise Exception('Unknown table: "%s"' % table_name)
+            raise UnknownTableError('Unknown table: "%s"' % table_name)
 
         if column_name is not None:
             column = table.cols_by_name.get(column_name)
             if column is None:
-                raise Exception('Unknown column: "%s" on table "%s"' % (
-                    column_name, table_name))
+                raise UnknownColumnError(
+                    'Unknown column: "%s" on table "%s"' % (
+                        column_name, table_name))
         else:
             column = None
 
@@ -309,12 +312,12 @@ class ExtractionModel(object):
 
         if (disabled and column is not None and
                 type == Relation.TYPE_OUTGOING and column.notnull):
-            raise Exception(
+            raise RelationIntegrityError(
                 'Cannot disable outgoing not null foreign keys on column '
                 '%s as this would lead to an integrity error' % column)
 
         if disabled and 'sticky' in relation_data:
-            raise Exception(
+            raise InvalidConfigError(
                 'The sticky flag is meaningless on disabled relations')
 
         self._add_relation(
@@ -373,7 +376,8 @@ class ExtractionModel(object):
             table_name = relation_data.get('table')
 
             if (defaults is None) == (table_name is None):
-                raise Exception('Either defaults or table must be set')
+                raise InvalidConfigError(
+                    'Either defaults or table must be set')
 
             if table_name is not None:
                 self._add_table_relation(target, relation_data)
@@ -386,9 +390,11 @@ class ExtractionModel(object):
             self.table_validator.validate(table_data)
 
             if 'column' in table_data and 'values' not in table_data:
-                raise Exception('A table with a column must have values')
+                raise InvalidConfigError(
+                    'A table with a column must have values')
             if 'values' in table_data and 'column' not in table_data:
-                raise Exception('A table with values must have a column')
+                raise InvalidConfigError(
+                    'A table with values must have a column')
 
             table_name = table_data['table']
             column_name = table_data.get('column')
@@ -415,7 +421,7 @@ class ExtractionModel(object):
                 self._add_tables(subject.tables, list_data)
 
         if len(subject.tables) == 0:
-            raise Exception('A subject must have at least one table')
+            raise InvalidConfigError('A subject must have at least one table')
 
     def _add_not_null_cols(self, data):
         for row in data:
@@ -431,7 +437,7 @@ class ExtractionModel(object):
                     if column == fk_col:
                         found_fk = foreign_key
             if not found_fk:
-                raise Exception(
+                raise RelationIntegrityError(
                     "not-null-columns can only be used on foreign keys."
                     "Column %s on table %s isn't a foreign key." % (
                         column.name, table.name))

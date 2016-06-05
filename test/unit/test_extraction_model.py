@@ -3,6 +3,8 @@ import pytest
 from jsonschema.exceptions import ValidationError
 from abridger.extraction_model import (ExtractionModel, Relation,
                                        merge_relations)
+from abridger.exc import (UnknownTableError, UnknownColumnError,
+                          InvalidConfigError, RelationIntegrityError)
 
 
 class TestExtractionModelBase(object):
@@ -53,35 +55,31 @@ class TestExtractionModel(TestExtractionModelBase):
     def test_non_existent_table_data(self):
         # Check unknown table
         data = [{'subject': [{'tables': [{'table': 'foo'}]}]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownTableError):
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'Unknown table' in str(e)
 
         # Check unknown column
         table_name = self.schema1_sl.tables[0].name
         table = {'table': table_name, 'column': 'unknown', 'values': [1]}
         subject = [{'tables': [table]}]
         data = [{'subject': subject}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownColumnError):
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'Unknown column' in str(e)
 
     def test_non_existent_relation_table_data(self):
         # Check unknown table
         relation = dict(self.relations[0])
         relation['table'] = 'foo'
         data = [{'relations': [relation]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownTableError):
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'Unknown table' in str(e)
 
         # Check unknown column
         relation = dict(self.relations[0])
         relation['column'] = 'unknown'
         data = [{'relations': [relation]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownColumnError):
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'Unknown column' in str(e)
 
     def test_relation_keys(self):
         relation = dict(self.relations[0])
@@ -142,14 +140,14 @@ class TestExtractionModel(TestExtractionModelBase):
         relation = dict(self.relations[0])
         table = relation.pop('table')
         data = [{'relations': [relation]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(InvalidConfigError) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Either defaults or table must be set' in str(e)
 
         # Test both set
         relation['table'] = table
         relation['defaults'] = Relation.DEFAULT_EVERYTHING
-        with pytest.raises(Exception) as e:
+        with pytest.raises(InvalidConfigError) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'Either defaults or table must be set' in str(e)
 
@@ -219,7 +217,7 @@ class TestExtractionModel(TestExtractionModelBase):
 
     def test_subject_must_have_at_least_one_table(self):
         data = [{'subject': [{'relations': self.relations}]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(InvalidConfigError) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'A subject must have at least one table' in str(e)
 
@@ -279,7 +277,7 @@ class TestExtractionModel(TestExtractionModelBase):
                 table['values'] = 1
             subject = [{'relations': self.relations}, {'tables': [table]}]
             data = [{'subject': subject}]
-            with pytest.raises(Exception) as e:
+            with pytest.raises(InvalidConfigError) as e:
                 ExtractionModel.load(self.schema1_sl, data)
             if key == 'column':
                 assert 'A table with a column must have values' in str(e)
@@ -353,15 +351,13 @@ class TestExtractionModel(TestExtractionModelBase):
 
         data = [
             {'not-null-columns': [{'table': 'foo', 'column': column}]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownTableError):
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'Unknown table' in str(e)
 
         data = [
             {'not-null-columns': [{'table': table, 'column': 'unknown'}]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownColumnError):
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'Unknown column' in str(e)
 
     def test_not_null_columns_must_be_a_foreign_key(self):
         # The assumption there is that the first table doesn't have any
@@ -391,7 +387,7 @@ class TestExtractionModel(TestExtractionModelBase):
         data = [
             {'not-null-columns': [{'table': non_fk_column.table.name,
                                    'column': non_fk_column.name}]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(RelationIntegrityError) as e:
             ExtractionModel.load(self.schema1_sl, data)
         assert 'not-null-columns can only be used on foreign keys' in str(e)
 
@@ -495,6 +491,6 @@ class TestExtractionModelMergeRelations(TestExtractionModelBase):
             relation['sticky'] = sticky
             relation['disabled'] = True
             data = [{'relations': [relation]}]
-            with pytest.raises(Exception) as e:
+            with pytest.raises(InvalidConfigError) as e:
                 ExtractionModel.load(self.schema1_sl, data)
             assert 'The sticky flag is meaningless' in str(e)

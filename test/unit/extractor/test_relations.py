@@ -4,6 +4,7 @@ from abridger.extraction_model import (Relation, ExtractionModel,
                                        merge_relations)
 from abridger.schema import SqliteSchema
 from test.unit.extractor.base import TestExtractorBase
+from abridger.exc import RelationIntegrityError
 
 
 class TestExtractorRelations(TestExtractorBase):
@@ -120,9 +121,8 @@ class TestExtractorRelations(TestExtractorBase):
         relation = {'table': 'test2', 'column': 'test1_nn_id',
                     'type': Relation.TYPE_OUTGOING, 'disabled': True}
         data = [{'relations': [relation]}]
-        with pytest.raises(Exception) as e:
+        with pytest.raises(RelationIntegrityError):
             ExtractionModel.load(schema1, data)
-        assert 'Cannot disable outgoing not null foreign keys' in str(e)
 
     @pytest.mark.parametrize(
         'type_, notnull, sticky, propagate_sticky, only_if_sticky', [

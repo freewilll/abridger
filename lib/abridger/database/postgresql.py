@@ -8,9 +8,9 @@ class PostgresqlDatabase(Database):
     def __init__(self, host=None, port=None, dbname=None, user=None,
                  password=None):
         if dbname is None:
-            raise Exception('dbname must have a value')
+            raise ValueError('dbname must have a value')
         if user is None:
-            raise Exception('user must have a value')
+            raise ValueError('user must have a value')
 
         self.host = host
         self.port = port

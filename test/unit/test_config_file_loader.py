@@ -2,6 +2,7 @@ import os.path
 import pytest
 import tempfile
 from abridger.config_file_loader import load
+from abridger.exc import IncludeError, DataError, FileNotFoundError
 from .utils import make_temp_yaml_file
 
 
@@ -15,14 +16,12 @@ class TestConfigFileLoader(object):
         return make_temp_yaml_file(contents, dir=dir)
 
     def test_load_unknown_file(self):
-        with pytest.raises(Exception) as e:
+        with pytest.raises(FileNotFoundError):
             load('foo')
-        assert 'No such file' in str(e)
 
     def test_bad_non_mapping_in_root(self):
-        with pytest.raises(Exception) as e:
+        with pytest.raises(DataError):
             load(make_temp_yaml_file({}))
-        assert 'must be a sequence' in str(e)
 
     def test_include_toplevel_string(self):
         '''Test - include: foo.yaml'''
@@ -73,6 +72,5 @@ class TestConfigFileLoader(object):
                 }]
             }
         ])
-        with pytest.raises(Exception) as e:
+        with pytest.raises(IncludeError):
             assert load(filename1) == [{'fetch': [{'relations': []}]}]
-        assert 'Unable to locate' in str(e)

@@ -80,6 +80,6 @@ def main(args):
         try:
             connection.rollback()
         except Exception as e:
-            print("Some thing went wrong while trying a rollback: %s" % str(e))
+            print("Something went wrong while trying a rollback: %s" % str(e))
 
         dst_database.disconnect()

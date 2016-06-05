@@ -1,6 +1,7 @@
 import pytest
 
 from abridger.schema import SqliteSchema
+from abridger.exc import UnknownTableError, UnknownColumnError
 
 
 class TestSqliteSchema(object):
@@ -176,9 +177,8 @@ class TestSqliteSchema(object):
                 );''']:
             sqlite_conn.execute(sql)
 
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownColumnError):
             SqliteSchema.create_from_conn(sqlite_conn)
-        assert 'Unknown column' in str(e)
 
     def test_schema_non_existent_foreign_key_unknown_table(self, sqlite_conn):
         for sql in [
@@ -192,9 +192,8 @@ class TestSqliteSchema(object):
                 );''']:
             sqlite_conn.execute(sql)
 
-        with pytest.raises(Exception) as e:
+        with pytest.raises(UnknownTableError):
             SqliteSchema.create_from_conn(sqlite_conn)
-        assert 'Unknown table' in str(e)
 
     def test_schema_unique_indexes(self, sqlite_conn):
         for sql in [

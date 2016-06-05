@@ -2,6 +2,7 @@ from collections import defaultdict
 import re
 
 from .base import Schema, Table, ForeignKeyConstraint, UniqueIndex
+from abridger.exc import UnknownTableError, UnknownColumnError
 
 
 class SqliteSchema(Schema):
@@ -76,8 +77,8 @@ class SqliteSchema(Schema):
 
                     dst_table = self.tables_by_name.get(dst_table_name)
                     if dst_table is None:
-                        raise Exception(
-                            'Unknown table "%s"in foreign key '
+                        raise UnknownTableError(
+                            'Unknown table "%s" in foreign key '
                             'constraint on table "%s", column "%s"' % (
                                 dst_table_name, src_table, src_col_name))
 
@@ -89,7 +90,7 @@ class SqliteSchema(Schema):
                     else:
                         dst_col = dst_table.cols_by_name.get(dst_col_name)
                         if dst_col is None:
-                            raise Exception(
+                            raise UnknownColumnError(
                                 'Unknown column "%s" on table "%s"' % (
                                     dst_table.name, dst_col_name))
 
