@@ -3,10 +3,10 @@ import pytest
 from abridger.extraction_model import (Relation, ExtractionModel,
                                        merge_relations)
 from abridger.schema import SqliteSchema
-from test.unit.rocket.rocket_platform import TestRocketBase
+from test.unit.extractor.base import TestExtractorBase
 
 
-class TestRocketRelations(TestRocketBase):
+class TestExtractorRelations(TestExtractorBase):
     REL_NOTNULL = [{'defaults': Relation.DEFAULT_OUTGOING_NOTNULL}]
     REL_EVERYTHING = [{'defaults': Relation.DEFAULT_EVERYTHING}]
 

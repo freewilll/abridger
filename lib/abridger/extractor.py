@@ -123,7 +123,7 @@ class WorkItem(object):
         print()
 
 
-class Rocket(object):
+class Extractor(object):
     def __init__(self, database, extraction_model, explain=False):
         self.database = database
         self.extraction_model = extraction_model

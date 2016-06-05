@@ -2,10 +2,10 @@ import pytest
 from pprint import pprint
 
 from abridger.extraction_model import ExtractionModel
-from abridger.rocket import Rocket
+from abridger.extractor import Extractor
 
 
-class TestRocketBase(object):
+class TestExtractorBase(object):
     @pytest.fixture(autouse=True)
     def default_fixtures(self, sqlite_conn, sqlite_database):
         self.database = sqlite_database
@@ -18,19 +18,19 @@ class TestRocketBase(object):
             extraction_model_data.append({'relations': global_relations})
 
         extraction_model = ExtractionModel.load(schema, extraction_model_data)
-        rocket = Rocket(self.database, extraction_model).launch()
+        extractor = Extractor(self.database, extraction_model).launch()
         expected_data = sorted(expected_data, key=lambda t: t[0].name)
 
-        if rocket.flat_results() != expected_data:
+        if extractor.flat_results() != expected_data:
             print()
             print('Got results:')
-            pprint(rocket.flat_results())
+            pprint(extractor.flat_results())
             print('Expected results:')
             pprint(expected_data)
-        assert rocket.flat_results() == expected_data
+        assert extractor.flat_results() == expected_data
         if expected_fetch_count is not None:
-            assert rocket.fetch_count == expected_fetch_count
-        return rocket
+            assert extractor.fetch_count == expected_fetch_count
+        return extractor
 
     def check_one_subject(self, schema, tables, expected_data,
                           relations=None, global_relations=None,

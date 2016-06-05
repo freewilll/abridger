@@ -3,12 +3,12 @@ from pprint import pprint
 
 from abridger.schema import SqliteSchema
 from abridger.extraction_model import ExtractionModel, Relation
-from abridger.rocket import Rocket
+from abridger.extractor import Extractor
 from abridger.generator import Generator
-from test.unit.rocket.rocket_platform import TestRocketBase
+from test.unit.extractor.base import TestExtractorBase
 
 
-class TestGenerator(TestRocketBase):
+class TestGenerator(TestExtractorBase):
     # Two unrelated tables
     @pytest.fixture()
     def schema1(self):
@@ -184,8 +184,8 @@ class TestGenerator(TestRocketBase):
             {'not-null-columns': not_null_columns},
         ]
         extraction_model = ExtractionModel.load(schema, extraction_model_data)
-        rocket = Rocket(self.database, extraction_model)
-        return Generator(schema, rocket)
+        extractor = Extractor(self.database, extraction_model)
+        return Generator(schema, extractor)
 
     def check_table_order(self, schema, expected_table_order,
                           not_null_columns=None,
@@ -264,7 +264,7 @@ class TestGenerator(TestRocketBase):
         rows = [(table4, (1, 1))]
         self.database.insert_rows(rows)
         generator = self.get_generator_instance(schema6, table='test4')
-        generator.rocket.launch()
+        generator.extractor.launch()
         generator.generate_statements()
 
         assert generator.insert_statements == [(table4, (1, None))]
@@ -312,7 +312,7 @@ class TestGenerator(TestRocketBase):
         self.database.update_rows(updates)
 
         generator = self.get_generator_instance(schema6, table='test3')
-        generator.rocket.launch()
+        generator.extractor.launch()
         generator.generate_statements()
         self.check_statements(generator, inserts, updates)
 
@@ -323,6 +323,6 @@ class TestGenerator(TestRocketBase):
     def test_statements_no_pk_no_index(self, schema7, data7, table, start,
                                        end):
         generator = self.get_generator_instance(schema7, table=table)
-        generator.rocket.launch()
+        generator.extractor.launch()
         generator.generate_statements()
         self.check_statements(generator, data7[start:end], [])

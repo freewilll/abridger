@@ -2,10 +2,10 @@ from functools import reduce
 
 
 class Generator(object):
-    def __init__(self, schema, rocket):
+    def __init__(self, schema, extractor):
         self.schema = schema
-        self.extraction_model = rocket.extraction_model
-        self.rocket = rocket
+        self.extraction_model = extractor.extraction_model
+        self.extractor = extractor
         self.make_table_order()
         self.make_deferred_update_rules()
         self.generate_statements()
@@ -86,11 +86,11 @@ class Generator(object):
         self.update_statements = []
         for table in self.table_order:
             col_indexes = {col: table.cols.index(col) for col in table.cols}
-            if table not in self.rocket.results:
+            if table not in self.extractor.results:
                 continue
 
             epk = table.effective_primary_key
-            results_rows = self.rocket.results[table][epk]
+            results_rows = self.extractor.results[table][epk]
             for results_row in sorted(results_rows.values()):
                 row = results_row.row
                 deferred_update_cols = self.deferred_update_rules[table]

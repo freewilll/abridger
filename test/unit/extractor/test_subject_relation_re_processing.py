@@ -2,10 +2,10 @@ import pytest
 
 from abridger.extraction_model import Relation
 from abridger.schema import SqliteSchema
-from test.unit.rocket.rocket_platform import TestRocketBase
+from test.unit.extractor.base import TestExtractorBase
 
 
-class TestRocketSubjectRelationReProcessingIncoming(TestRocketBase):
+class TestExtractorSubjectRelationReProcessingIncoming(TestExtractorBase):
     @pytest.fixture()
     def schema1(self):
         for sql in [
@@ -55,7 +55,7 @@ class TestRocketSubjectRelationReProcessingIncoming(TestRocketBase):
         #  \   /
         #    4
 
-        # The rocket algorithm goes breadth first. In this example,
+        # The extractor algorithm goes breadth first. In this example,
         # the test2 table is hit twice. However the first time it is hit,
         # it has less relationships, so it won't pull in test3.
         # The second subject includes test3 and test4. test2 will only get
@@ -87,7 +87,7 @@ class TestRocketSubjectRelationReProcessingIncoming(TestRocketBase):
         self.check_launch(schema1, extraction_model_data, data1)
 
 
-class TestRocketTwoSubjectTwoColumnNulling(TestRocketBase):
+class TestExtractorTwoSubjectTwoColumnNulling(TestExtractorBase):
     TEST_CASES = []
 
     for i in (True, False):
@@ -157,7 +157,7 @@ class TestRocketTwoSubjectTwoColumnNulling(TestRocketBase):
         #  \   /
         #    4
 
-        # The rocket algorithm goes breadth first. By testing with two
+        # The extractor algorithm goes breadth first. By testing with two
         # subjects, things can be rigged so that the test2 table is processed
         # twice, with different relationships.
         #

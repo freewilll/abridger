@@ -1,12 +1,12 @@
 import pytest
 
 from abridger.extraction_model import ExtractionModel
-from abridger.rocket import Rocket
+from abridger.extractor import Extractor
 from abridger.schema import SqliteSchema
-from test.unit.rocket.rocket_platform import TestRocketBase
+from test.unit.extractor.base import TestExtractorBase
 
 
-class TestRocketBasics(TestRocketBase):
+class TestExtractorBasics(TestExtractorBase):
     @pytest.fixture()
     def schema1(self):
         self.database.execute('''
@@ -225,17 +225,17 @@ class TestRocketBasics(TestRocketBase):
             {'subject': [{'tables': [{'table': 'test2'}]}]},
         ]
         extraction_model = ExtractionModel.load(schema2, extraction_model_data)
-        rocket = Rocket(self.database, extraction_model).launch()
-        assert rocket.flat_results() == data2
+        extractor = Extractor(self.database, extraction_model).launch()
+        assert extractor.flat_results() == data2
 
     def test_results_row_str_and_repr(self, schema1, data1):
         extraction_model_data = [
             {'subject': [{'tables': [{'table': 'test1'}]}]},
         ]
         extraction_model = ExtractionModel.load(schema1, extraction_model_data)
-        rocket = Rocket(self.database, extraction_model).launch()
+        extractor = Extractor(self.database, extraction_model).launch()
         table1 = schema1.tables[0]
-        result_rows = rocket.results[table1][table1.primary_key]
+        result_rows = extractor.results[table1][table1.primary_key]
         for result_row in list(result_rows.values()):
             assert repr(result_row) is not None
 
@@ -247,6 +247,6 @@ class TestRocketBasics(TestRocketBase):
                                       'column': 'id', 'values': 1}]}]},
         ]
         extraction_model = ExtractionModel.load(schema2, extraction_model_data)
-        rocket = Rocket(self.database, extraction_model).launch()
+        extractor = Extractor(self.database, extraction_model).launch()
         # Everything in test 1 and one row in test2
-        assert rocket.flat_results() == data2[0:2] + data2[2:3]
+        assert extractor.flat_results() == data2[0:2] + data2[2:3]

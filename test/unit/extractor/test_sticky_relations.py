@@ -2,10 +2,10 @@ import pytest
 
 from abridger.extraction_model import Relation
 from abridger.schema import SqliteSchema
-from test.unit.rocket.rocket_platform import TestRocketBase
+from test.unit.extractor.base import TestExtractorBase
 
 
-class TestRocketStickyRelations(TestRocketBase):
+class TestExtractorStickyRelations(TestExtractorBase):
     @pytest.fixture()
     def schema_out(self):
         '''

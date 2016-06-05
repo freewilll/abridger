@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import abridger.database
 from abridger.extraction_model import ExtractionModel
-from abridger.rocket import Rocket
+from abridger.extractor import Extractor
 from abridger.generator import Generator
 import abridger.config_file_loader
 
@@ -34,13 +34,13 @@ def main(args):
     extraction_model_data = abridger.config_file_loader.load(args.config_path)
     extraction_model = ExtractionModel.load(src_database.schema,
                                             extraction_model_data)
-    rocket = Rocket(src_database, extraction_model, explain=args.explain)
-    rocket.launch()
+    extractor = Extractor(src_database, extraction_model, explain=args.explain)
+    extractor.launch()
 
     if args.explain:
         exit(0)
 
-    generator = Generator(src_database.schema, rocket)
+    generator = Generator(src_database.schema, extractor)
     generator.generate_statements()
     src_database.disconnect()
 

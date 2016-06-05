@@ -2,10 +2,10 @@ import pytest
 
 from abridger.extraction_model import Relation
 from abridger.schema import SqliteSchema
-from test.unit.rocket.rocket_platform import TestRocketBase
+from test.unit.extractor.base import TestExtractorBase
 
 
-class TestRocketNonPrimaryKeyTables(TestRocketBase):
+class TestExtractorNonPrimaryKeyTables(TestExtractorBase):
     REL_EVERYTHING = [{'defaults': Relation.DEFAULT_EVERYTHING}]
 
     schema1 = [
