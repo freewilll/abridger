@@ -50,8 +50,11 @@ class Generator(object):
             data = new_data
 
         if data:
+            tables_csv = ', '.join([t.name for t in sorted(data.keys())])
             raise CyclicDependencyError(
-                "A cyclic dependency exists amongst %r" % data)
+                "There is a cycle of not-null keys in tables: %s. "
+                "Not null constraints need to be disabled "
+                "to allow data to be loaded." % tables_csv)
 
     def make_table_order(self):
         topologically_sorted = self.topologically_sort(

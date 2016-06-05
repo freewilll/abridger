@@ -244,8 +244,9 @@ class TestGenerator(TestExtractorBase):
         self.check_table_order(schema4, ['test3', 'test2', 'test1'])
 
     def test_generator_table_order5(self, schema5):
-        with pytest.raises(CyclicDependencyError):
+        with pytest.raises(CyclicDependencyError) as e:
             self.check_table_order(schema5, ['test3', 'test2', 'test1'])
+        assert 'test1, test2, test3' in str(e)
 
     def test_generator_table_order6(self, schema6):
         self.check_table_order(schema6, ['test3', 'test4', 'test2', 'test1'])
