@@ -1,4 +1,4 @@
-import psycopg2
+import importlib
 
 from .base import Database
 from abridger.schema import PostgresqlSchema
@@ -32,6 +32,15 @@ class PostgresqlDatabase(Database):
             password=dj_details['PASSWORD'])
 
     def connect(self):
+        psycopg2_package = 'psycopg2'
+        try:
+            psycopg2 = importlib.import_module(psycopg2_package)
+        except ImportError:
+            raise ImportError(
+                'Please install {0} package.\n'
+                'pip install -U {0}'.format(psycopg2_package)
+            )
+
         self.connection = psycopg2.connect(
             database=self.dbname,
             user=self.user,

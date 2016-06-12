@@ -22,7 +22,7 @@ setup(
     author_email='abridger@example.com',
     url='http://abridger.example.com/',
     license='GPLv3',
-    install_requires=['setuptools', 'pyyaml', 'psycopg2', 'six',
+    install_requires=['setuptools', 'pyyaml', 'six',
                       'jsonschema', 'dj-database-url', 'future'],
     package_dir={'': 'lib'},
     packages=find_packages('lib'),

@@ -1,3 +1,8 @@
+import pytest
+from test.conftest import got_postgresql
+
+
+@pytest.mark.skipif(not got_postgresql(), reason='Needs postgresql')
 class TestSqlitePostgresSchemaEquivalence(object):
     def test_equality(self, schema1_sl, schema1_pg):
         sl_table_names = set([t.name for t in schema1_sl.tables])

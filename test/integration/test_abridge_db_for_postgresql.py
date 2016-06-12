@@ -1,13 +1,16 @@
+import pytest
 from pytest_dbfixtures import factories
 
 from test.abridge_db_test_utils import TestAbridgeDbBase
 from test.fixtures.postgresql import make_postgresql_database
+from test.conftest import got_postgresql
 
 
 postgresql_proc2 = factories.postgresql_proc(port=5434)
 postgresql2 = factories.postgresql('postgresql_proc2')
 
 
+@pytest.mark.skipif(not got_postgresql(), reason='Needs postgresql')
 class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
     def setup_method(self, method):
         self.src_database = None
