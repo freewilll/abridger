@@ -24,11 +24,12 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
             self.create_schema(dst_conn)
         self.dst_database.disconnect()
 
-    def run_main(self, explain=False):
+    def run_main(self, explain=False, verbosity=1):
         src_url = self.src_database.url()
         dst_url = self.dst_database.url()
         super(TestAbridgeDbForSqlite, self).run_main(
-            src_url, dst_url, self.dst_database, explain=explain)
+            src_url, dst_url, self.dst_database, explain=explain,
+            verbosity=verbosity)
 
     def test_success(self, capsys):
         self.prepare_src()
@@ -51,4 +52,37 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
         out, err = capsys.readouterr()
         assert 'test1* -> test1.id=2 -> test2.id=2 -> test1.id=2' in out
         assert err == ''
-        assert len(out.split("\n")) == 8
+
+    def test_quiet_output(self, capsys):
+        self.prepare_src()
+        self.prepare_dst(with_schema=True)
+        self.run_main(verbosity=0)
+        out, err = capsys.readouterr()
+        assert len(out) == 0
+        assert len(err) == 0
+
+    def check_verbosity1_output(self, out):
+        assert 'Connecting to' in out
+        assert 'Querying' in out
+        assert 'Performing 5 inserts and 2 updates to 2 tables...' in out
+        assert 'Extraction completed: rows=7, tables=2, queries=3, depth=2' \
+            in out
+        assert 'Data loading completed in' in out
+
+    def test_default_output(self, capsys):
+        self.prepare_src()
+        self.prepare_dst(with_schema=True)
+        self.run_main(verbosity=1)
+        out, err = capsys.readouterr()
+        self.check_verbosity1_output(out)
+
+    def test_verbose_output(self, capsys):
+        self.prepare_src()
+        self.prepare_dst(with_schema=True)
+        self.run_main(verbosity=2)
+        out, err = capsys.readouterr()
+        self.check_verbosity1_output(out)
+        assert ('Processing pass=1     queued=0     depth=0   tables=0    '
+                'rows=0       table') in out
+        assert 'Inserting' in out
+        assert 'Updating' in out

@@ -1,7 +1,7 @@
 from __future__ import print_function
 from queue import Queue
 from collections import defaultdict
-import sys
+from time import time
 from abridger.extraction_model import Relation, merge_relations
 
 
@@ -51,6 +51,10 @@ class WorkItem(object):
         self.cols = cols
         self.values = values
         self.sticky = sticky
+        self.depth = 0
+
+        if parent_work_item is not None:
+            self.depth = parent_work_item.depth + 1
 
         self.set_history(parent_work_item, parent_results_row)
 
@@ -94,13 +98,13 @@ class WorkItem(object):
         self.history = list(work_item.history)
         work_item_history = self.make_work_item_history()
 
-        # if results_row is not None:
-        results_row_history = self.make_results_row_history(results_row)
-        if self.history[-1] != results_row_history:
-            self.history.append(results_row_history)
+        if results_row is not None:
+            results_row_history = self.make_results_row_history(results_row)
+            if self.history[-1] != results_row_history:
+                self.history.append(results_row_history)
 
-        if work_item_history != results_row_history:
-            self.history.append(work_item_history)
+            if work_item_history != results_row_history:
+                self.history.append(work_item_history)
 
     def print_history(self):
         if len(self.history) == 0:
@@ -119,21 +123,23 @@ class WorkItem(object):
                 print(table, end='')
 
             if sticky:
-                sys.stdout.write('*')
+                print('*', end='')
         print()
 
 
 class Extractor(object):
-    def __init__(self, database, extraction_model, explain=False):
+    def __init__(self, database, extraction_model, explain=False,
+                 verbosity=0):
         self.database = database
         self.extraction_model = extraction_model
-
         self.explain = explain
+        self.verbosity = verbosity
         self.work_queue = Queue()
         self.results = defaultdict(lambda: defaultdict(dict))
         self.fetch_count = 0
         self.fetched_row_count = 0
         self.fetched_row_count_per_table = defaultdict(int)
+        self.max_depth = 0
         self.seen_work_items = set()
 
         self.subject_table_relations = {}
@@ -229,7 +235,7 @@ class Extractor(object):
             if not self.explain and len(dst_values) > 0:
                 self.work_queue.put(WorkItem(
                     work_item.subject, dst_table, dst_cols,
-                    dst_values, sticky))
+                    dst_values, sticky, parent_work_item=work_item))
 
     def _process_work_item_results_rows(self, work_item, results_rows,
                                         processed_outgoing_fk_cols):
@@ -275,8 +281,23 @@ class Extractor(object):
                 table_epk_results[value].count = count
 
     def _process_work_item(self, work_item):
+        if work_item.depth > self.max_depth:
+            self.max_depth = work_item.depth
+
         if self.explain:
             work_item.print_history()
+
+        if self.verbosity > 1:
+            table_count = len(self.fetched_row_count_per_table.keys())
+            print(
+                'Processing pass=%-5d queued=%-5d depth=%-3d tables=%-4d '
+                'rows=%-7d table %s' % (
+                    self.fetch_count + 1,
+                    self.work_queue.qsize(),
+                    self.max_depth,
+                    table_count,
+                    self.fetched_row_count,
+                    work_item.table.name))
 
         table = work_item.table
 
@@ -297,6 +318,8 @@ class Extractor(object):
                                              processed_outgoing_fk_cols)
 
     def launch(self):
+        start_time = time()
+
         while not self.work_queue.empty():
             work_item = self.work_queue.get()
 
@@ -317,6 +340,19 @@ class Extractor(object):
                 for value in work_item.values:
                     h = work_item.value_hash(value)
                     self.seen_work_items.add(h)
+
+        elapsed_time = time() - start_time
+
+        if self.verbosity > 0:
+            table_count = len(self.fetched_row_count_per_table.keys())
+            print(
+                'Extraction completed: rows=%d, tables=%d, queries=%d, '
+                'depth=%d, duration=%0.1f seconds' % (
+                    self.fetched_row_count,
+                    table_count,
+                    self.fetch_count,
+                    self.max_depth,
+                    elapsed_time))
 
         return self
 

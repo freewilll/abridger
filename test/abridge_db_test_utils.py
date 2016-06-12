@@ -27,7 +27,8 @@ class TestAbridgeDbBase(object):
         cur.execute('UPDATE test1 SET test2_id = 2 WHERE id=2')
         conn.commit()
 
-    def run_main(self, src_url, dst_url, dst_database, explain=False):
+    def run_main(self, src_url, dst_url, dst_database, explain=False,
+                 verbosity=1):
         config_filename = make_temp_yaml_file([
             {'subject': [{'tables': [{'table': 'test1'}]}]}
         ])
@@ -35,6 +36,10 @@ class TestAbridgeDbBase(object):
         args = [config_filename, src_url, dst_url]
         if explain:
             args.append('--explain')
+        if verbosity == 0:
+            args.append('-q')
+        if verbosity == 2:
+            args.append('-v')
         main(args)
 
         # Check dst
