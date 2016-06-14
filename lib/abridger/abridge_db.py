@@ -3,12 +3,82 @@ from signal import signal, SIGPIPE, SIG_DFL
 from time import time
 import argparse
 import math
+import os
+import sys
 
 import abridger.database
 from abridger.extraction_model import ExtractionModel
 from abridger.extractor import Extractor
 from abridger.generator import Generator
 import abridger.config_file_loader
+
+
+class DbOutputter(object):
+    def __init__(self, url, verbosity):
+        self.verbosity = verbosity
+
+        if verbosity > 0:
+            print('Connecting to', url)
+        self.database = abridger.database.load(url)
+        self.connection = self.database.connection
+        self.cursor = self.connection.cursor()
+
+    def insert_row(self, row):
+        self.database.insert_rows([row], cursor=self.cursor)
+
+    def update_row(self, row):
+        self.database.update_rows([row], cursor=self.cursor)
+
+    def begin(self):
+        pass
+
+    def commit(self):
+        self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
+
+    def finish(self):
+        self.database.disconnect()
+
+
+class SqlOutputter(object):
+    def __init__(self, src_database, path, verbosity):
+        self.src_db = src_database
+        self.verbosity = verbosity
+        self.path = path
+        self.cursor = self.src_db.connection.cursor()
+
+        if path == '-':
+            self.file = os.fdopen(sys.stdout.fileno(), 'wb')
+        else:
+            self.file = open(path, 'wb')
+
+    def insert_row(self, row):
+        stmt = self.src_db.make_insert_stmt(self.cursor, row)
+        self.file.write(stmt)
+        self.file.write(b"\n")
+
+    def update_row(self, row):
+        stmt = self.src_db.make_update_stmt(self.cursor, row)
+        self.file.write(stmt)
+        self.file.write(b"\n")
+
+    def begin(self):
+        for stmt in self.src_db.make_begin_stmts():
+            self.file.write(stmt)
+            self.file.write(b"\n")
+
+    def commit(self):
+        for stmt in self.src_db.make_commit_stmts():
+            self.file.write(stmt)
+            self.file.write(b"\n")
+
+    def rollback(self):
+        pass
+
+    def finish(self):
+        self.file.close()
 
 
 def main(args):
@@ -18,8 +88,10 @@ def main(args):
                         help="path to extraction config file")
     parser.add_argument(dest='src_url', metavar='SRC_URL',
                         help="source database url")
-    parser.add_argument(dest='dst_url', metavar='DST_URL',
+    parser.add_argument('-u', dest='dst_url', metavar='URL',
                         help="destination database url")
+    parser.add_argument('-f', dest='dst_file', metavar='FILE',
+                        help="destination database file. Use - for stdout")
     parser.add_argument('-e', '--explain', dest='explain', action='store_true',
                         default=False,
                         help='explain where rows are coming from')
@@ -41,9 +113,24 @@ def main(args):
     if args.verbose:
         verbosity = 2
 
+    if (args.dst_url is None) == (args.dst_file is None):
+        print('Either -u or -f must be passed')
+        exit(1)
+
     if verbosity > 0:
         print('Connecting to', args.src_url)
     src_database = abridger.database.load(args.src_url)
+
+    if args.dst_url is not None:
+        outputter = DbOutputter(args.dst_url, verbosity)
+        if not isinstance(src_database, type(outputter.database)):
+            print('src and dst databases must be of the same type')
+            exit(1)
+    else:
+        if not src_database.CAN_GENERATE_SQL:
+            print("SQL generation isn't available for this type of database")
+            exit(1)
+        outputter = SqlOutputter(src_database, args.dst_file, verbosity)
 
     if verbosity > 0:
         print('Querying...')
@@ -59,14 +146,10 @@ def main(args):
 
     generator = Generator(src_database.schema, extractor)
     generator.generate_statements()
-    src_database.disconnect()
 
-    if verbosity > 0:
-        print('Connecting to', args.dst_url)
-    dst_database = abridger.database.load(args.dst_url)
-
-    connection = dst_database.connection
-    cur = connection.cursor()
+    if args.dst_url is not None:
+        # The src database isn't needed any more
+        src_database.disconnect()
 
     total_table_insert_counts = defaultdict(int)
     total_table_update_counts = defaultdict(int)
@@ -96,6 +179,7 @@ def main(args):
 
         insert_count = 0
         count = 0
+        outputter.begin()
         for insert_statement in generator.insert_statements:
             (table, values) = insert_statement
             table_insert_counts[table] += 1
@@ -109,7 +193,8 @@ def main(args):
                     table_insert_counts[table],
                     total_table_insert_counts[table],
                     table))
-            dst_database.insert_rows([insert_statement], cursor=cur)
+            outputter
+            outputter.insert_row(insert_statement)
 
         update_count = 0
         for update_statement in generator.update_statements:
@@ -125,16 +210,17 @@ def main(args):
                     total_table_update_counts[table],
                     table_update_counts[table],
                     table))
-            dst_database.update_rows([update_statement], cursor=cur)
+            outputter.update_row(update_statement)
 
-        connection.commit()
+        outputter.commit()
     finally:
         try:
-            connection.rollback()
+            outputter.rollback()
         except Exception as e:
             print("Something went wrong while trying a rollback: %s" % str(e))
 
-        dst_database.disconnect()
+        src_database.disconnect()
+        outputter.finish()
 
     if verbosity > 0:
         elapsed_time = time() - start_time

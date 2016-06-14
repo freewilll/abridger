@@ -5,6 +5,8 @@ from abridger.schema import PostgresqlSchema
 
 
 class PostgresqlDatabase(Database):
+    CAN_GENERATE_SQL = True
+
     def __init__(self, host=None, port=None, dbname=None, user=None,
                  password=None):
         if dbname is None:
@@ -19,6 +21,7 @@ class PostgresqlDatabase(Database):
         self.password = password
         self.placeholder_symbol = '%s'
         self.schema_class = PostgresqlSchema
+        self.connection = None
         self.connect()
         self.create_schema(PostgresqlSchema)
 
@@ -32,6 +35,9 @@ class PostgresqlDatabase(Database):
             password=dj_details['PASSWORD'])
 
     def connect(self):
+        if self.connection is not None:
+            return
+
         psycopg2_package = 'psycopg2'
         try:
             psycopg2 = importlib.import_module(psycopg2_package)
@@ -55,3 +61,17 @@ class PostgresqlDatabase(Database):
             self.host,
             self.port,
             self.dbname)
+
+    def make_begin_stmts(self):
+        return [b'BEGIN;', b'\\set ON_ERROR_STOP']
+
+    def make_commit_stmts(self):
+        return [b'COMMIT;']
+
+    def make_insert_stmt(self, cursor, row):
+        (stmt, placeholders) = list(self.make_insert_statements([row]))[0]
+        return cursor.mogrify(stmt, placeholders)
+
+    def make_update_stmt(self, cursor, row):
+        (stmt, placeholders) = list(self.make_update_statements([row]))[0]
+        return cursor.mogrify(stmt, placeholders)

@@ -37,12 +37,9 @@ class Database(object):
 
         return list(self.execute_and_fetchall(sql, values))
 
-    def insert_rows(self, rows, cursor=None):
-        if cursor is None:
-            cursor = self.connection.cursor()
-
+    def make_insert_statements(self, rows, placeholder_symbol=None):
         table_cols = {}
-        phs = self.placeholder_symbol
+        phs = placeholder_symbol or self.placeholder_symbol
 
         for (table, values) in rows:
             if table not in table_cols:
@@ -55,14 +52,18 @@ class Database(object):
                 (cols_csv, q) = table_cols[table]
 
             sql = 'INSERT INTO %s (%s) VALUES(%s)' % (table.name, cols_csv, q)
-            self.execute(sql, values)
+            yield sql, values
 
-    def update_rows(self, rows, cursor=None):
+    def insert_rows(self, rows, cursor=None):
         if cursor is None:
             cursor = self.connection.cursor()
+        statements = self.make_insert_statements(rows)
+        for (stmt, values) in statements:
+            self.execute(stmt, values)
 
+    def make_update_statements(self, rows, placeholder_symbol=None):
         table_cols = {}
-        phs = self.placeholder_symbol
+        phs = placeholder_symbol or self.placeholder_symbol
 
         def get_col_names(table, cols):
             if (table, cols) not in table_cols:
@@ -97,4 +98,11 @@ class Database(object):
                 table.name,
                 ', '.join(sets),
                 ' AND '.join(where))
-            self.execute(sql, placeholder_values)
+            yield sql, placeholder_values
+
+    def update_rows(self, rows, cursor=None):
+        if cursor is None:
+            cursor = self.connection.cursor()
+        statements = self.make_update_statements(rows)
+        for (stmt, values) in statements:
+            self.execute(stmt, values)

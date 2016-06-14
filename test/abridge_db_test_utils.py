@@ -27,13 +27,30 @@ class TestAbridgeDbBase(object):
         cur.execute('UPDATE test1 SET test2_id = 2 WHERE id=2')
         conn.commit()
 
-    def run_main(self, src_url, dst_url, dst_database, explain=False,
-                 verbosity=1):
-        config_filename = make_temp_yaml_file([
+    def make_config(self):
+        return make_temp_yaml_file([
             {'subject': [{'tables': [{'table': 'test1'}]}]}
         ])
 
-        args = [config_filename, src_url, dst_url]
+    def check_dst_database(self, dst_database):
+        dst_database.connect()
+        dst_conn = dst_database.connection
+        cur = dst_conn.cursor()
+        try:
+            cur.execute('SELECT id, test2_id FROM test1 ORDER BY id')
+            rows = list(cur.fetchall())
+            assert rows == [(1, 1), (2, 2), (3, None)]
+
+            cur.execute('SELECT id, test1_id FROM test2 ORDER BY id')
+            rows = list(cur.fetchall())
+            assert rows == [(1, 1), (2, 2)]
+        finally:
+            dst_database.disconnect()
+
+    def run_with_dst_database(self, src_url, dst_url, dst_database,
+                              explain=False, verbosity=1, check=True):
+        config_filename = self.make_config()
+        args = [config_filename, src_url, '-u', dst_url]
         if explain:
             args.append('--explain')
         if verbosity == 0:
@@ -42,17 +59,5 @@ class TestAbridgeDbBase(object):
             args.append('-v')
         main(args)
 
-        # Check dst
-        dst_database.connect()
-        dst_conn = dst_database.connection
-        cur = dst_conn.cursor()
-
-        cur.execute('SELECT id, test2_id FROM test1 ORDER BY id')
-        rows = list(cur.fetchall())
-        assert rows == [(1, 1), (2, 2), (3, None)]
-
-        cur.execute('SELECT id, test1_id FROM test2 ORDER BY id')
-        rows = list(cur.fetchall())
-        assert rows == [(1, 1), (2, 2)]
-
-        dst_database.disconnect()
+        if check:
+            self.check_dst_database(dst_database)
