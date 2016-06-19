@@ -8,11 +8,13 @@ class PostgresqlDatabase(Database):
     CAN_GENERATE_SQL = True
 
     def __init__(self, host=None, port=None, dbname=None, user=None,
-                 password=None):
+                 password=None, connect=True):
         if dbname is None:
             raise ValueError('dbname must have a value')
         if user is None:
             raise ValueError('user must have a value')
+        if host is None:
+            raise ValueError('host must have a value')
 
         self.host = host
         self.port = port
@@ -22,8 +24,10 @@ class PostgresqlDatabase(Database):
         self.placeholder_symbol = '%s'
         self.schema_class = PostgresqlSchema
         self.connection = None
-        self.connect()
-        self.create_schema(PostgresqlSchema)
+
+        if connect:
+            self.connect()
+            self.create_schema(PostgresqlSchema)
 
     @staticmethod
     def create_from_django_database(dj_details):
@@ -55,11 +59,11 @@ class PostgresqlDatabase(Database):
             port=self.port)
 
     def url(self):
-        return 'postgresql://%s%s@%s:%s/%s' % (
+        return 'postgresql://%s%s@%s%s/%s' % (
             self.user,
-            ':%s' % self.password if self.password is None else '',
+            ':%s' % self.password if self.password is not None else '',
             self.host,
-            self.port,
+            ':%s' % self.port if self.port is not None else '',
             self.dbname)
 
     def make_begin_stmts(self):
@@ -70,8 +74,8 @@ class PostgresqlDatabase(Database):
 
     def make_insert_stmt(self, cursor, row):
         (stmt, placeholders) = list(self.make_insert_statements([row]))[0]
-        return cursor.mogrify(stmt, placeholders)
+        return cursor.mogrify(stmt, placeholders) + b';'
 
     def make_update_stmt(self, cursor, row):
         (stmt, placeholders) = list(self.make_update_statements([row]))[0]
-        return cursor.mogrify(stmt, placeholders)
+        return cursor.mogrify(stmt, placeholders) + b';'

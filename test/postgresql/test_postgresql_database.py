@@ -14,7 +14,21 @@ class TestPostgresqlDatabase(DatabaseTestBase):
         self.make_db(request, PostgresqlSchema)
 
     def test_bad_params(self):
+        for key in ('user', 'host', 'dbname'):
+            params = {'host': 'host', 'user': 'user', 'dbname': 'dbname'}
+            del params[key]
         with pytest.raises(ValueError):
-            PostgresqlDatabase(user='foo')
-        with pytest.raises(ValueError):
-            PostgresqlDatabase(dbname='foo')
+            PostgresqlDatabase(**params)
+
+    @pytest.mark.parametrize('params, url', [
+        ({}, 'u@h/n'),
+        ({'password': 'pass'}, 'u:pass@h/n'),
+        ({'port': 100}, 'u@h:100/n'),
+        ({'password': 'pass', 'port': 100}, 'u:pass@h:100/n'),
+    ])
+    def test_url_generation(self, params, url):
+        full_params = {'host': 'h', 'user': 'u', 'dbname': 'n',
+                       'connect': False}
+        full_params.update(params)
+        url = 'postgresql://' + url
+        assert PostgresqlDatabase(**full_params).url() == url

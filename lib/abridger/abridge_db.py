@@ -62,7 +62,7 @@ class SqlOutputter(object):
     def update_row(self, row):
         stmt = self.src_db.make_update_stmt(self.cursor, row)
         self.file.write(stmt)
-        self.file.write(b"\n")
+        self.file.write(b";\n")
 
     def begin(self):
         for stmt in self.src_db.make_begin_stmts():
