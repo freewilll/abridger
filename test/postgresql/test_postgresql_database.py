@@ -6,8 +6,20 @@ from abridger.database import PostgresqlDatabase
 from test.conftest import got_postgresql
 
 
-@pytest.mark.skipif(not got_postgresql(), reason='Needs postgresql')
 class TestPostgresqlDatabase(DatabaseTestBase):
+    @pytest.fixture(autouse=True)
+    def _skip_if_not_postgres(self):
+        # Note: pytest.mark.skipif cannot be used at the class level,
+        # since this could have the side-effect of also disabling the sqlite
+        # tests.
+        #
+        # It appears that adding a skip to this class causes
+        # all other test classes using the DatabaseTestBase base class to be
+        # skipped too.
+
+        if not got_postgresql():
+            pytest.skip('Needs postgresql')
+
     @pytest.fixture(autouse=True)
     def prepare(self, request, postgresql_database):
         self.database = postgresql_database
