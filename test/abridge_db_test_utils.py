@@ -27,7 +27,7 @@ class TestAbridgeDbBase(object):
         cur.execute('UPDATE test1 SET test2_id = 2 WHERE id=2')
         conn.commit()
 
-    def make_config(self):
+    def make_config_tempfile(self):
         return make_temp_yaml_file([
             {'subject': [{'tables': [{'table': 'test1'}]}]}
         ])
@@ -49,8 +49,8 @@ class TestAbridgeDbBase(object):
 
     def run_with_dst_database(self, src_url, dst_url, dst_database,
                               explain=False, verbosity=1, check=True):
-        config_filename = self.make_config()
-        args = [config_filename, src_url, '-u', dst_url]
+        config_tempfile = self.make_config_tempfile()
+        args = [config_tempfile.name, src_url, '-u', dst_url]
         if explain:
             args.append('--explain')
         if verbosity == 0:

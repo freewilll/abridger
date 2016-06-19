@@ -97,9 +97,9 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
     def test_unavailable_file_output(self, capsys):
         self.prepare_src()
         src_url = self.src_database.url()
-        config_filename = self.make_config()
+        config_tempfile = self.make_config_tempfile()
         for path in ('-', '/tmp/a-file.test'):
             with pytest.raises(SystemExit):
-                main([config_filename, src_url, '-q', '-f', path])
+                main([config_tempfile.name, src_url, '-q', '-f', path])
             out, err = capsys.readouterr()
             assert "SQL generation isn't available" in out

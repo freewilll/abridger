@@ -21,21 +21,22 @@ class TestConfigFileLoader(object):
 
     def test_bad_non_mapping_in_root(self):
         with pytest.raises(DataError):
-            load(make_temp_yaml_file({}))
+            tempfile = make_temp_yaml_file({})
+            load(tempfile.name)
 
     def test_include_toplevel_string(self):
         '''Test - include: foo.yaml'''
         filename2 = self.make_temp_yaml_file([{'relations': []}])
-        filename1 = self.make_temp_yaml_file([{'include': filename2}])
-        assert load(filename1) == [{'relations': []}]
+        filename1 = self.make_temp_yaml_file([{'include': filename2.name}])
+        assert load(filename1.name) == [{'relations': []}]
 
     def test_include_toplevel_array(self):
         '''Test - include: [foo.yaml, bar.yaml]'''
         filename2 = self.make_temp_yaml_file([{'relations': [{'a': 'b'}]}])
         filename3 = self.make_temp_yaml_file([{'relations': [{'c': 'd'}]}])
-        filename1 = self.make_temp_yaml_file([{'include': [filename2,
-                                                           filename3]}])
-        assert load(filename1) == [
+        filename1 = self.make_temp_yaml_file([{'include': [filename2.name,
+                                                           filename3.name]}])
+        assert load(filename1.name) == [
             {'relations': [{'a': 'b'}]},
             {'relations': [{'c': 'd'}]}]
 
@@ -45,9 +46,9 @@ class TestConfigFileLoader(object):
         filename2 = self.make_temp_yaml_file([{'relations': []}], temp_dir)
         short_filename2 = os.path.join(
             os.path.basename(temp_dir),
-            os.path.basename(filename2))
+            os.path.basename(filename2.name))
         filename1 = self.make_temp_yaml_file([{'include': short_filename2}])
-        assert load(filename1) == [{'relations': []}]
+        assert load(filename1.name) == [{'relations': []}]
 
     def test_include_deep(self):
         '''Test: - fetch: [{include: foo.yaml}]'''
@@ -56,11 +57,11 @@ class TestConfigFileLoader(object):
         filename1 = self.make_temp_yaml_file([
             {
                 'fetch': [{
-                    'include': filename2
+                    'include': filename2.name
                 }]
             }
         ])
-        assert load(filename1) == [{'fetch': [{'relations': []}]}]
+        assert load(filename1.name) == [{'fetch': [{'relations': []}]}]
 
     def test_include_deep_unknown_file(self):
         '''Test: - fetch: [{include: foo.yaml}]'''
@@ -73,4 +74,4 @@ class TestConfigFileLoader(object):
             }
         ])
         with pytest.raises(IncludeError):
-            assert load(filename1) == [{'fetch': [{'relations': []}]}]
+            assert load(filename1.name) == [{'fetch': [{'relations': []}]}]

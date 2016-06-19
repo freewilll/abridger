@@ -164,10 +164,9 @@ class TestPostgresqlSchema(object):
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
 
-        temp = tempfile.NamedTemporaryFile(mode='wt', delete=False)
+        temp = tempfile.NamedTemporaryFile(mode='wt')
         schema.dump_relations(temp)
-        temp.close()
-
+        temp.seek(0)
         data = yaml.load(open(temp.name).read())
 
         keys = [

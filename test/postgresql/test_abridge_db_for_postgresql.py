@@ -65,7 +65,7 @@ class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
         self.check_dst_database(self.dst_database)
 
     def test_output_to_stdout(self, postgresql, postgresql2):
-        config_filename = self.make_config()
+        config_tempfile = self.make_config_tempfile()
         self.prepare_src(postgresql)
 
         executable = os.path.join(
@@ -73,14 +73,14 @@ class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
             'abridge-db')
         stmts = subprocess.check_output([
             executable,
-            config_filename, self.src_database.url(), '-q', '-f', '-']
+            config_tempfile.name, self.src_database.url(), '-q', '-f', '-']
         ).decode('UTF-8')
         self.check_statements(postgresql2, stmts)
 
     def test_output_to_file(self, postgresql, postgresql2):
         dst_filename = tempfile.NamedTemporaryFile(mode='wb')
         dst_filename.close()
-        config_filename = self.make_config()
+        config_tempfile = self.make_config_tempfile()
         self.prepare_src(postgresql)
 
         executable = os.path.join(
@@ -88,20 +88,20 @@ class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
             'abridge-db')
         subprocess.check_output([
             executable,
-            config_filename, self.src_database.url(), '-q',
+            config_tempfile.name, self.src_database.url(), '-q',
             '-f', dst_filename.name]
         ).decode('UTF-8')
         with open(dst_filename.name) as f:
             self.check_statements(postgresql2, f.read())
 
     def test_src_dst_type_mismatch(self, capsys, postgresql):
-        config_filename = self.make_config()
+        config_tempfile = self.make_config_tempfile()
         self.prepare_src(postgresql)
         dst = NamedTemporaryFile(mode='wt', suffix='.sqlite3')
         dst_database = SqliteDatabase(dst.name)
 
         with pytest.raises(SystemExit):
-            main([config_filename, self.src_database.url(), '-q',
+            main([config_tempfile.name, self.src_database.url(), '-q',
                   '-u', dst_database.url()])
         out, err = capsys.readouterr()
         assert 'src and dst databases must be of the same type' in out
