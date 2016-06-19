@@ -22,27 +22,80 @@ class TestExtractionModelBase(object):
 
 
 class TestExtractionModel(TestExtractionModelBase):
-    def test_unknown_directive(self):
-        with pytest.raises(ValidationError):
-            data = [{'foo': []}]
-            ExtractionModel.load(self.schema1_sl, data)
-
-    def test_relation_errors(self):
-        with pytest.raises(ValidationError):
+    def test_toplevel(self):
+        with pytest.raises(ValidationError) as e:
             data = 'foo'
             ExtractionModel.load(self.schema1_sl, data)
+        assert 'is not of type' in str(e)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as e:
             data = ['foo']
             ExtractionModel.load(self.schema1_sl, data)
+        assert 'is not of type' in str(e)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as e:
             data = [{'foo': [], 'bar': []}]
             ExtractionModel.load(self.schema1_sl, data)
+        assert 'Additional properties are not allowed' in str(e)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as e:
             data = [{'foo': 'bar'}]
             ExtractionModel.load(self.schema1_sl, data)
+        assert 'Additional properties are not allowed' in str(e)
+
+    def test_toplevel_key_value(self):
+        # Check bad None value for top level keys
+        for key in ('subject', 'relations', 'not-null-columns'):
+            with pytest.raises(ValidationError) as e:
+                data = [{key: None}]
+                ExtractionModel.load(self.schema1_sl, data)
+            assert 'is not of type' in str(e)
+
+    def test_toplevel_keys(self):
+        # Test good cases
+        not_null_columns = {'not-null-columns': []}
+        relations = {'relations': self.relations}
+        table = {'table': self.schema1_sl.tables[0].name}
+        subject = {'subject': [
+            {'relations': self.relations},
+            {'tables': [table]}
+        ]}
+
+        ExtractionModel.load(self.schema1_sl, [not_null_columns])
+        ExtractionModel.load(self.schema1_sl, [relations])
+        ExtractionModel.load(self.schema1_sl, [subject])
+
+        # Test exactly one of the keys has to be set
+        with pytest.raises(InvalidConfigError) as e:
+            ExtractionModel.load(self.schema1_sl, [{}])
+        assert 'Expected one key, got' in str(e)
+
+        with pytest.raises(InvalidConfigError) as e:
+            data = dict(not_null_columns)
+            data.update(relations)
+            ExtractionModel.load(self.schema1_sl, [data])
+        assert 'Expected one key, got' in str(e)
+
+    def test_subject_keys(self):
+        table = {'table': self.schema1_sl.tables[0].name}
+        subject = [
+            {'relations': self.relations},
+            {'tables': [table]}
+        ]
+        ExtractionModel.load(self.schema1_sl, [{'subject': subject}])
+
+        # Test zero keys
+        with pytest.raises(InvalidConfigError) as e:
+            subject.append({})
+            ExtractionModel.load(self.schema1_sl, [{'subject': subject}])
+        assert 'Expected one key, got' in str(e)
+
+        # Test two keys
+        with pytest.raises(InvalidConfigError) as e:
+            subject[2] = dict(subject[0])
+            subject[2].update(subject[1])
+            ExtractionModel.load(self.schema1_sl, [{'subject': subject}])
+        assert 'Expected one key, got' in str(e)
 
     def test_schema1_sl_relations(self):
         data = [{'relations': self.relations}]
@@ -287,7 +340,8 @@ class TestExtractionModel(TestExtractionModelBase):
     def test_subject_table_values_types(self):
         table = {'table': self.schema1_sl.tables[0].name}
         column = table['column'] = self.schema1_sl.tables[0].cols[0].name
-        for values in [1, '1', [1, 2], ['1', '2']]:
+
+        def test(values):
             table = {'table': self.schema1_sl.tables[0].name, 'column': column,
                      'values': values}
             subject = [{'relations': self.relations}, {'tables': [table]}]
@@ -295,17 +349,27 @@ class TestExtractionModel(TestExtractionModelBase):
             model = ExtractionModel.load(self.schema1_sl, data)
             assert model.subjects[0].tables[0].values == values
 
+        # Good values
+        for values in [1, '1', [1, 2], ['1', '2'], [1, '2']]:
+            test(values)
+
+        # Bad values
+        for values in [None, True, {}, [None], [True], [{}]]:
+            with pytest.raises(ValidationError) as e:
+                test(values)
+            assert 'is not valid under any of the given schemas' in str(e)
+
     def test_not_null_columns_must_be_toplevel(self):
         not_null_columns = [{'not-null-columns': []}]
-        data = [{'relations': [not_null_columns]}]
-        with pytest.raises(Exception) as e:
+        data = [{'relations': not_null_columns}]
+        with pytest.raises(ValidationError) as e:
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'is not valid under any of the given schemas' in str(e)
+        assert 'Additional properties are not allowed' in str(e)
 
-        data = [{'tables': [not_null_columns]}]
-        with pytest.raises(Exception) as e:
+        data = [{'tables': not_null_columns}]
+        with pytest.raises(ValidationError) as e:
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'is not valid under any of the given schemas' in str(e)
+        assert 'Additional properties are not allowed' in str(e)
 
     def test_not_null_columns(self):
         relation = dict(self.relations[0])
@@ -319,20 +383,20 @@ class TestExtractionModel(TestExtractionModelBase):
         ExtractionModel.load(self.schema1_sl, data)
 
         # It must have table and column keys
-        with pytest.raises(Exception) as e:
+        with pytest.raises(ValidationError) as e:
             data = [{'not-null-columns': [{}]}]
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'is not valid under any of the given schemas' in str(e)
+        assert "is a required property" in str(e)
 
-        with pytest.raises(Exception) as e:
+        with pytest.raises(ValidationError) as e:
             data = [{'not-null-columns': [{'table': table}]}]
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'is not valid under any of the given schemas' in str(e)
+        assert "'column' is a required property" in str(e)
 
-        with pytest.raises(Exception) as e:
+        with pytest.raises(ValidationError) as e:
             data = [{'not-null-columns': [{'column': column}]}]
             ExtractionModel.load(self.schema1_sl, data)
-        assert 'is not valid under any of the given schemas' in str(e)
+        assert "'table' is a required property" in str(e)
 
         data = [
             {'not-null-columns': [{'table': table, 'column': column}]}]

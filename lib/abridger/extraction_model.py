@@ -173,14 +173,12 @@ class ExtractionModel(object):
     subject_definition = {
         'type': 'array',
         'items': {
-            'anyOf': [
-                {'type': 'object',
-                 'properties': {'tables': tables_arr},
-                 'additionalProperties': False},
-                {'type': 'object',
-                 'properties': {'relations': rels_arr},
-                 'additionalProperties': False},
-            ],
+            'type': 'object',
+            'properties': {
+                'tables': tables_arr,
+                'relations': rels_arr
+            },
+            'additionalProperties': False,
         }
     }
 
@@ -200,17 +198,13 @@ class ExtractionModel(object):
     root_definition = {
         'type': 'array',
         'items': {
-            'anyOf': [
-                {'type': 'object',
-                 'properties': {'subject': subject_definition},
-                 'additionalProperties': False},
-                {'type': 'object',
-                 'properties': {'relations': rels_arr},
-                 'additionalProperties': False},
-                {'type': 'object',
-                 'properties': {'not-null-columns': not_null_cols_arr},
-                 'additionalProperties': False},
-            ],
+            'type': 'object',
+            'properties': {
+                'subject': subject_definition,
+                'relations': rels_arr,
+                'not-null-columns': not_null_cols_arr,
+            },
+            'additionalProperties': False,
         }
     }
 
@@ -230,10 +224,6 @@ class ExtractionModel(object):
                       'definitions': definitions}
     root_schema = {'$ref': '#/definitions/root',
                    'definitions': definitions}
-
-    table_validator = Draft4Validator(table_schema)
-    subject_validator = Draft4Validator(subject_schema)
-    relation_validator = Draft4Validator(relation_schema)
     root_validator = Draft4Validator(root_schema)
 
     def __init__(self, schema):
@@ -246,7 +236,9 @@ class ExtractionModel(object):
     @staticmethod
     def get_single_key_dict(data):
         assert isinstance(data, dict)
-        assert len(list(data.keys())) == 1
+        if len(list(data.keys())) != 1:
+            raise InvalidConfigError('Expected one key, got %s' %
+                                     sorted(data.keys()))
         key = list(data.keys())[0]
         list_data = data[key]
         assert isinstance(list_data, list)
@@ -370,8 +362,6 @@ class ExtractionModel(object):
 
     def _add_relations(self, target, data):
         for relation_data in data:
-            self.relation_validator.validate(relation_data)
-
             defaults = relation_data.get('defaults')
             table_name = relation_data.get('table')
 
@@ -387,8 +377,6 @@ class ExtractionModel(object):
 
     def _add_tables(self, target, data):
         for table_data in data:
-            self.table_validator.validate(table_data)
-
             if 'column' in table_data and 'values' not in table_data:
                 raise InvalidConfigError(
                     'A table with a column must have values')
@@ -407,8 +395,6 @@ class ExtractionModel(object):
                 values=table_data.get('values')))
 
     def _add_subject(self, target, subject_data):
-        self.subject_validator.validate(subject_data)
-
         subject = Subject()
         self.subjects.append(subject)
 
