@@ -124,6 +124,12 @@ class TestExtractorRelations(TestExtractorBase):
         with pytest.raises(RelationIntegrityError):
             ExtractionModel.load(schema1, data)
 
+    def test_illegal_disabled_without_a_column(self, schema1, data1):
+        relation = {'table': 'test2', 'disabled': True}
+        data = [{'relations': [relation]}]
+        with pytest.raises(RelationIntegrityError):
+            ExtractionModel.load(schema1, data)
+
     @pytest.mark.parametrize(
         'type_, notnull, sticky, propagate_sticky, only_if_sticky', [
             (Relation.TYPE_OUTGOING, True, True, True, False),

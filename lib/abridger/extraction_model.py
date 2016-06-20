@@ -302,6 +302,10 @@ class ExtractionModel(object):
         disabled = relation_data.get('disabled', False)
         sticky = relation_data.get('sticky', False)
 
+        if disabled and column is None:
+            raise RelationIntegrityError(
+                'Disabled relations must have a column')
+
         if (disabled and column is not None and
                 type == Relation.TYPE_OUTGOING and column.notnull):
             raise RelationIntegrityError(
