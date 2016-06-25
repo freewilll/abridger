@@ -66,6 +66,27 @@ class PostgresqlDatabase(Database):
             ':%s' % self.port if self.port is not None else '',
             self.dbname)
 
+    def make_multi_col_where_clause(self, table, cols, values):
+        # Produce something like
+        # (col1, col2) IN ((1, 'foo'), (2, 'bar'))
+
+        phs = self.placeholder_symbol
+        where_clause = '('
+        where_clause += ', '.join([c.name for c in table.cols])
+        where_clause += ') IN ('
+
+        sql_values = []
+        ph_with_comma = '%s, ' % phs
+        q = ph_with_comma.join([''] * len(cols)) + phs
+
+        for i, value_tuple in enumerate(values):
+            if i > 0:
+                where_clause += ', '
+            where_clause += '(%s)' % q
+            sql_values.extend(list(value_tuple))
+        where_clause += ')'
+        return where_clause, sql_values
+
     def make_begin_stmts(self):
         return [b'BEGIN;', b'\\set ON_ERROR_STOP']
 

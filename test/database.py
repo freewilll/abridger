@@ -2,30 +2,46 @@ import pytest
 
 
 class DatabaseTestBase(object):
-    def make_db(self, request, schema_cls):
+    def make_db(self, request):
         database = self.database
         conn = database.connection
         database.execute(
             "CREATE TABLE table1 (id SERIAL PRIMARY KEY, name TEXT)")
         conn.commit()
 
-        self.schema = schema_cls.create_from_conn(database.connection)
+        self.schema = self.schema_cls.create_from_conn(database.connection)
         self.table1 = self.schema.tables[0]
 
         def fin():
             conn.close()
         request.addfinalizer(fin)
 
-    def test_fetch_rows(self):
+    @pytest.mark.parametrize('cols, values, results', [
+        (None, None, [(1, 'foo'), (2, 'bar')]),
+        ([0], [], []),
+        ([0], [(1,)], [(1, 'foo')]),
+        ([0], [(2,)], [(2, 'bar')]),
+        ([0], [(1,), (2,)], [(1, 'foo'), (2, 'bar')]),
+        ([1], [], []),
+        ([1], [('foo',)], [(1, 'foo')]),
+        ([1], [('bar',)], [(2, 'bar')]),
+        ([1], [('foo',), ('bar',)], [(1, 'foo'), (2, 'bar')]),
+        ([0], [(3,)], []),
+        ([1], [('baz',)], []),
+        ([0, 1], [], []),
+        ([0, 1], [(1, 'foo',)], [(1, 'foo')]),
+        ([0, 1], [(1, 'foo',), (2, 'bar',)], [(1, 'foo'), (2, 'bar')]),
+    ])
+    def test_fetch_rows(self, cols, values, results):
         database = self.database
         database.execute("INSERT INTO table1 (id, name) VALUES (1, 'foo')")
         database.execute("INSERT INTO table1 (id, name) VALUES (2, 'bar')")
         database.connection.commit()
-        results = database.execute_and_fetchall('SELECT * FROM table1')
-        inserts = [(1, 'foo'), (2, 'bar')]
-        assert results == inserts
-        fetch_result = self.database.fetch_rows(self.table1, None, None)
-        assert list(fetch_result) == inserts
+
+        if cols is not None:
+            cols = [self.schema.tables[0].cols[i] for i in cols]
+        fetch_result = self.database.fetch_rows(self.table1, cols, values)
+        assert list(fetch_result) == results
 
     @pytest.mark.parametrize('cols, values, start, end', [
         (None, None, 0, 2),

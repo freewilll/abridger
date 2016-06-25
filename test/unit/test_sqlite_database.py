@@ -10,7 +10,8 @@ class TestSqliteDatabase(DatabaseTestBase):
     @pytest.fixture(autouse=True)
     def prepare(self, request, sqlite_database):
         self.database = sqlite_database
-        self.make_db(request, SqliteSchema)
+        self.schema_cls = SqliteSchema
+        self.make_db(request)
 
     def test_bad_url(self):
         with pytest.raises(DatabaseUrlError):

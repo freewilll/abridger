@@ -23,7 +23,8 @@ class TestPostgresqlDatabase(DatabaseTestBase):
     @pytest.fixture(autouse=True)
     def prepare(self, request, postgresql_database):
         self.database = postgresql_database
-        self.make_db(request, PostgresqlSchema)
+        self.schema_cls = PostgresqlSchema
+        self.make_db(request)
 
     def test_bad_params(self):
         for key in ('user', 'host', 'dbname'):

@@ -20,22 +20,48 @@ class Database(object):
         return cursor.fetchall()
 
     def fetch_rows(self, table, cols, values):
+        if values is not None and len(values) == 0:
+            return []
+
         phs = self.placeholder_symbol
         cols_csv = ', '.join([c.name for c in table.cols])
         sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
 
         if cols is None:
             sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
-            values = ()
+            sql_values = ()
         elif len(cols) == 1:
             ph_with_comma = '%s, ' % phs
             q = ph_with_comma.join([''] * len(values)) + phs
             sql += ' WHERE %s IN (%s)' % (cols[0].name, q)
-            values = [v[0] for v in values]
+            sql_values = [v[0] for v in values]
         else:
-            raise NotImplementedError('TODO: multi col where')
+            (where_clause, sql_values) = self.make_multi_col_where_clause(
+                table, cols, values)
+            sql += ' WHERE ' + where_clause
 
-        return list(self.execute_and_fetchall(sql, values))
+        return list(self.execute_and_fetchall(sql, sql_values))
+
+    def make_multi_col_where_clause(self, table, cols, values):
+        # Produce something like
+        # (col1=%s AND col2=%s) OR (col1=%s AND col2=%s) ...
+        # This function should be written by databases that can produce
+        # more efficient SQL, like e.g. postgresql.
+
+        phs = self.placeholder_symbol
+        sql_values = []
+        or_clauses = []
+
+        for value_tuple in values:
+            where_clause = ''
+            for i, (col, val) in enumerate(zip(cols, value_tuple)):
+                if i > 0:
+                    where_clause += ' AND '
+                where_clause += '%s=%s' % (col.name, phs)
+                sql_values.append(val)
+            or_clauses.append('(%s)' % where_clause)
+
+        return ' OR '.join(or_clauses), sql_values
 
     def make_insert_statements(self, rows, placeholder_symbol=None):
         table_cols = {}
