@@ -101,7 +101,8 @@ class TestExtractionModel(TestExtractionModelBase):
         data = [{'relations': self.relations}]
         model = ExtractionModel.load(self.schema1_sl, data)
         assert model.relations[0].table.name == self.relations[0]['table']
-        assert model.relations[0].column.name == self.relations[0]['column']
+        fk_col = model.relations[0].foreign_key.src_cols[0]
+        assert fk_col.name == self.relations[0]['column']
         assert model.relations[0].name == self.relations[0]['name']
         assert repr(model.relations[0]) is not None
 
@@ -132,6 +133,25 @@ class TestExtractionModel(TestExtractionModelBase):
         relation['column'] = 'unknown'
         data = [{'relations': [relation]}]
         with pytest.raises(UnknownColumnError):
+            ExtractionModel.load(self.schema1_sl, data)
+
+        # Check known column, but it's not a foreign keys
+        known_relations = set()
+        for rel in self.relations:
+            known_relations.add((rel['table'], rel['column']))
+        found_test = None
+        for table in self.schema1_sl.tables:
+            for col in table.cols:
+                if (table.name, col.name) not in known_relations:
+                    found_test = (table.name, col.name)
+                    break
+        if found_test is None:
+            raise Exception('Unable to find a test table/column')
+        (table, col) = found_test
+
+        relation = {'table': table, 'column': col}
+        data = [{'relations': [relation]}]
+        with pytest.raises(RelationIntegrityError):
             ExtractionModel.load(self.schema1_sl, data)
 
     def test_relation_keys(self):
@@ -237,7 +257,7 @@ class TestExtractionModel(TestExtractionModelBase):
 
             if relation.type == Relation.TYPE_OUTGOING:
                 got_outgoing = True
-                if relation.column.notnull:
+                if relation.foreign_key.notnull:
                     got_outgoing_not_null = True
                 else:
                     got_outgoing_nullable = True
@@ -304,7 +324,7 @@ class TestExtractionModel(TestExtractionModelBase):
         data = [{'subject': subject}]
         model = ExtractionModel.load(self.schema1_sl, data)
         assert len(model.subjects) == 1
-        assert model.subjects[0].relations[0].column is None
+        assert model.subjects[0].relations[0].foreign_key is None
 
     def test_subject_repr(self):
         model = self.model_of_table0()
@@ -458,7 +478,7 @@ class TestExtractionModel(TestExtractionModelBase):
     def test_clone_relation(self, relation0):
         r = relation0.clone()
         assert r.table == relation0.table
-        assert r.column == relation0.column
+        assert r.foreign_key == relation0.foreign_key
         assert r.disabled == relation0.disabled
         assert r.type == relation0.type
         assert r.propagate_sticky == relation0.propagate_sticky

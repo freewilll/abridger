@@ -165,26 +165,15 @@ class Extractor(object):
 
         # Add subject and global relations
         for relation in relations:
-            col = relation.column
-
-            if col is None:
-                # TODO relations without a column on a subject
-                # Bear in mind that stickiness has to be transmitted.
-                continue
-
-            found_fk = None
-            for fk in col.table.foreign_keys:
-                if len(fk.src_cols) == 1 and fk.src_cols[0] == col:
-                    found_fk = fk
-            assert found_fk is not None
+            fk = relation.foreign_key
 
             if relation.type == Relation.TYPE_INCOMING:
-                table_relations[found_fk.dst_cols[0].table].append(
-                    (found_fk.dst_cols, found_fk.src_cols,
+                table_relations[fk.dst_cols[0].table].append(
+                    (fk.dst_cols, fk.src_cols,
                      relation.propagate_sticky, relation.only_if_sticky))
             else:
-                table_relations[found_fk.src_cols[0].table].append(
-                    (found_fk.src_cols, found_fk.dst_cols,
+                table_relations[fk.src_cols[0].table].append(
+                    (fk.src_cols, fk.dst_cols,
                      relation.propagate_sticky, relation.only_if_sticky))
 
         self.subject_table_relations[subject] = table_relations

@@ -13,14 +13,15 @@ class Relation(object):
     DEFAULTS = [DEFAULT_OUTGOING_NOTNULL, DEFAULT_OUTGOING_NULLABLE,
                 DEFAULT_INCOMING, DEFAULT_EVERYTHING]
 
-    def __init__(self, table, column, name, disabled, sticky, type):
+    def __init__(self, table, foreign_key, name, disabled, sticky, type):
         self.table = table
-        self.column = column
+        self.foreign_key = foreign_key
         self.name = name
         self.disabled = disabled
         self.propagate_sticky = sticky
         self.only_if_sticky = \
-            (type == self.TYPE_OUTGOING and sticky and not column.notnull) or \
+            (type == self.TYPE_OUTGOING and sticky and
+             not foreign_key.notnull) or \
             (type == self.TYPE_INCOMING and sticky)
         self.type = type
 
@@ -34,7 +35,7 @@ class Relation(object):
             flags = ' ' + flags
         return '%s:%s name=%s type=%s%s' % (
             self.table.name,
-            self.column.name if self.column is not None else 'None',
+            str(self.foreign_key) if self.foreign_key is not None else '-',
             self.name,
             self.type,
             flags)
@@ -48,7 +49,7 @@ class Relation(object):
     def _base_list(self):
         return [
             self.table.name,
-            self.column.name if self.column is not None else '-',
+            str(self.foreign_key) if self.foreign_key is not None else '-',
             self.name or '-',
             self.type]
 
@@ -63,8 +64,8 @@ class Relation(object):
             str(self.only_if_sticky)]))
 
     def clone(self):
-        relation = Relation(self.table, self.column, self.name, self.disabled,
-                            False, self.type)
+        relation = Relation(self.table, self.foreign_key, self.name,
+                            self.disabled, False, self.type)
         relation.propagate_sticky = self.propagate_sticky
         relation.only_if_sticky = self.only_if_sticky
         return relation

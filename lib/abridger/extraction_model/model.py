@@ -153,11 +153,11 @@ class ExtractionModel(object):
 
         return (table, column)
 
-    def _add_relation(self, target, table=None, column=None, type=None,
+    def _add_relation(self, target, table=None, foreign_key=None, type=None,
                       name=None, disabled=False, sticky=False):
         target.append(Relation(
             table=table,
-            column=column,
+            foreign_key=foreign_key,
             name=name,
             disabled=disabled,
             sticky=sticky,
@@ -169,6 +169,18 @@ class ExtractionModel(object):
         (table, column) = self._check_table_and_column(table_name,
                                                        column_name)
 
+        foreign_key = None
+        if column is not None:
+            for fk in table.foreign_keys:
+                if column in fk.src_cols:
+                    foreign_key = fk
+                    break
+            if foreign_key is None:
+                raise RelationIntegrityError(
+                    "Relations can only be used on foreign keys."
+                    "Column %s on table %s isn't a foreign key." % (
+                        column.name, table.name))
+
         # Note: validation will ensure the type is valid
         type = relation_data.get('type', Relation.TYPE_INCOMING)
         disabled = relation_data.get('disabled', False)
@@ -178,8 +190,8 @@ class ExtractionModel(object):
             raise RelationIntegrityError(
                 'Disabled relations must have a column')
 
-        if (disabled and column is not None and
-                type == Relation.TYPE_OUTGOING and column.notnull):
+        if (disabled and foreign_key is not None and
+                type == Relation.TYPE_OUTGOING and foreign_key.notnull):
             raise RelationIntegrityError(
                 'Cannot disable outgoing not null foreign keys on column '
                 '%s as this would lead to an integrity error' % column)
@@ -191,7 +203,7 @@ class ExtractionModel(object):
         self._add_relation(
             target,
             table=table,
-            column=column,
+            foreign_key=foreign_key,
             name=relation_data.get('name'),
             disabled=disabled,
             sticky=sticky,
@@ -222,17 +234,16 @@ class ExtractionModel(object):
             Relation.DEFAULT_INCOMING,
             Relation.DEFAULT_EVERYTHING]
 
-        def _add_rel(table, column, type):
-            self._add_relation(target, table=table, column=column, type=type)
+        def _add_rel(table, fk, type):
+            self._add_relation(target, table=table, foreign_key=fk, type=type)
 
         for table in self.schema.tables:
             for fk in table.foreign_keys:
-                first_fk_col = fk.src_cols[0]
                 if (fk.notnull or
                         (not fk.notnull and want_outgoing_nullables)):
-                    _add_rel(table, first_fk_col, type=Relation.TYPE_OUTGOING)
+                    _add_rel(table, fk, type=Relation.TYPE_OUTGOING)
                 if want_incoming:
-                    _add_rel(table, first_fk_col, type=Relation.TYPE_INCOMING)
+                    _add_rel(table, fk, type=Relation.TYPE_INCOMING)
 
         self._got_relation_defaults = True
 
