@@ -63,18 +63,13 @@ class SqliteSchema(Schema):
                                                src_col_name, dst_col_name))
 
             for fk_index, fk_cols in list(foreign_keys.items()):
-                if len(fk_cols) > 1:
-                    raise Exception(
-                        'Compound foreign keys are not supported '
-                        'on table "%s"' % src_table.name)
-
                 dst_table_names = set()
                 src_cols = []
                 dst_cols = []
                 src_col_names = []
                 dst_col_names = []
-                for (dst_table_name, src_col_name, dst_col_name) in fk_cols:
-
+                for i, (dst_table_name, src_col_name, dst_col_name) in \
+                        enumerate(fk_cols):
                     dst_table = self.tables_by_name.get(dst_table_name)
                     if dst_table is None:
                         raise UnknownTableError(
@@ -85,8 +80,7 @@ class SqliteSchema(Schema):
                     src_col = src_table.cols_by_name[src_col_name]
 
                     if dst_col_name is None:
-                        # Composite foreign keys aren't supported
-                        dst_col = list(dst_table.primary_key)[0]
+                        dst_col = list(dst_table.primary_key)[i]
                     else:
                         dst_col = dst_table.cols_by_name.get(dst_col_name)
                         if dst_col is None:

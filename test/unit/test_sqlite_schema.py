@@ -149,21 +149,51 @@ class TestSqliteSchema(object):
     def test_schema_compound_foreign_key_constraints(self, sqlite_conn):
         for sql in [
             '''CREATE TABLE test1 (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT,
-                    UNIQUE(id, name)
+                    id1 INTEGER,
+                    id2 INTEGER,
+                    id3 INTEGER,
+                    id4 INTEGER,
+                    PRIMARY KEY(id1, id2),
+                    UNIQUE(id3, id4)
                 );''',
             '''CREATE TABLE test2 (
-                    id SERIAL PRIMARY KEY,
                     fk1 INTEGER,
-                    fk2 TEXT,
-                    FOREIGN KEY(fk1, fk2) REFERENCES test1(id, name)
+                    fk2 INTEGER,
+                    fk3 INTEGER,
+                    fk4 INTEGER,
+                    fk5 INTEGER,
+                    fk6 INTEGER,
+                    FOREIGN KEY(fk1, fk2) REFERENCES test1,
+                    FOREIGN KEY(fk3, fk4) REFERENCES test1(id1, id2)
+                    FOREIGN KEY(fk5, fk6) REFERENCES test1(id3, id4)
                 );''']:
             sqlite_conn.execute(sql)
 
-        with pytest.raises(Exception) as e:
-            SqliteSchema.create_from_conn(sqlite_conn)
-        assert 'Compound foreign keys are not supported on table' in str(e)
+        schema = SqliteSchema.create_from_conn(sqlite_conn)
+        table1 = schema.tables[0]
+        table2 = schema.tables[1]
+
+        assert len(table1.incoming_foreign_keys) == 3
+        assert len(table2.foreign_keys) == 3
+
+        fks_by_col = {}
+        for i in range(1, 3):
+            for fk in table2.foreign_keys:
+                assert len(fk.src_cols) == 2
+                assert len(fk.dst_cols) == 2
+                fks_by_col[(fk.src_cols[0], fk.src_cols[1])] = fk
+
+        expected_columns = [
+            # table2 column indexes -> table1 column indexes
+            ((0, 1), (0, 1)),
+            ((2, 3), (0, 1)),
+            ((4, 5), (2, 3)),
+        ]
+        for (table2_cols, table1_cols) in expected_columns:
+            (t11, t12) = table1_cols
+            (t21, t22) = table2_cols
+            fk = fks_by_col[(table2.cols[t21], table2.cols[t22])]
+            assert fk.dst_cols == (table1.cols[t11], table1.cols[t12])
 
     def test_schema_non_existent_foreign_key_unknown_column(self, sqlite_conn):
         for sql in [
