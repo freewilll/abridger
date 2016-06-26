@@ -4,7 +4,7 @@ import re
 
 from abridger.database import PostgresqlDatabase
 from abridger.schema import PostgresqlSchema
-from conftest_utils import generic_conn
+from test.conftest_utils import generic_conn
 
 
 def make_postgresql_database(postgresql_fixture):

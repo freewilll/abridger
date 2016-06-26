@@ -3,7 +3,7 @@ import pytest
 
 from abridger.database.sqlite import SqliteDatabase
 from abridger.schema import SqliteSchema
-from conftest_utils import generic_conn
+from test.conftest_utils import generic_conn
 
 
 @pytest.fixture(scope='function')
