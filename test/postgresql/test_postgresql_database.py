@@ -30,8 +30,8 @@ class TestPostgresqlDatabase(DatabaseTestBase):
         for key in ('user', 'host', 'dbname'):
             params = {'host': 'host', 'user': 'user', 'dbname': 'dbname'}
             del params[key]
-        with pytest.raises(ValueError):
-            PostgresqlDatabase(**params)
+            with pytest.raises(ValueError):
+                PostgresqlDatabase(**params)
 
     @pytest.mark.parametrize('params, url', [
         ({}, 'u@h/n'),
