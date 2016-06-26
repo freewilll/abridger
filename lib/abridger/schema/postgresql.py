@@ -28,22 +28,22 @@ class PostgresqlSchema(Schema):
         schema = cls()
         schema.tables_by_oid = {}
 
-        schema.add_tables_from_conn(conn)
-        schema.add_columns_from_conn(conn)
-        schema.add_foreign_key_constraints_from_conn(conn)
-        schema.add_primary_key_constraints(conn)
-        schema.add_unique_indexes(conn)
-        schema.add_alternate_primary_keys()
+        schema._add_tables_from_conn(conn)
+        schema._add_columns_from_conn(conn)
+        schema._add_foreign_key_constraints_from_conn(conn)
+        schema._add_primary_key_constraints(conn)
+        schema._add_unique_indexes(conn)
+        schema._add_alternate_primary_keys()
         return schema
 
-    def add_table(self, name, oid):
+    def _add_table(self, name, oid):
         table = PostgresqlTable(name, oid)
         self.tables.append(table)
         self.tables_by_name[name] = table
         self.tables_by_oid[oid] = table
         return table
 
-    def add_tables_from_conn(self, conn):
+    def _add_tables_from_conn(self, conn):
         stmt = '''
             SELECT pg_class.oid, relname
             FROM pg_class
@@ -59,9 +59,9 @@ class PostgresqlSchema(Schema):
         with conn.cursor() as cur:
             cur.execute(stmt)
             for (oid, name) in cur.fetchall():
-                self.add_table(name, oid)
+                self._add_table(name, oid)
 
-    def add_columns_from_conn(self, conn):
+    def _add_columns_from_conn(self, conn):
         stmt = '''
             SELECT pg_class.oid, attname, attnum, attnotnull
             FROM pg_class
@@ -84,7 +84,7 @@ class PostgresqlSchema(Schema):
                 table = self.tables_by_oid[oid]
                 table.add_column(name, notnull, attrnum)
 
-    def add_foreign_key_constraints_from_conn(self, conn):
+    def _add_foreign_key_constraints_from_conn(self, conn):
         stmt = '''
             SELECT conname, base_table.oid, conkey, ref_table.oid, confkey
             FROM pg_class AS base_table
@@ -113,7 +113,7 @@ class PostgresqlSchema(Schema):
                 ForeignKeyConstraint.create_and_add_to_tables(
                     name, tuple(src_cols), tuple(dst_cols))
 
-    def add_primary_key_constraints(self, conn):
+    def _add_primary_key_constraints(self, conn):
         stmt = '''
             SELECT conname, base_table.oid, conkey
             FROM pg_class AS base_table
@@ -131,7 +131,7 @@ class PostgresqlSchema(Schema):
                     primary_key.append(table.cols_by_attrnum[attrnum])
                 table.primary_key = tuple(primary_key)
 
-    def add_unique_indexes(self, conn):
+    def _add_unique_indexes(self, conn):
         stmt = '''
             SELECT c1.oid, c2.relname, i.indisunique, i.indkey
             FROM pg_class c1

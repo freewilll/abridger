@@ -57,7 +57,7 @@ class WorkItem(object):
         if parent_work_item is not None:
             self.depth = parent_work_item.depth + 1
 
-        self.set_history(parent_work_item, parent_results_row)
+        self._set_history(parent_work_item, parent_results_row)
 
     def value_hash(self, value):
         return hash(tuple([self.subject, self.table, self.cols, value,
@@ -71,7 +71,7 @@ class WorkItem(object):
         fetched_rows = [ResultsRow(self.table, fr) for fr in fetched_rows]
         return fetched_rows
 
-    def make_work_item_history(self):
+    def _make_work_item_history(self):
         if self.values is not None:
             cols_csv = ','.join([c.name for c in self.cols])
             values_csv = ','.join([str(v) for v in list(self.values[0])])
@@ -82,7 +82,7 @@ class WorkItem(object):
         else:
             return (self.table, None, None, self.sticky)
 
-    def make_results_row_history(self, results_row):
+    def _make_results_row_history(self, results_row):
         epk = results_row.table.effective_primary_key
         col_indexes = [results_row.table.cols.index(c) for c in epk]
 
@@ -94,16 +94,16 @@ class WorkItem(object):
             cols_csv = '(%s)' % cols_csv
         return (results_row.table, cols_csv, values_csv, self.sticky)
 
-    def set_history(self, work_item, results_row):
+    def _set_history(self, work_item, results_row):
         if work_item is None:
-            self.history = [self.make_work_item_history()]
+            self.history = [self._make_work_item_history()]
             return
 
         self.history = list(work_item.history)
-        work_item_history = self.make_work_item_history()
+        work_item_history = self._make_work_item_history()
 
         if results_row is not None:
-            results_row_history = self.make_results_row_history(results_row)
+            results_row_history = self._make_results_row_history(results_row)
             if self.history[-1] != results_row_history:
                 self.history.append(results_row_history)
 

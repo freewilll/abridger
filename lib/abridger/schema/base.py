@@ -101,7 +101,7 @@ class Table(object):
         self.cols_by_name[name] = col
         return col
 
-    def set_effective_primary_key(self):
+    def _set_effective_primary_key(self):
         if self.primary_key is not None:
             self.effective_primary_key = self.primary_key
             self.can_have_duplicated_rows = False
@@ -127,7 +127,7 @@ class Schema(object):
         else:
             return {'columns':  [c.name for c in fk.src_cols]}
 
-    def add_alternate_primary_keys(self):
+    def _add_alternate_primary_keys(self):
         for table in self.tables:
             table.alternate_primary_key = None
             if table.primary_key is not None:
@@ -140,7 +140,7 @@ class Schema(object):
                     table.alternate_primary_key = tuple(unique_index.cols)
 
         for table in self.tables:
-            table.set_effective_primary_key()
+            table._set_effective_primary_key()
 
     def relations(self):
         results = []

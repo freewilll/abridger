@@ -9,20 +9,20 @@ class SqliteSchema(Schema):
     @classmethod
     def create_from_conn(cls, conn):
         schema = cls()
-        schema.add_tables_from_conn(conn)
-        schema.add_columns_from_conn(conn)
-        schema.add_foreign_key_constraints_from_conn(conn)
-        schema.add_unique_indexes(conn)
-        schema.add_alternate_primary_keys()
+        schema._add_tables_from_conn(conn)
+        schema._add_columns_from_conn(conn)
+        schema._add_foreign_key_constraints_from_conn(conn)
+        schema._add_unique_indexes(conn)
+        schema._add_alternate_primary_keys()
         return schema
 
-    def add_table(self, name):
+    def _add_table(self, name):
         table = Table(name)
         self.tables.append(table)
         self.tables_by_name[name] = table
         return table
 
-    def add_tables_from_conn(self, conn):
+    def _add_tables_from_conn(self, conn):
         stmt = '''
             SELECT name FROM sqlite_master
             WHERE type='table' ORDER BY name
@@ -30,9 +30,9 @@ class SqliteSchema(Schema):
 
         rs = conn.execute(stmt)
         for (name,) in rs:
-            self.add_table(name)
+            self._add_table(name)
 
-    def add_columns_from_conn(self, conn):
+    def _add_columns_from_conn(self, conn):
         for table in self.tables:
             stmt = "PRAGMA table_info('%s')" % table.name
             rs = conn.execute(stmt)
@@ -50,7 +50,7 @@ class SqliteSchema(Schema):
             else:
                 table.primary_key = None
 
-    def add_foreign_key_constraints_from_conn(self, conn):
+    def _add_foreign_key_constraints_from_conn(self, conn):
         for src_table in self.tables:
             stmt = "PRAGMA foreign_key_list('%s')" % src_table.name
             rs = conn.execute(stmt)
@@ -125,7 +125,7 @@ class SqliteSchema(Schema):
                     if t in fks:
                         fks[t].name = name
 
-    def add_unique_indexes(self, conn):
+    def _add_unique_indexes(self, conn):
         for table in self.tables:
             stmt = "PRAGMA index_list('%s')" % table.name
             rs = conn.execute(stmt)

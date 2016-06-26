@@ -107,7 +107,7 @@ class ExtractionModel(object):
         self._got_relation_defaults = False
 
     @staticmethod
-    def get_single_key_dict(data):
+    def _get_single_key_dict(data):
         assert isinstance(data, dict)
         if len(list(data.keys())) != 1:
             raise InvalidConfigError('Expected one key, got %s' %
@@ -123,7 +123,7 @@ class ExtractionModel(object):
         ExtractionModel.root_validator.validate(data)
 
         for top_level_element in data:
-            (key, list_data) = ExtractionModel.get_single_key_dict(
+            (key, list_data) = ExtractionModel._get_single_key_dict(
                 top_level_element)
 
             if key == 'relations':
@@ -287,7 +287,7 @@ class ExtractionModel(object):
         self.subjects.append(subject)
 
         for subject_data_row in subject_data:
-            (key, list_data) = ExtractionModel.get_single_key_dict(
+            (key, list_data) = ExtractionModel._get_single_key_dict(
                 subject_data_row)
             if key == 'relations':
                 self._add_relations(subject.relations, list_data)

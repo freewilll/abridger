@@ -8,11 +8,11 @@ class Generator(object):
         self.schema = schema
         self.extraction_model = extractor.extraction_model
         self.extractor = extractor
-        self.make_table_order()
-        self.make_deferred_update_rules()
+        self._make_table_order()
+        self._make_deferred_update_rules()
         self.generate_statements()
 
-    def not_null_tables_graph(self, tables):
+    def _not_null_tables_graph(self, tables):
         graph = {}
         for table in tables:
             graph[table] = set()
@@ -29,7 +29,7 @@ class Generator(object):
 
         return graph
 
-    def topologically_sort(self, data):
+    def _topologically_sort(self, data):
         for k, v in list(data.items()):
             v.discard(k)  # Ignore self dependencies
         extra_items_in_deps = reduce(set.union, list(data.values())) - \
@@ -57,16 +57,16 @@ class Generator(object):
                 "Not null constraints need to be disabled "
                 "to allow data to be loaded." % tables_csv)
 
-    def make_table_order(self):
-        topologically_sorted = self.topologically_sort(
-            self.not_null_tables_graph(self.schema.tables))
+    def _make_table_order(self):
+        topologically_sorted = self._topologically_sort(
+            self._not_null_tables_graph(self.schema.tables))
 
         self.table_order = []
         for sublist in topologically_sorted:
             for table in sorted(sublist):
                 self.table_order.append(table)
 
-    def make_deferred_update_rules(self):
+    def _make_deferred_update_rules(self):
         extra_table_not_null_cols = set()
         for not_null_col in self.extraction_model.not_null_cols:
             for col in not_null_col.foreign_key.src_cols:
