@@ -163,10 +163,10 @@ class PostgresqlSchema(Schema):
                 if 0 in col_attrs:
                     continue
 
-                columns = set([table.cols_by_attrnum[a] for a in col_attrs])
-                unique_indexes[table][name] = columns
+                cols = set([table.cols_by_attrnum[a] for a in col_attrs])
+                unique_indexes[table][name] = cols
 
         for table in unique_indexes:
             for name in unique_indexes[table]:
-                columns = unique_indexes[table][name]
-                UniqueIndex.create_and_add_to_table(table, name, columns)
+                cols = unique_indexes[table][name]
+                UniqueIndex.create_and_add_to_table(table, name, cols)

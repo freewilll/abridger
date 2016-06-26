@@ -150,7 +150,7 @@ class Extractor(object):
                     if not isinstance(table.values, list):
                         table.values = [table.values]
                     value_tuples = [(v,) for v in table.values]
-                    cols = (table.column,)
+                    cols = (table.col,)
                 else:
                     value_tuples = None
                     cols = None

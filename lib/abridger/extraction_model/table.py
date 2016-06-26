@@ -1,5 +1,5 @@
 class Table(object):
-    def __init__(self, table, column, values):
+    def __init__(self, table, col, values):
         self.table = table
-        self.column = column
+        self.col = col
         self.values = values

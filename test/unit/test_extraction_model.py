@@ -54,7 +54,7 @@ class TestExtractionModel(TestExtractionModelBase):
 
     def test_toplevel_keys(self):
         # Test good cases
-        not_null_columns = {'not-null-columns': []}
+        not_null_cols = {'not-null-columns': []}
         relations = {'relations': self.relations}
         table = {'table': self.schema_sl.tables[0].name}
         subject = {'subject': [
@@ -62,7 +62,7 @@ class TestExtractionModel(TestExtractionModelBase):
             {'tables': [table]}
         ]}
 
-        ExtractionModel.load(self.schema_sl, [not_null_columns])
+        ExtractionModel.load(self.schema_sl, [not_null_cols])
         ExtractionModel.load(self.schema_sl, [relations])
         ExtractionModel.load(self.schema_sl, [subject])
 
@@ -72,7 +72,7 @@ class TestExtractionModel(TestExtractionModelBase):
         assert 'Expected one key, got' in str(e)
 
         with pytest.raises(InvalidConfigError) as e:
-            data = dict(not_null_columns)
+            data = dict(not_null_cols)
             data.update(relations)
             ExtractionModel.load(self.schema_sl, [data])
         assert 'Expected one key, got' in str(e)
@@ -342,11 +342,11 @@ class TestExtractionModel(TestExtractionModelBase):
 
     def test_subject_table_column_and_values_keys_both_set(self):
         table = {'table': self.schema_sl.tables[0].name}
-        column = table['column'] = self.schema_sl.tables[0].cols[0].name
+        col = table['column'] = self.schema_sl.tables[0].cols[0].name
         for key in ['column', 'values']:
             table = {'table': self.schema_sl.tables[0].name}
             if key == 'column':
-                table['column'] = column
+                table['column'] = col
             if key == 'values':
                 table['values'] = 1
             subject = [{'relations': self.relations}, {'tables': [table]}]
@@ -360,10 +360,10 @@ class TestExtractionModel(TestExtractionModelBase):
 
     def test_subject_table_values_types(self):
         table = {'table': self.schema_sl.tables[0].name}
-        column = table['column'] = self.schema_sl.tables[0].cols[0].name
+        col = table['column'] = self.schema_sl.tables[0].cols[0].name
 
         def test(values):
-            table = {'table': self.schema_sl.tables[0].name, 'column': column,
+            table = {'table': self.schema_sl.tables[0].name, 'column': col,
                      'values': values}
             subject = [{'relations': self.relations}, {'tables': [table]}]
             data = [{'subject': subject}]
@@ -380,22 +380,22 @@ class TestExtractionModel(TestExtractionModelBase):
                 test(values)
             assert 'is not valid under any of the given schemas' in str(e)
 
-    def test_not_null_columns_must_be_toplevel(self):
-        not_null_columns = [{'not-null-columns': []}]
-        data = [{'relations': not_null_columns}]
+    def test_not_null_cols_must_be_toplevel(self):
+        not_null_cols = [{'not-null-columns': []}]
+        data = [{'relations': not_null_cols}]
         with pytest.raises(ValidationError) as e:
             ExtractionModel.load(self.schema_sl, data)
         assert 'Additional properties are not allowed' in str(e)
 
-        data = [{'tables': not_null_columns}]
+        data = [{'tables': not_null_cols}]
         with pytest.raises(ValidationError) as e:
             ExtractionModel.load(self.schema_sl, data)
         assert 'Additional properties are not allowed' in str(e)
 
-    def test_not_null_columns(self):
+    def test_not_null_cols(self):
         relation = dict(self.relations[0])
         table = relation['table']
-        column = relation['column']
+        col = relation['column']
 
         data = [{'not-null-columns': []}]
         ExtractionModel.load(self.schema_sl, data)
@@ -415,27 +415,27 @@ class TestExtractionModel(TestExtractionModelBase):
         assert "'column' is a required property" in str(e)
 
         with pytest.raises(ValidationError) as e:
-            data = [{'not-null-columns': [{'column': column}]}]
+            data = [{'not-null-columns': [{'column': col}]}]
             ExtractionModel.load(self.schema_sl, data)
         assert "'table' is a required property" in str(e)
 
         data = [
-            {'not-null-columns': [{'table': table, 'column': column}]}]
+            {'not-null-columns': [{'table': table, 'column': col}]}]
         model = ExtractionModel.load(self.schema_sl, data)
         assert len(model.not_null_cols) == 1
         afc = model.not_null_cols[0]
         assert afc.table.name == table
-        assert afc.column.name == column
+        assert afc.col.name == col
         assert afc.foreign_key.src_cols[0].table.name == table
-        assert column in [c.name for c in afc.foreign_key.src_cols]
+        assert col in [c.name for c in afc.foreign_key.src_cols]
 
-    def test_non_existent_not_null_columns_data(self):
+    def test_non_existent_not_null_cols_data(self):
         relation = dict(self.relations[0])
         table = relation['table']
-        column = relation['column']
+        col = relation['column']
 
         data = [
-            {'not-null-columns': [{'table': 'foo', 'column': column}]}]
+            {'not-null-columns': [{'table': 'foo', 'column': col}]}]
         with pytest.raises(UnknownTableError):
             ExtractionModel.load(self.schema_sl, data)
 
@@ -444,34 +444,34 @@ class TestExtractionModel(TestExtractionModelBase):
         with pytest.raises(UnknownColumnError):
             ExtractionModel.load(self.schema_sl, data)
 
-    def test_not_null_columns_must_be_a_foreign_key(self):
+    def test_not_null_cols_must_be_a_foreign_key(self):
         # The assumption there is that the first table doesn't have any
         # foreign keys.
-        non_fk_column = self.schema_sl.tables[0].cols[0]
-        fk_column = None
+        non_fk_col = self.schema_sl.tables[0].cols[0]
+        fk_col = None
 
         # Let's check that assumption, just to be paranoid that the starting
         # conditions of this test are valid.
         for table in self.schema_sl.tables:
             for fk in table.foreign_keys:
-                for fk_column in fk.src_cols:
-                    assert non_fk_column != fk_column
-                    if fk_column is None:
-                        fk_column = fk_column
+                for fk_col in fk.src_cols:
+                    assert non_fk_col != fk_col
+                    if fk_col is None:
+                        fk_col = fk_col
 
-        assert fk_column is not None
+        assert fk_col is not None
 
         # Test for a valid foreign key
         data = [
-            {'not-null-columns': [{'table': fk_column.table.name,
-                                   'column': fk_column.name}]}]
+            {'not-null-columns': [{'table': fk_col.table.name,
+                                   'column': fk_col.name}]}]
         model = ExtractionModel.load(self.schema_sl, data)
         assert len(model.not_null_cols) == 1
 
         # Test for a non foreign key
         data = [
-            {'not-null-columns': [{'table': non_fk_column.table.name,
-                                   'column': non_fk_column.name}]}]
+            {'not-null-columns': [{'table': non_fk_col.table.name,
+                                   'column': non_fk_col.name}]}]
         with pytest.raises(RelationIntegrityError) as e:
             ExtractionModel.load(self.schema_sl, data)
         assert 'not-null-columns can only be used on foreign keys' in str(e)

@@ -175,24 +175,24 @@ class TestGenerator(TestExtractorBase):
         self.database.insert_rows(rows)
         return rows
 
-    def get_generator_instance(self, schema, not_null_columns=None,
+    def get_generator_instance(self, schema, not_null_cols=None,
                                table='test1'):
-        if not_null_columns is None:
-            not_null_columns = []
+        if not_null_cols is None:
+            not_null_cols = []
         extraction_model_data = [
             {'subject': [{'tables': [{'table': table}]}]},
             {'relations': [{'defaults': Relation.DEFAULT_EVERYTHING}]},
-            {'not-null-columns': not_null_columns},
+            {'not-null-columns': not_null_cols},
         ]
         extraction_model = ExtractionModel.load(schema, extraction_model_data)
         extractor = Extractor(self.database, extraction_model)
         return Generator(schema, extractor)
 
     def check_table_order(self, schema, expected_table_order,
-                          not_null_columns=None,
+                          not_null_cols=None,
                           expected_deferred_update_rules=None):
         generator = self.get_generator_instance(
-            schema, not_null_columns=not_null_columns)
+            schema, not_null_cols=not_null_cols)
         table_order = [t.name for t in generator.table_order]
         if table_order != expected_table_order:
             print()
@@ -234,7 +234,7 @@ class TestGenerator(TestExtractorBase):
         }
         self.check_table_order(
             schema2, ['test2', 'test1'],
-            not_null_columns=[{'table': 'test1', 'column': 'test2_id'}],
+            not_null_cols=[{'table': 'test1', 'column': 'test2_id'}],
             expected_deferred_update_rules=expected_deferred_update_rules)
 
     def test_table_order3(self, schema3):

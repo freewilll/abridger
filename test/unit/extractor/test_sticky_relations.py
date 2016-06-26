@@ -99,8 +99,8 @@ class TestExtractorStickyRelations(TestExtractorBase):
         # trail
         table = {'table': 'test1'}
 
-        def outgoing_sticky_rel(table, column):
-            return {'table': table, 'column': column, 'sticky': True,
+        def outgoing_sticky_rel(table, col):
+            return {'table': table, 'column': col, 'sticky': True,
                     'type': Relation.TYPE_OUTGOING}
 
         relations = [

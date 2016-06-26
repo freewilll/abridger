@@ -144,15 +144,15 @@ class ExtractionModel(object):
             raise UnknownTableError('Unknown table: "%s"' % table_name)
 
         if column_name is not None:
-            column = table.cols_by_name.get(column_name)
-            if column is None:
+            col = table.cols_by_name.get(column_name)
+            if col is None:
                 raise UnknownColumnError(
                     'Unknown column: "%s" on table "%s"' % (
                         column_name, table_name))
         else:
-            column = None
+            col = None
 
-        return (table, column)
+        return (table, col)
 
     def _add_relation(self, target, table=None, foreign_key=None, type=None,
                       name=None, disabled=False, sticky=False):
@@ -166,28 +166,27 @@ class ExtractionModel(object):
 
     def _add_table_relation(self, target, relation_data):
         table_name = relation_data.get('table')
-        column_name = relation_data.get('column')
-        (table, column) = self._check_table_and_column(table_name,
-                                                       column_name)
+        col_name = relation_data.get('column')
+        (table, col) = self._check_table_and_column(table_name, col_name)
 
         foreign_key = None
-        if column is not None:
+        if col is not None:
             for fk in table.foreign_keys:
-                if column in fk.src_cols:
+                if col in fk.src_cols:
                     foreign_key = fk
                     break
             if foreign_key is None:
                 raise RelationIntegrityError(
                     "Relations can only be used on foreign keys."
                     "Column %s on table %s isn't a foreign key." % (
-                        column.name, table.name))
+                        col.name, table.name))
 
         # Note: validation will ensure the type is valid
         type = relation_data.get('type', Relation.TYPE_INCOMING)
         disabled = relation_data.get('disabled', False)
         sticky = relation_data.get('sticky', False)
 
-        if disabled and column is None:
+        if disabled and col is None:
             raise RelationIntegrityError(
                 'Disabled relations must have a column')
 
@@ -195,7 +194,7 @@ class ExtractionModel(object):
                 type == Relation.TYPE_OUTGOING and foreign_key.notnull):
             raise RelationIntegrityError(
                 'Cannot disable outgoing not null foreign keys on column '
-                '%s as this would lead to an integrity error' % column)
+                '%s as this would lead to an integrity error' % col)
 
         if disabled and 'sticky' in relation_data:
             raise InvalidConfigError(
@@ -273,13 +272,12 @@ class ExtractionModel(object):
                     'A table with values must have a column')
 
             table_name = table_data['table']
-            column_name = table_data.get('column')
-            (table, column) = self._check_table_and_column(table_name,
-                                                           column_name)
+            col_name = table_data.get('column')
+            (table, col) = self._check_table_and_column(table_name, col_name)
 
             target.append(Table(
                 table=table,
-                column=column,
+                col=col,
                 values=table_data.get('values')))
 
     def _add_subject(self, target, subject_data):
@@ -300,21 +298,20 @@ class ExtractionModel(object):
     def _add_not_null_cols(self, data):
         for row in data:
             table_name = row['table']
-            column_name = row['column']
-            (table, column) = self._check_table_and_column(table_name,
-                                                           column_name)
+            col_name = row['column']
+            (table, col) = self._check_table_and_column(table_name, col_name)
 
             # Check it's a foreign key
             found_fk = False
             for foreign_key in table.foreign_keys:
                 for fk_col in foreign_key.src_cols:
-                    if column == fk_col:
+                    if col == fk_col:
                         found_fk = foreign_key
             if not found_fk:
                 raise RelationIntegrityError(
                     "not-null-columns can only be used on foreign keys."
                     "Column %s on table %s isn't a foreign key." % (
-                        column.name, table.name))
+                        col.name, table.name))
 
             self.not_null_cols.append(NotNullColumn(
-                table, column, found_fk))
+                table, col, found_fk))

@@ -144,8 +144,8 @@ class TestExtractorRelations(TestExtractorBase):
     def test_sticky_combinations(self, schema1, data1, type_,
                                  notnull, sticky, propagate_sticky,
                                  only_if_sticky):
-        column = 'test1_nn_id' if notnull else 'test1_id'
-        relation = {'table': 'test2', 'column': column,
+        col = 'test1_nn_id' if notnull else 'test1_id'
+        relation = {'table': 'test2', 'column': col,
                     'type': type_, 'sticky': sticky}
         data = [{'relations': [relation]}]
         model = ExtractionModel.load(schema1, data)

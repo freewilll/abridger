@@ -77,16 +77,16 @@ class Generator(object):
         self.deferred_update_rules = {}
         for table in self.table_order:
             src_index = order_dict[table]
-            columns = set()
+            cols = set()
             for fk in table.foreign_keys:
                 for col in fk.src_cols:
                     dst_index = order_dict[col.table]
                     extra_notnull = col in extra_table_not_null_cols
                     notnull = col.notnull or extra_notnull
                     if not notnull and dst_index >= src_index:
-                        columns.add(col)
+                        cols.add(col)
 
-            self.deferred_update_rules[table] = columns
+            self.deferred_update_rules[table] = cols
 
     def generate_statements(self):
         self.insert_statements = []
