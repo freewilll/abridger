@@ -1,3 +1,4 @@
+import mock
 import pytest
 
 from abridger.database import PostgresqlDatabase
@@ -45,3 +46,11 @@ class TestPostgresqlDatabase(DatabaseTestBase):
         full_params.update(params)
         url = 'postgresql://' + url
         assert PostgresqlDatabase(**full_params).url() == url
+
+    @mock.patch('abridger.database.postgresql.import_module',
+                side_effect=[ImportError(), None])
+    def test_missing_psycopg2_package(self, request, postgresql_database):
+        self.database.disconnect()
+        with pytest.raises(ImportError) as e:
+            self.database.connect()
+        assert 'Please install psycopg2 package' in str(e)

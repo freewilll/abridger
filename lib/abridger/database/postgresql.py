@@ -1,4 +1,4 @@
-import importlib
+from importlib import import_module
 
 from .base import Database
 from abridger.schema import PostgresqlSchema
@@ -44,7 +44,7 @@ class PostgresqlDatabase(Database):
 
         psycopg2_package = 'psycopg2'
         try:
-            psycopg2 = importlib.import_module(psycopg2_package)
+            psycopg2 = import_module(psycopg2_package)
         except ImportError:
             raise ImportError(
                 'Please install {0} package.\n'
