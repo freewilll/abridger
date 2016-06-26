@@ -1,5 +1,3 @@
-from functools import reduce
-
 from abridger.exc import CyclicDependencyError
 
 
@@ -32,11 +30,6 @@ class Generator(object):
     def _topologically_sort(self, data):
         for k, v in list(data.items()):
             v.discard(k)  # Ignore self dependencies
-        extra_items_in_deps = reduce(set.union, list(data.values())) - \
-            set(data.keys())
-
-        for item in extra_items_in_deps:
-            data[item] = set()
 
         while True:
             ordered = set(item for item, dep in list(data.items()) if not dep)
