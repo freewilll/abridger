@@ -23,19 +23,19 @@ class SqliteSchema(Schema):
         return table
 
     def add_tables_from_conn(self, conn):
-        sql = '''
+        stmt = '''
             SELECT name FROM sqlite_master
             WHERE type='table' ORDER BY name
         '''
 
-        rs = conn.execute(sql)
+        rs = conn.execute(stmt)
         for (name,) in rs:
             self.add_table(name)
 
     def add_columns_from_conn(self, conn):
         for table in self.tables:
-            sql = "PRAGMA table_info('%s')" % table.name
-            rs = conn.execute(sql)
+            stmt = "PRAGMA table_info('%s')" % table.name
+            rs = conn.execute(stmt)
 
             primary_key = list()
             for row in rs:
@@ -52,8 +52,8 @@ class SqliteSchema(Schema):
 
     def add_foreign_key_constraints_from_conn(self, conn):
         for src_table in self.tables:
-            sql = "PRAGMA foreign_key_list('%s')" % src_table.name
-            rs = conn.execute(sql)
+            stmt = "PRAGMA foreign_key_list('%s')" % src_table.name
+            rs = conn.execute(stmt)
             foreign_keys = defaultdict(list)
             fks = {}
             for row in rs:
@@ -101,11 +101,11 @@ class SqliteSchema(Schema):
                 assert len(dst_table_names) == 1
 
             # Find constraint names by parsing the schema SQL
-            sql = '''
+            stmt = '''
                 SELECT sql FROM sqlite_master WHERE name = '%s'
                 AND type = 'table'
             ''' % src_table.name
-            rs = conn.execute(sql)
+            rs = conn.execute(stmt)
             table_sql = rs.fetchone()[0]
 
             fk_pattern = (
@@ -127,15 +127,15 @@ class SqliteSchema(Schema):
 
     def add_unique_indexes(self, conn):
         for table in self.tables:
-            sql = "PRAGMA index_list('%s')" % table.name
-            rs = conn.execute(sql)
+            stmt = "PRAGMA index_list('%s')" % table.name
+            rs = conn.execute(stmt)
             for row in rs:
                 (index_name, is_unique) = (row[1], row[2])
                 if not is_unique:
                     continue
 
-                sql = "PRAGMA index_info('%s')" % index_name
-                rs = conn.execute(sql)
+                stmt = "PRAGMA index_info('%s')" % index_name
+                rs = conn.execute(stmt)
                 columns = set()
                 for row in rs:
                     column_name = row[2]

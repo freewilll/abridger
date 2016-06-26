@@ -10,7 +10,7 @@ from test.conftest import got_postgresql
 
 @pytest.mark.skipif(not got_postgresql(), reason='Needs postgresql')
 class TestPostgresqlSchema(object):
-    test_relations_sql = '''
+    test_relations_stmts = '''
         CREATE TABLE test1 (
             id SERIAL PRIMARY KEY,
             alt_id SERIAL UNIQUE,
@@ -82,7 +82,7 @@ class TestPostgresqlSchema(object):
 
     def test_schema_foreign_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
-            cur.execute(self.test_relations_sql)
+            cur.execute(self.test_relations_stmts)
         cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -160,7 +160,7 @@ class TestPostgresqlSchema(object):
 
     def test_dump_relations(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
-            cur.execute(self.test_relations_sql)
+            cur.execute(self.test_relations_stmts)
         cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -243,7 +243,7 @@ class TestPostgresqlSchema(object):
 
     def test_self_referencing_non_null_foreign_key(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
-            for sql in [
+            for stmt in [
                 '''CREATE TABLE test1 (
                         id SERIAL PRIMARY KEY
                     );
@@ -254,7 +254,7 @@ class TestPostgresqlSchema(object):
                 # Sanity test the above is even possible
                 'INSERT INTO test1  (id) VALUES(1);'
             ]:
-                cur.execute(sql)
+                cur.execute(stmt)
 
         with pytest.raises(RelationIntegrityError):
             PostgresqlSchema.create_from_conn(postgresql_conn)

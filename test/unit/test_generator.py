@@ -13,7 +13,7 @@ class TestGenerator(TestExtractorBase):
     # Two unrelated tables
     @pytest.fixture()
     def schema1(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT
@@ -23,7 +23,7 @@ class TestGenerator(TestExtractorBase):
                 name TEXT
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
 
         return SqliteSchema.create_from_conn(self.database.connection)
 
@@ -41,7 +41,7 @@ class TestGenerator(TestExtractorBase):
     @pytest.fixture()
     # A single nullable dependency
     def schema2(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
@@ -52,14 +52,14 @@ class TestGenerator(TestExtractorBase):
                 name TEXT
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
 
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # A single not null dependency
     def schema3(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
@@ -70,14 +70,14 @@ class TestGenerator(TestExtractorBase):
                 name TEXT
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
 
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # Two level dependency
     def schema4(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
@@ -93,14 +93,14 @@ class TestGenerator(TestExtractorBase):
                 name TEXT
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
 
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # A cycle of not null keys
     def schema5(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
@@ -117,14 +117,14 @@ class TestGenerator(TestExtractorBase):
                 test1_id INTEGER NOT NULL REFERENCES test1
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
 
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
     # A cycle of not null keys, with one nullable
     def schema6(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 test2_id INTEGER NOT NULL REFERENCES test2
@@ -143,21 +143,21 @@ class TestGenerator(TestExtractorBase):
                 test4_id INTEGER REFERENCES test4
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
 
         return SqliteSchema.create_from_conn(self.database.connection)
 
     # Tables without primary keys tests
     @pytest.fixture()
     def schema7(self):
-        for sql in [
+        for stmt in [
             # No primary key, no unique indexes
             '''CREATE TABLE test1 (id INTEGER);''',
 
             # No primary key, with a unique index
             '''CREATE TABLE test2 (id INTEGER UNIQUE);''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
 
         return SqliteSchema.create_from_conn(self.database.connection)
 

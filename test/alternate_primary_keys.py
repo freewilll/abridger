@@ -1,5 +1,5 @@
 class TestAlternatePrimaryKeysBase(object):
-    test_alternate_primary_keys_sql = [
+    test_alternate_primary_keys_stmts = [
         '''CREATE TABLE test1 (
                 id1 INTEGER UNIQUE
             );''',

@@ -6,7 +6,7 @@ from abridger.schema import SqliteSchema
 
 
 class TestSqliteSchema(object):
-    test_relations_sql = [
+    test_relations_stmts = [
         '''
             CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
@@ -85,8 +85,8 @@ class TestSqliteSchema(object):
         assert nullable_col.notnull is False
 
     def test_schema_foreign_key_constraints(self, sqlite_conn):
-        for sql in self.test_relations_sql:
-            sqlite_conn.execute(sql)
+        for stmt in self.test_relations_stmts:
+            sqlite_conn.execute(stmt)
 
         schema = SqliteSchema.create_from_conn(sqlite_conn)
         table1 = schema.tables[0]
@@ -120,13 +120,13 @@ class TestSqliteSchema(object):
                 assert fk.dst_cols == (table1_id,)
 
     def test_schema_primary_key_constraints(self, sqlite_conn):
-        sqls = [
+        stmts = [
             'CREATE TABLE test1 (id1 INTEGER PRIMARY KEY, name text);',
             'CREATE TABLE test2 (name text, id2 INTEGER PRIMARY KEY);',
             'CREATE TABLE test3 (id3 INTEGER);',
         ]
-        for sql in sqls:
-            sqlite_conn.execute(sql)
+        for stmt in stmts:
+            sqlite_conn.execute(stmt)
 
         schema = SqliteSchema.create_from_conn(sqlite_conn)
 
@@ -148,7 +148,7 @@ class TestSqliteSchema(object):
         assert pk == (schema.tables[0].cols[0], schema.tables[0].cols[1],)
 
     def test_schema_compound_foreign_key_constraints(self, sqlite_conn):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                     id1 INTEGER,
                     id2 INTEGER,
@@ -168,7 +168,7 @@ class TestSqliteSchema(object):
                     FOREIGN KEY(fk3, fk4) REFERENCES test1(id1, id2)
                     FOREIGN KEY(fk5, fk6) REFERENCES test1(id3, id4)
                 );''']:
-            sqlite_conn.execute(sql)
+            sqlite_conn.execute(stmt)
 
         schema = SqliteSchema.create_from_conn(sqlite_conn)
         table1 = schema.tables[0]
@@ -197,7 +197,7 @@ class TestSqliteSchema(object):
             assert fk.dst_cols == (table1.cols[t11], table1.cols[t12])
 
     def test_schema_non_existent_foreign_key_unknown_column(self, sqlite_conn):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY
                 );''',
@@ -206,13 +206,13 @@ class TestSqliteSchema(object):
                     fk1 INTEGER,
                     FOREIGN KEY(fk1) REFERENCES test1(name)
                 );''']:
-            sqlite_conn.execute(sql)
+            sqlite_conn.execute(stmt)
 
         with pytest.raises(UnknownColumnError):
             SqliteSchema.create_from_conn(sqlite_conn)
 
     def test_schema_non_existent_foreign_key_unknown_table(self, sqlite_conn):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY
                 );''',
@@ -221,13 +221,13 @@ class TestSqliteSchema(object):
                     fk1 INTEGER,
                     FOREIGN KEY(fk1) REFERENCES foo(id)
                 );''']:
-            sqlite_conn.execute(sql)
+            sqlite_conn.execute(stmt)
 
         with pytest.raises(UnknownTableError):
             SqliteSchema.create_from_conn(sqlite_conn)
 
     def test_schema_unique_indexes(self, sqlite_conn):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY,
                     col1 TEXT UNIQUE,
@@ -241,7 +241,7 @@ class TestSqliteSchema(object):
             'CREATE UNIQUE INDEX uindex1 ON test1(col1, col2);',
             'CREATE UNIQUE INDEX uindex2 ON test1(col3, col4);'
         ]:
-            sqlite_conn.execute(sql)
+            sqlite_conn.execute(stmt)
 
         schema = SqliteSchema.create_from_conn(sqlite_conn)
         assert len(schema.tables[0].unique_indexes) == 8  # including PK
@@ -275,7 +275,7 @@ class TestSqliteSchema(object):
         assert('col2', 'col4') not in tuples
 
     def test_self_referencing_non_null_foreign_key(self, sqlite_conn):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY
                 );
@@ -291,13 +291,13 @@ class TestSqliteSchema(object):
             # Sanity test the above is even possible
             'INSERT INTO test1  (id) VALUES(1);'
         ]:
-            sqlite_conn.execute(sql)
+            sqlite_conn.execute(stmt)
 
         with pytest.raises(RelationIntegrityError):
             SqliteSchema.create_from_conn(sqlite_conn)
 
     def test_set_effective_primary_key(self, sqlite_conn):
-        for sql in [
+        for stmt in [
             '''
                CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY,
@@ -314,7 +314,7 @@ class TestSqliteSchema(object):
                     id2 INTEGER
                 );'''
         ]:
-            sqlite_conn.execute(sql)
+            sqlite_conn.execute(stmt)
 
         schema = SqliteSchema.create_from_conn(sqlite_conn)
         tables = schema.tables

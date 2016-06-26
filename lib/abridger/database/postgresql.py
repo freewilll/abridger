@@ -5,7 +5,7 @@ from abridger.schema import PostgresqlSchema
 
 
 class PostgresqlDatabase(Database):
-    CAN_GENERATE_SQL = True
+    CAN_GENERATE_SQL_STATEMENTS = True
 
     def __init__(self, host=None, port=None, dbname=None, user=None,
                  password=None, connect=True):
@@ -75,7 +75,7 @@ class PostgresqlDatabase(Database):
         where_clause += ', '.join([c.name for c in table.cols])
         where_clause += ') IN ('
 
-        sql_values = []
+        stmt_values = []
         ph_with_comma = '%s, ' % phs
         q = ph_with_comma.join([''] * len(cols)) + phs
 
@@ -83,9 +83,9 @@ class PostgresqlDatabase(Database):
             if i > 0:
                 where_clause += ', '
             where_clause += '(%s)' % q
-            sql_values.extend(list(value_tuple))
+            stmt_values.extend(list(value_tuple))
         where_clause += ')'
-        return where_clause, sql_values
+        return where_clause, stmt_values
 
     def make_begin_stmts(self):
         return [b'BEGIN;', b'\\set ON_ERROR_STOP']

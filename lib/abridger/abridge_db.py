@@ -127,7 +127,7 @@ def main(args):
             print('src and dst databases must be of the same type')
             exit(1)
     else:
-        if not src_database.CAN_GENERATE_SQL:
+        if not src_database.CAN_GENERATE_SQL_STATEMENTS:
             print("SQL generation isn't available for this type of database")
             exit(1)
         outputter = SqlOutputter(src_database, args.dst_file, verbosity)

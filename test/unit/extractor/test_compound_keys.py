@@ -7,7 +7,7 @@ from test.unit.extractor.base import TestExtractorBase
 class TestExtractorBasics(TestExtractorBase):
     @pytest.fixture()
     def schema1(self):
-        for sql in [
+        for stmt in [
             '''
                 CREATE TABLE test1 (
                     id1 INTEGER,
@@ -24,7 +24,7 @@ class TestExtractorBasics(TestExtractorBase):
                 );
             ''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()

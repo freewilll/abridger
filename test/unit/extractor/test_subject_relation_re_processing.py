@@ -8,7 +8,7 @@ from test.unit.extractor.base import TestExtractorBase
 class TestExtractorSubjectRelationReProcessingIncoming(TestExtractorBase):
     @pytest.fixture()
     def schema1(self):
-        for sql in [
+        for stmt in [
             '''
                 CREATE TABLE test1 (
                     id INTEGER PRIMARY KEY
@@ -31,7 +31,7 @@ class TestExtractorSubjectRelationReProcessingIncoming(TestExtractorBase):
                 );
             ''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
@@ -98,7 +98,7 @@ class TestExtractorTwoSubjectTwoColumnNulling(TestExtractorBase):
 
     @pytest.fixture()
     def schema1(self):
-        for sql in [
+        for stmt in [
             '''
                 CREATE TABLE test1 (
                     id INTEGER PRIMARY KEY
@@ -126,7 +126,7 @@ class TestExtractorTwoSubjectTwoColumnNulling(TestExtractorBase):
                 );
             ''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()

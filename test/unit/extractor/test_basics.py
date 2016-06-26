@@ -27,7 +27,7 @@ class TestExtractorBasics(TestExtractorBase):
 
     @pytest.fixture()
     def schema2(self):
-        for sql in [
+        for stmt in [
             '''
                 CREATE TABLE test1 (
                     id INTEGER PRIMARY KEY
@@ -39,7 +39,7 @@ class TestExtractorBasics(TestExtractorBase):
                 );
             ''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
@@ -60,7 +60,7 @@ class TestExtractorBasics(TestExtractorBase):
 
     @pytest.fixture()
     def schema3(self):
-        for sql in [
+        for stmt in [
             '''
                 CREATE TABLE test1 (
                     id INTEGER PRIMARY KEY,
@@ -73,7 +73,7 @@ class TestExtractorBasics(TestExtractorBase):
                 );
             ''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()

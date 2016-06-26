@@ -44,7 +44,7 @@ class PostgresqlSchema(Schema):
         return table
 
     def add_tables_from_conn(self, conn):
-        sql = '''
+        stmt = '''
             SELECT pg_class.oid, relname
             FROM pg_class
             LEFT JOIN pg_namespace ON (relnamespace = pg_namespace.oid)
@@ -57,12 +57,12 @@ class PostgresqlSchema(Schema):
         '''
 
         with conn.cursor() as cur:
-            cur.execute(sql)
+            cur.execute(stmt)
             for (oid, name) in cur.fetchall():
                 self.add_table(name, oid)
 
     def add_columns_from_conn(self, conn):
-        sql = '''
+        stmt = '''
             SELECT pg_class.oid, attname, attnum, attnotnull
             FROM pg_class
               LEFT JOIN pg_namespace ON (relnamespace = pg_namespace.oid)
@@ -79,13 +79,13 @@ class PostgresqlSchema(Schema):
         '''
 
         with conn.cursor() as cur:
-            cur.execute(sql)
+            cur.execute(stmt)
             for (oid, name, attrnum, notnull) in cur.fetchall():
                 table = self.tables_by_oid[oid]
                 table.add_column(name, notnull, attrnum)
 
     def add_foreign_key_constraints_from_conn(self, conn):
-        sql = '''
+        stmt = '''
             SELECT conname, base_table.oid, conkey, ref_table.oid, confkey
             FROM pg_class AS base_table
                 INNER JOIN pg_constraint ON (base_table.oid = conrelid)
@@ -94,7 +94,7 @@ class PostgresqlSchema(Schema):
         '''
 
         with conn.cursor() as cur:
-            cur.execute(sql)
+            cur.execute(stmt)
             for (name, src_oid, src_attrnum, dst_oid, dst_attrnum) \
                     in cur.fetchall():
                 src_table = self.tables_by_oid[src_oid]
@@ -114,7 +114,7 @@ class PostgresqlSchema(Schema):
                     name, tuple(src_cols), tuple(dst_cols))
 
     def add_primary_key_constraints(self, conn):
-        sql = '''
+        stmt = '''
             SELECT conname, base_table.oid, conkey
             FROM pg_class AS base_table
                 INNER JOIN pg_constraint ON (base_table.oid = conrelid)
@@ -122,7 +122,7 @@ class PostgresqlSchema(Schema):
         '''
 
         with conn.cursor() as cur:
-            cur.execute(sql)
+            cur.execute(stmt)
             for (name, oid, attrnums) in cur.fetchall():
                 table = self.tables_by_oid[oid]
                 assert type(attrnums) is list
@@ -132,7 +132,7 @@ class PostgresqlSchema(Schema):
                 table.primary_key = tuple(primary_key)
 
     def add_unique_indexes(self, conn):
-        sql = '''
+        stmt = '''
             SELECT c1.oid, c2.relname, i.indisunique, i.indkey
             FROM pg_class c1
             JOIN pg_index i on c1.oid = i.indrelid
@@ -145,7 +145,7 @@ class PostgresqlSchema(Schema):
         '''
 
         with conn.cursor() as cur:
-            cur.execute(sql)
+            cur.execute(stmt)
             unique_indexes = defaultdict(dict)
             for row in cur.fetchall():
                 (table_oid, name, is_unique, attrs) = (

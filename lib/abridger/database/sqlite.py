@@ -5,7 +5,7 @@ from abridger.schema import SqliteSchema
 
 
 class SqliteDatabase(Database):
-    CAN_GENERATE_SQL = False
+    CAN_GENERATE_SQL_STATEMENTS = False
 
     def __init__(self, path):
         self.path = path

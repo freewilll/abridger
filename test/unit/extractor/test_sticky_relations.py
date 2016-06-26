@@ -12,7 +12,7 @@ class TestExtractorStickyRelations(TestExtractorBase):
             test1 -> sticky         -> test3 <- test2
                   -> non_sticky     -> test3 <- test2
         '''
-        for sql in [
+        for stmt in [
             '''
                 CREATE TABLE non_sticky (
                     id INTEGER PRIMARY KEY,
@@ -40,7 +40,7 @@ class TestExtractorStickyRelations(TestExtractorBase):
                 );
             ''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()

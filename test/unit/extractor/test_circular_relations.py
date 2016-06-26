@@ -9,13 +9,13 @@ class TestExtractorCircularRelations(TestExtractorBase):
     @pytest.fixture()
     # A self referencing table
     def schema1(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE test1 (
                 id INTEGER PRIMARY KEY,
                 test1_id INTEGER REFERENCES test1
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     def test_one_table_self_referencing(self, schema1):
@@ -33,7 +33,7 @@ class TestExtractorCircularRelations(TestExtractorBase):
     @pytest.fixture()
     # A staff-manager example
     def schema2(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE managers (
                 id INTEGER PRIMARY KEY,
                 staff_id INTEGER NOT NULL REFERENCES staff
@@ -43,7 +43,7 @@ class TestExtractorCircularRelations(TestExtractorBase):
                 manager_id INTEGER REFERENCES managers
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     def test_staff_manager(self, schema2):
@@ -69,7 +69,7 @@ class TestExtractorCircularRelations(TestExtractorBase):
     # A staff-manager example using a foreign key pointing to a non-primary
     # key. This tests the lookup code.
     def schema3(self):
-        for sql in [
+        for stmt in [
             '''CREATE TABLE managers (
                 id INTEGER PRIMARY KEY,
                 alt_staff_id INTEGER NOT NULL REFERENCES staff(alt_id)
@@ -80,7 +80,7 @@ class TestExtractorCircularRelations(TestExtractorBase):
                 manager_id INTEGER REFERENCES managers
             );''',
         ]:
-            self.database.execute(sql)
+            self.database.execute(stmt)
         return SqliteSchema.create_from_conn(self.database.connection)
 
     def test_alt_staff_manager(self, schema3):

@@ -11,8 +11,8 @@ class TestPostgresqlAlternatePrimaryKeys(Base):
     def test_schema_postgresql_alternate_primary_keys(self, postgresql_conn,
                                                       table, count):
         with postgresql_conn.cursor() as cur:
-            for sql in self.test_alternate_primary_keys_sql:
-                cur.execute(sql)
+            for stmt in self.test_alternate_primary_keys_stmts:
+                cur.execute(stmt)
             cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)

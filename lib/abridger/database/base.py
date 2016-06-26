@@ -25,22 +25,22 @@ class Database(object):
 
         phs = self.placeholder_symbol
         cols_csv = ', '.join([c.name for c in table.cols])
-        sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
+        stmt = 'SELECT %s FROM %s' % (cols_csv, table.name)
 
         if cols is None:
-            sql = 'SELECT %s FROM %s' % (cols_csv, table.name)
-            sql_values = ()
+            stmt = 'SELECT %s FROM %s' % (cols_csv, table.name)
+            stmt_values = ()
         elif len(cols) == 1:
             ph_with_comma = '%s, ' % phs
             q = ph_with_comma.join([''] * len(values)) + phs
-            sql += ' WHERE %s IN (%s)' % (cols[0].name, q)
-            sql_values = [v[0] for v in values]
+            stmt += ' WHERE %s IN (%s)' % (cols[0].name, q)
+            stmt_values = [v[0] for v in values]
         else:
-            (where_clause, sql_values) = self.make_multi_col_where_clause(
+            (where_clause, stmt_values) = self.make_multi_col_where_clause(
                 table, cols, values)
-            sql += ' WHERE ' + where_clause
+            stmt += ' WHERE ' + where_clause
 
-        return list(self.execute_and_fetchall(sql, sql_values))
+        return list(self.execute_and_fetchall(stmt, stmt_values))
 
     def make_multi_col_where_clause(self, table, cols, values):
         # Produce something like
@@ -49,7 +49,7 @@ class Database(object):
         # more efficient SQL, like e.g. postgresql.
 
         phs = self.placeholder_symbol
-        sql_values = []
+        stmt_values = []
         or_clauses = []
 
         for value_tuple in values:
@@ -58,10 +58,10 @@ class Database(object):
                 if i > 0:
                     where_clause += ' AND '
                 where_clause += '%s=%s' % (col.name, phs)
-                sql_values.append(val)
+                stmt_values.append(val)
             or_clauses.append('(%s)' % where_clause)
 
-        return ' OR '.join(or_clauses), sql_values
+        return ' OR '.join(or_clauses), stmt_values
 
     def make_insert_statements(self, rows, placeholder_symbol=None):
         table_cols = {}
@@ -77,8 +77,8 @@ class Database(object):
             else:
                 (cols_csv, q) = table_cols[table]
 
-            sql = 'INSERT INTO %s (%s) VALUES(%s)' % (table.name, cols_csv, q)
-            yield sql, values
+            stmt = 'INSERT INTO %s (%s) VALUES(%s)' % (table.name, cols_csv, q)
+            yield stmt, values
 
     def insert_rows(self, rows, cursor=None):
         if cursor is None:
@@ -120,11 +120,11 @@ class Database(object):
                 where.append("%s=%s" % (col_name, phs))
                 placeholder_values.append(pk_value)
 
-            sql = 'UPDATE %s SET %s WHERE %s' % (
+            stmt = 'UPDATE %s SET %s WHERE %s' % (
                 table.name,
                 ', '.join(sets),
                 ' AND '.join(where))
-            yield sql, placeholder_values
+            yield stmt, placeholder_values
 
     def update_rows(self, rows, cursor=None):
         if cursor is None:

@@ -5,7 +5,7 @@ from test.unit.utils import make_temp_yaml_file
 class TestAbridgeDbBase(object):
     def create_schema(self, conn):
         cur = conn.cursor()
-        for sql in (
+        for stmt in (
             '''
                 CREATE TABLE test1(
                     id INTEGER PRIMARY KEY)
@@ -16,7 +16,7 @@ class TestAbridgeDbBase(object):
             ''', '''
                 ALTER TABLE test1 ADD COLUMN test2_id INT REFERENCES test2
                 '''):
-            cur.execute(sql)
+            cur.execute(stmt)
         conn.commit()
 
     def create_data(self, conn):

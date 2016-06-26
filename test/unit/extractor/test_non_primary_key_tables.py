@@ -112,8 +112,8 @@ class TestExtractorNonPrimaryKeyTables(TestExtractorBase):
 
     @pytest.mark.parametrize('schema, data', test_cases)
     def test_non_primary_key_table(self, schema, data):
-        for sql in schema:
-            self.database.execute(sql)
+        for stmt in schema:
+            self.database.execute(stmt)
         schema = SqliteSchema.create_from_conn(self.database.connection)
         for i, datum in enumerate(data):
             (table_name, row_values) = datum
