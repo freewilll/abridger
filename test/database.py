@@ -16,6 +16,9 @@ class DatabaseTestBase(object):
             conn.close()
         request.addfinalizer(fin)
 
+    def test_double_connect(self):
+        self.database.connect()
+
     @pytest.mark.parametrize('cols, values, results', [
         (None, None, [(1, 'foo'), (2, 'bar')]),
         ([0], [], []),
