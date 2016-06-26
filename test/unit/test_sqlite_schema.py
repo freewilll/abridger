@@ -51,7 +51,7 @@ class TestSqliteSchema(object):
         assert str(schema.tables[0]) is not None
         assert repr(schema.tables[0]) is not None
 
-    def test_columns(self, sqlite_conn):
+    def test_cols(self, sqlite_conn):
         sqlite_conn.execute('''
                 CREATE TABLE test1 (
                     id INTEGER PRIMARY KEY,
@@ -184,19 +184,19 @@ class TestSqliteSchema(object):
                 assert len(fk.dst_cols) == 2
                 fks_by_col[(fk.src_cols[0], fk.src_cols[1])] = fk
 
-        expected_columns = [
-            # table2 column indexes -> table1 column indexes
+        expected_cols = [
+            # table2 col indexes -> table1 col indexes
             ((0, 1), (0, 1)),
             ((2, 3), (0, 1)),
             ((4, 5), (2, 3)),
         ]
-        for (table2_cols, table1_cols) in expected_columns:
+        for (table2_cols, table1_cols) in expected_cols:
             (t11, t12) = table1_cols
             (t21, t22) = table2_cols
             fk = fks_by_col[(table2.cols[t21], table2.cols[t22])]
             assert fk.dst_cols == (table1.cols[t11], table1.cols[t12])
 
-    def test_non_existent_foreign_key_unknown_column(self, sqlite_conn):
+    def test_non_existent_foreign_key_unknown_col(self, sqlite_conn):
         for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY
