@@ -239,7 +239,6 @@ class TestExtractorBasics(TestExtractorBase):
         for result_row in list(result_rows.values()):
             assert repr(result_row) is not None
 
-    @pytest.mark.xfail  # TODO relations without a column on a subject
     def test_relation_without_a_column(self, schema2, data2):
         extraction_model_data = [
             {'relations': [{'table': 'test1'}]},
