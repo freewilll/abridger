@@ -49,7 +49,9 @@ class SqlOutputter(object):
         self.path = path
         self.cursor = self.src_db.connection.cursor()
 
-        if path == '-':
+        if path == '-':  # pragma: no cover
+            # Coverage isn't measured since this the test is executed in a
+            # subprocess
             self.file = os.fdopen(sys.stdout.fileno(), 'wb')
         else:
             self.file = open(path, 'wb')

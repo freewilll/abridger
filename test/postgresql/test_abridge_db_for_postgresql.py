@@ -83,14 +83,9 @@ class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
         config_tempfile = self.make_config_tempfile()
         self.prepare_src(postgresql)
 
-        executable = os.path.join(
-            os.path.dirname(__file__), os.pardir, os.pardir, 'bin',
-            'abridge-db')
-        subprocess.check_output([
-            executable,
-            config_tempfile.name, self.src_database.url(), '-q',
-            '-f', dst_filename.name]
-        ).decode('UTF-8')
+        main([config_tempfile.name, self.src_database.url(), '-q',
+              '-f', dst_filename.name])
+
         with open(dst_filename.name) as f:
             self.check_statements(postgresql2, f.read())
 
