@@ -8,8 +8,8 @@ from test.conftest import got_postgresql
 @pytest.mark.skipif(not got_postgresql(), reason='Needs postgresql')
 class TestPostgresqlAlternatePrimaryKeys(Base):
     @pytest.mark.parametrize('table, count', Base.alternate_primary_keys_tests)
-    def test_schema_postgresql_alternate_primary_keys(self, postgresql_conn,
-                                                      table, count):
+    def test_alternate_primary_keys(self, postgresql_conn,
+                                    table, count):
         with postgresql_conn.cursor() as cur:
             for stmt in self.test_alternate_primary_keys_stmts:
                 cur.execute(stmt)

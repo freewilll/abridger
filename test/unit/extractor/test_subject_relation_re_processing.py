@@ -49,7 +49,7 @@ class TestExtractorSubjectRelationReProcessingIncoming(TestExtractorBase):
         self.database.insert_rows(rows)
         return rows
 
-    def test_subject_relation_re_processing(self, schema1, data1):
+    def test_re_processing(self, schema1, data1):
         # 1 <-  2 <-  3
         # ^     ^
         #  \   /

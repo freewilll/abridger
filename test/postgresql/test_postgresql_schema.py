@@ -30,7 +30,7 @@ class TestPostgresqlSchema(object):
         );
     '''
 
-    def test_schema_tables(self, postgresql_conn):
+    def test_tables(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (id serial PRIMARY KEY);
@@ -45,7 +45,7 @@ class TestPostgresqlSchema(object):
         assert len(list(schema.tables_by_name.keys())) == 2
         assert len(list(schema.tables_by_oid.keys())) == 2
 
-    def test_schema_columns(self, postgresql_conn):
+    def test_columns(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (
@@ -80,7 +80,7 @@ class TestPostgresqlSchema(object):
         assert not_null_col.notnull is True
         assert nullable_col.notnull is False
 
-    def test_schema_foreign_key_constraints(self, postgresql_conn):
+    def test_foreign_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
             cur.execute(self.test_relations_stmts)
         cur.close()
@@ -129,7 +129,7 @@ class TestPostgresqlSchema(object):
         assert str(fk1) is not None
         assert repr(fk1) is not None
 
-    def test_schema_primary_key_constraints(self, postgresql_conn):
+    def test_primary_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (id1 serial PRIMARY KEY, name text);
@@ -144,7 +144,7 @@ class TestPostgresqlSchema(object):
         assert schema.tables[1].primary_key == (schema.tables[1].cols[1],)
         assert schema.tables[2].primary_key is None
 
-    def test_schema_compound_primary_key_constraints(self, postgresql_conn):
+    def test_compound_primary_key_constraints(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (
@@ -192,7 +192,7 @@ class TestPostgresqlSchema(object):
         expected_data = {'relations': expected_data}
         assert data == expected_data
 
-    def test_schema_unique_indexes(self, postgresql_conn):
+    def test_unique_indexes(self, postgresql_conn):
         with postgresql_conn.cursor() as cur:
             cur.execute('''
                 CREATE TABLE test1 (

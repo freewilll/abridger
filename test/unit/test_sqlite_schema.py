@@ -39,7 +39,7 @@ class TestSqliteSchema(object):
         'ALTER TABLE test2 ADD COLUMN fk13 INTEGER REFERENCES test1(id);',
     ]
 
-    def test_schema_tables(self, sqlite_conn):
+    def test_tables(self, sqlite_conn):
         sqlite_conn.execute('CREATE TABLE test1 (id INTEGER PRIMARY KEY);')
         sqlite_conn.execute('CREATE TABLE test2 (id INTEGER PRIMARY KEY);')
 
@@ -51,7 +51,7 @@ class TestSqliteSchema(object):
         assert str(schema.tables[0]) is not None
         assert repr(schema.tables[0]) is not None
 
-    def test_schema_columns(self, sqlite_conn):
+    def test_columns(self, sqlite_conn):
         sqlite_conn.execute('''
                 CREATE TABLE test1 (
                     id INTEGER PRIMARY KEY,
@@ -84,7 +84,7 @@ class TestSqliteSchema(object):
         assert not_null_col.notnull is True
         assert nullable_col.notnull is False
 
-    def test_schema_foreign_key_constraints(self, sqlite_conn):
+    def test_foreign_key_constraints(self, sqlite_conn):
         for stmt in self.test_relations_stmts:
             sqlite_conn.execute(stmt)
 
@@ -119,7 +119,7 @@ class TestSqliteSchema(object):
             else:
                 assert fk.dst_cols == (table1_id,)
 
-    def test_schema_primary_key_constraints(self, sqlite_conn):
+    def test_primary_key_constraints(self, sqlite_conn):
         stmts = [
             'CREATE TABLE test1 (id1 INTEGER PRIMARY KEY, name text);',
             'CREATE TABLE test2 (name text, id2 INTEGER PRIMARY KEY);',
@@ -134,7 +134,7 @@ class TestSqliteSchema(object):
         assert schema.tables[1].primary_key == (schema.tables[1].cols[1],)
         assert schema.tables[2].primary_key is None
 
-    def test_schema_compound_primary_key_constraints(self, sqlite_conn):
+    def test_compound_primary_key_constraints(self, sqlite_conn):
         sqlite_conn.execute('''
             CREATE TABLE test1 (
                 id INTEGER,
@@ -147,7 +147,7 @@ class TestSqliteSchema(object):
         pk = schema.tables[0].primary_key
         assert pk == (schema.tables[0].cols[0], schema.tables[0].cols[1],)
 
-    def test_schema_compound_foreign_key_constraints(self, sqlite_conn):
+    def test_compound_foreign_key_constraints(self, sqlite_conn):
         for stmt in [
             '''CREATE TABLE test1 (
                     id1 INTEGER,
@@ -196,7 +196,7 @@ class TestSqliteSchema(object):
             fk = fks_by_col[(table2.cols[t21], table2.cols[t22])]
             assert fk.dst_cols == (table1.cols[t11], table1.cols[t12])
 
-    def test_schema_non_existent_foreign_key_unknown_column(self, sqlite_conn):
+    def test_non_existent_foreign_key_unknown_column(self, sqlite_conn):
         for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY
@@ -211,7 +211,7 @@ class TestSqliteSchema(object):
         with pytest.raises(UnknownColumnError):
             SqliteSchema.create_from_conn(sqlite_conn)
 
-    def test_schema_non_existent_foreign_key_unknown_table(self, sqlite_conn):
+    def test_non_existent_foreign_key_unknown_table(self, sqlite_conn):
         for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY
@@ -226,7 +226,7 @@ class TestSqliteSchema(object):
         with pytest.raises(UnknownTableError):
             SqliteSchema.create_from_conn(sqlite_conn)
 
-    def test_schema_unique_indexes(self, sqlite_conn):
+    def test_unique_indexes(self, sqlite_conn):
         for stmt in [
             '''CREATE TABLE test1 (
                     id SERIAL PRIMARY KEY,

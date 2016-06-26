@@ -78,7 +78,7 @@ class TestExtractorStickyRelations(TestExtractorBase):
 
         return rows
 
-    def test_sticky_relations1(self, schema_out, data_out):
+    def test1(self, schema_out, data_out):
         # Check fetch without any relations, which won't grab any rows in
         # table 2
         table = {'table': 'test1'}
@@ -86,14 +86,14 @@ class TestExtractorStickyRelations(TestExtractorBase):
         self.check_one_subject(schema_out, [table],
                                self.data_everything_except_table2)
 
-    def test_sticky_relations2(self, schema_out, data_out):
+    def test2(self, schema_out, data_out):
         # Check fetch without sticky relations, which grabs everything
         table = {'table': 'test1'}
         relation = {'table': 'test2', 'column': 'test3_id'}
         self.check_one_subject(schema_out, [table], data_out,
                                relations=[relation])
 
-    def test_sticky_relations3(self, schema_out, data_out):
+    def test3(self, schema_out, data_out):
         # Check fetch without sticky relations, but flag test2 as sticky
         # this should not fetch anything in test2 since there is no sticky
         # trail
