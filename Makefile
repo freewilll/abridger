@@ -29,3 +29,6 @@ venv:
 
 coverage:
 	py.test -vs --cov-report=term-missing --cov=abridger --cov=bin
+
+readme:
+	bin/tools/make-readme.py

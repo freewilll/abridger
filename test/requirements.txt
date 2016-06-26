@@ -1,6 +1,7 @@
+flake8
+jinja2
 mock
 pytest
 pytest-cov
-pytest-xdist
 pytest-dbfixtures
-flake8
+pytest-xdist

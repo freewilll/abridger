@@ -67,11 +67,11 @@ Default Relationships
 
 Examples
 ========
-Some example extractions follow, using toy database.
+Some example extractions follow, using an example database.
 
 Database
 --------
-This toy database is used:
+This example database is used:
 ```
 CREATE TABLE departments (
     id INTEGER PRIMARY KEY,
@@ -92,17 +92,7 @@ INSERT INTO employees (id, name, department_id) VALUES
     (1, 'John', 1),
     (2, 'Jane', 1),
     (3, 'Janet', 2);
-```
 
-The data looks like this:
-```
-SELECT d.*, e.* FROM employees e JOIN departments d ON (d.id = e.department_id) ORDER by e.id, d.id
- id |    name    | id | name  | department_id
-----+------------+----+-------+---------------
-  1 | Research   |  1 | John  |             1
-  1 | Research   |  2 | Jane  |             1
-  2 | Accounting |  3 | Janet |             2
-(3 rows)
 ```
 
 Extraction with the default relations
@@ -113,89 +103,84 @@ Config
 ```
 - subject:
   - tables:
-    - {table: departments, column: name, values: Research}
+    - {column: name, table: departments, values: Research}
 ```
 
 Results
 ```
-BEGIN;
-\set ON_ERROR_STOP
 INSERT INTO departments (id, name) VALUES(1, 'Research');
-COMMIT;
 ```
 
-Extraction with a relation
---------------------------
+
+Extraction with a relation 1
+----------------------------
 This does an extraction with a relation from `employees` to `departments`. This will include both employees in the research department.
 
 Config
 ```
 - subject:
   - tables:
-    - {table: departments, column: name, values: Research}
+    - {column: name, table: departments, values: Research}
   - relations:
-    - {table: employees, column: department_id}
+    - {column: department_id, table: employees}
 ```
 
 Results
 ```
-BEGIN;
-\set ON_ERROR_STOP
 INSERT INTO departments (id, name) VALUES(1, 'Research');
 INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
 INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
-COMMIT;
 ```
 
-Extraction with a relation
---------------------------
+
+Extraction with a relation 2
+----------------------------
 This does an extraction with the above relation, but with both departments. This ends up fetching all employees.
 
 Config
 ```
 - subject:
   - tables:
-    - {table: departments, column: name, values: [Research, Accounting]}
+    - column: name
+      table: departments
+      values: [Research, Accounting]
   - relations:
-    - {table: employees, column: department_id}
+    - {column: department_id, table: employees}
 ```
 
 Results
 ```
-BEGIN;
-\set ON_ERROR_STOP
 INSERT INTO departments (id, name) VALUES(1, 'Research');
 INSERT INTO departments (id, name) VALUES(2, 'Accounting');
 INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
 INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
-COMMIT;
 ```
+
 
 Everything
 ----------
-This includes all relations. This leads to all employees in the research department being fetched since:
+This includes all relations. This leads to all employees in the research department being fetched since: |
 - John belongs to the research department
 - All employees in the research department are fetched, which pulls in Jane
+
 
 Config
 ```
 - relations:
-    - { defaults: everything}
+  - {defaults: everything}
 - subject:
   - tables:
-    - {table: employees, column: name, values: John}
+    - {column: name, table: employees, values: John}
 ```
 
 Results
 ```
-BEGIN;
-\set ON_ERROR_STOP
 INSERT INTO departments (id, name) VALUES(1, 'Research');
 INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
 INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
-COMMIT;
 ```
+
 
 Everything with --explain
 -------------------------
@@ -204,10 +189,10 @@ This runs the above extraction, but with the `--explain` option.
 Config
 ```
 - relations:
-    - { defaults: everything}
+  - {defaults: everything}
 - subject:
   - tables:
-    - {table: employees, column: name, values: John}
+    - {column: name, table: employees, values: John}
 ```
 
 Results
@@ -215,7 +200,10 @@ Results
 employees.name=John*
 employees.name=John* -> employees.id=1 -> departments.id=1
 employees.name=John* -> employees.id=1 -> departments.id=1 -> employees.department_id=1
-Extraction completed: rows=4, tables=2, queries=3, depth=2, duration=0.0 seconds
-```
 
+INSERT INTO departments (id, name) VALUES(1, 'Research');
+INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
+INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+```
 The asterisks indicate stickyness. In this case stickiness isn't used, so only the subject has a *.
+
