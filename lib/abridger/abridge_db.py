@@ -216,10 +216,11 @@ def main(args):
 
         outputter.commit()
     finally:
+        # Try to rollback in case something went wrong; ignore any errors
         try:
             outputter.rollback()
-        except:
-            pass
+        except:   # pragma: no cover
+            pass  # pragma: no cover
 
         src_database.disconnect()
         outputter.finish()
