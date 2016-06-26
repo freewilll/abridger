@@ -1,8 +1,8 @@
 import pytest
 
+from abridger.database import PostgresqlDatabase
 from abridger.schema import PostgresqlSchema
 from database import DatabaseTestBase
-from abridger.database import PostgresqlDatabase
 from test.conftest import got_postgresql
 
 

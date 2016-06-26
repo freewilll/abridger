@@ -1,7 +1,7 @@
 import dj_database_url
 
-from .sqlite import SqliteDatabase
 from .postgresql import PostgresqlDatabase
+from .sqlite import SqliteDatabase
 from abridger.exc import DatabaseUrlError
 
 

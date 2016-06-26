@@ -1,9 +1,9 @@
 import pytest
 
 from abridger.database import load
-from database import DatabaseTestBase
-from abridger.schema import SqliteSchema
 from abridger.exc import DatabaseUrlError
+from abridger.schema import SqliteSchema
+from database import DatabaseTestBase
 
 
 class TestSqliteDatabase(DatabaseTestBase):

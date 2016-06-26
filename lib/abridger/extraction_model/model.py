@@ -1,10 +1,11 @@
 from jsonschema import Draft4Validator
+
+from .not_null_column import NotNullColumn  # noqa
+from .relation import Relation, dedupe_relations, merge_relations  # noqa
+from .subject import Subject  # noqa
+from .table import Table  # noqa
 from abridger.exc import (UnknownTableError, UnknownColumnError,
                           InvalidConfigError, RelationIntegrityError)
-from .relation import Relation, dedupe_relations, merge_relations  # noqa
-from .table import Table  # noqa
-from .subject import Subject  # noqa
-from .not_null_column import NotNullColumn  # noqa
 
 
 class ExtractionModel(object):

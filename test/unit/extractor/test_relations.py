@@ -1,10 +1,10 @@
 import pytest
 
+from abridger.exc import RelationIntegrityError
 from abridger.extraction_model import (Relation, ExtractionModel,
                                        merge_relations)
 from abridger.schema import SqliteSchema
 from test.unit.extractor.base import TestExtractorBase
-from abridger.exc import RelationIntegrityError
 
 
 class TestExtractorRelations(TestExtractorBase):

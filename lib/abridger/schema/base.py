@@ -1,5 +1,5 @@
-from abridger.extraction_model import Relation
 from abridger.exc import RelationIntegrityError
+from abridger.extraction_model import Relation
 
 
 class ForeignKeyConstraint(object):

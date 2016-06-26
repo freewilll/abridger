@@ -2,10 +2,10 @@ import pytest
 import tempfile
 import yaml
 
-from abridger.schema import PostgresqlSchema
-from abridger.extraction_model import Relation
-from test.conftest import got_postgresql
 from abridger.exc import RelationIntegrityError
+from abridger.extraction_model import Relation
+from abridger.schema import PostgresqlSchema
+from test.conftest import got_postgresql
 
 
 @pytest.mark.skipif(not got_postgresql(), reason='Needs postgresql')

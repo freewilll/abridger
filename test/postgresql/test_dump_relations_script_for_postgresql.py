@@ -1,6 +1,5 @@
 import pytest
 
-
 from abridger.dump_relations import main
 from test.conftest import got_postgresql
 

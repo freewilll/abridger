@@ -1,4 +1,5 @@
 import pytest
+
 from abridger.schema import PostgresqlSchema
 from alternate_primary_keys import TestAlternatePrimaryKeysBase as Base
 from test.conftest import got_postgresql

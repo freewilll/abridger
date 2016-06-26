@@ -1,7 +1,8 @@
 from __future__ import print_function
-from queue import Queue
 from collections import defaultdict
+from queue import Queue
 from time import time
+
 from abridger.extraction_model import Relation, merge_relations
 
 

@@ -1,4 +1,5 @@
 from functools import reduce
+
 from abridger.exc import CyclicDependencyError
 
 

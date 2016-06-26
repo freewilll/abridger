@@ -1,10 +1,10 @@
-import pytest
-from tempfile import NamedTemporaryFile
 from sqlite3 import OperationalError
+from tempfile import NamedTemporaryFile
+import pytest
 
-from test.abridge_db_test_utils import TestAbridgeDbBase
 from abridger.abridge_db import main
 from abridger.database.sqlite import SqliteDatabase
+from test.abridge_db_test_utils import TestAbridgeDbBase
 
 
 class TestAbridgeDbForSqlite(TestAbridgeDbBase):

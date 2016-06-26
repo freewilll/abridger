@@ -1,12 +1,12 @@
-import pytest
 from pprint import pprint
+import pytest
 
-from abridger.schema import SqliteSchema
+from abridger.exc import CyclicDependencyError
 from abridger.extraction_model import ExtractionModel, Relation
 from abridger.extractor import Extractor
 from abridger.generator import Generator
+from abridger.schema import SqliteSchema
 from test.unit.extractor.base import TestExtractorBase
-from abridger.exc import CyclicDependencyError
 
 
 class TestGenerator(TestExtractorBase):

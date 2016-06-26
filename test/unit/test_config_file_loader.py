@@ -1,9 +1,10 @@
 import os.path
 import pytest
 import tempfile
+
+from .utils import make_temp_yaml_file
 from abridger.config_file_loader import load
 from abridger.exc import IncludeError, DataError, FileNotFoundError
-from .utils import make_temp_yaml_file
 
 
 class TestConfigFileLoader(object):

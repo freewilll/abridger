@@ -1,6 +1,7 @@
-import argparse
 from signal import signal, SIGPIPE, SIG_DFL
+import argparse
 import sys
+
 from abridger.database import load
 
 

@@ -1,8 +1,8 @@
 import pytest
 
-from abridger.schema import SqliteSchema
 from abridger.exc import (UnknownTableError, UnknownColumnError,
                           RelationIntegrityError)
+from abridger.schema import SqliteSchema
 
 
 class TestSqliteSchema(object):

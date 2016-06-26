@@ -6,11 +6,11 @@ import math
 import os
 import sys
 
-import abridger.database
 from abridger.extraction_model import ExtractionModel
 from abridger.extractor import Extractor
 from abridger.generator import Generator
 import abridger.config_file_loader
+import abridger.database
 
 
 class DbOutputter(object):

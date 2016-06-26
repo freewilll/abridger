@@ -1,5 +1,5 @@
-import pytest
 from pprint import pprint
+import pytest
 
 from abridger.extraction_model import ExtractionModel
 from abridger.extractor import Extractor
