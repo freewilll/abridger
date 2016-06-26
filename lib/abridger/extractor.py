@@ -89,9 +89,7 @@ class WorkItem(object):
         cols_csv = ','.join([c.name for c in epk])
         values = [results_row.row[i] for i in col_indexes]
         values_csv = ','.join([str(v) for v in values])
-        if len(values) > 1:
-            values_csv = '(%s)' % values_csv
-            cols_csv = '(%s)' % cols_csv
+        assert len(values) == 1
         return (results_row.table, cols_csv, values_csv, self.sticky)
 
     def _set_history(self, work_item, results_row):
