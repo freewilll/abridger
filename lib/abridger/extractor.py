@@ -107,9 +107,6 @@ class WorkItem(object):
                 self.history.append(work_item_history)
 
     def print_history(self):
-        if len(self.history) == 0:
-            return
-
         first = True
         for (table, cols, values, sticky) in self.history:
             if not first:
