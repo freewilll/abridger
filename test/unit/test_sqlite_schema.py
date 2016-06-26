@@ -295,3 +295,36 @@ class TestSqliteSchema(object):
 
         with pytest.raises(RelationIntegrityError):
             SqliteSchema.create_from_conn(sqlite_conn)
+
+    def test_set_effective_primary_key(self, sqlite_conn):
+        for sql in [
+            '''
+               CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY,
+                    something_else INTEGER
+                );
+            ''', '''
+               CREATE TABLE test2 (
+                    id INTEGER UNIQUE,
+                    something_else INTEGER
+                );
+            ''', '''
+               CREATE TABLE test3 (
+                    id1 INTEGER,
+                    id2 INTEGER
+                );'''
+        ]:
+            sqlite_conn.execute(sql)
+
+        schema = SqliteSchema.create_from_conn(sqlite_conn)
+        tables = schema.tables
+
+        assert tables[0].effective_primary_key == (tables[0].cols[0],)
+        assert tables[0].can_have_duplicated_rows is False
+
+        assert tables[1].effective_primary_key == (tables[1].cols[0],)
+        assert tables[1].can_have_duplicated_rows is False
+
+        assert tables[2].effective_primary_key == (tables[2].cols[0],
+                                                   tables[2].cols[1])
+        assert tables[2].can_have_duplicated_rows is True
