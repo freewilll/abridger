@@ -218,8 +218,8 @@ def main(args):
     finally:
         try:
             outputter.rollback()
-        except Exception as e:
-            print("Something went wrong while trying a rollback: %s" % str(e))
+        except:
+            pass
 
         src_database.disconnect()
         outputter.finish()
