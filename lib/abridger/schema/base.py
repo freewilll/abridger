@@ -1,4 +1,5 @@
 from abridger.extraction_model import Relation
+from abridger.exc import RelationIntegrityError
 
 
 class ForeignKeyConstraint(object):
@@ -12,6 +13,12 @@ class ForeignKeyConstraint(object):
         self.src_cols = src_cols
         self.dst_cols = dst_cols
         self.notnull = all([s.notnull for s in src_cols])
+
+        if self.notnull and self.src_cols[0].table == self.dst_cols[0].table:
+            raise RelationIntegrityError(
+                'Table %s has a self referencing not null foreign key. ' +
+                'This could lead to situations where no data can be added ' +
+                'without disabling foreign key constraints.')
 
     @staticmethod
     def create_and_add_to_tables(name, src_cols, dst_cols):

@@ -5,6 +5,7 @@ import yaml
 from abridger.schema import PostgresqlSchema
 from abridger.extraction_model import Relation
 from test.conftest import got_postgresql
+from abridger.exc import RelationIntegrityError
 
 
 @pytest.mark.skipif(not got_postgresql(), reason='Needs postgresql')
@@ -239,3 +240,21 @@ class TestPostgresqlSchema(object):
         assert('col1', 'col4') not in tuples
         assert('col2', 'col3') not in tuples
         assert('col2', 'col4') not in tuples
+
+    def test_self_referencing_non_null_foreign_key(self, postgresql_conn):
+        with postgresql_conn.cursor() as cur:
+            for sql in [
+                '''CREATE TABLE test1 (
+                        id SERIAL PRIMARY KEY
+                    );
+                ''',
+                '''ALTER TABLE test1 ADD COLUMN fk INTEGER NOT NULL DEFAULT 1
+                    REFERENCES test1''',
+
+                # Sanity test the above is even possible
+                'INSERT INTO test1  (id) VALUES(1);'
+            ]:
+                cur.execute(sql)
+
+        with pytest.raises(RelationIntegrityError):
+            PostgresqlSchema.create_from_conn(postgresql_conn)

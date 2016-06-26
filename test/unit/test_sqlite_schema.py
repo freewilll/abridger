@@ -1,7 +1,8 @@
 import pytest
 
 from abridger.schema import SqliteSchema
-from abridger.exc import UnknownTableError, UnknownColumnError
+from abridger.exc import (UnknownTableError, UnknownColumnError,
+                          RelationIntegrityError)
 
 
 class TestSqliteSchema(object):
@@ -272,3 +273,25 @@ class TestSqliteSchema(object):
         assert('col1', 'col4') not in tuples
         assert('col2', 'col3') not in tuples
         assert('col2', 'col4') not in tuples
+
+    def test_self_referencing_non_null_foreign_key(self, sqlite_conn):
+        for sql in [
+            '''CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY
+                );
+            ''',
+            # Work around SQL lite not liking
+            # NOT NULL foreign keys with a default, but disabling foreign
+            # key checking
+            'PRAGMA foreign_keys = 0;',
+            '''ALTER TABLE test1 ADD COLUMN fk INTEGER NOT NULL DEFAULT 1
+               REFERENCES test1''',
+            'PRAGMA foreign_keys = 1;',
+
+            # Sanity test the above is even possible
+            'INSERT INTO test1  (id) VALUES(1);'
+        ]:
+            sqlite_conn.execute(sql)
+
+        with pytest.raises(RelationIntegrityError):
+            SqliteSchema.create_from_conn(sqlite_conn)
