@@ -18,8 +18,11 @@ clean:
 	rm -rf build
 	rm -rf dist
 	rm -rf .tox
+	rm -rf htmlcov
+	rm -rf lib/abridger.egg-info
 	find . -type f -regex ".*\.py[co]$$" -delete
 	find . -type f -name '*.pyc' -delete
+	find . -type d -name '__pycache__' -delete
 
 python:
 	$(PYTHON) setup.py build
