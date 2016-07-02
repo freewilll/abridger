@@ -1,5 +1,4 @@
 flake8
-jinja2
 mock
 pytest
 pytest-cov
