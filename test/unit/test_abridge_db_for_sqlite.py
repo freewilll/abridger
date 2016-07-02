@@ -63,7 +63,8 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
         assert len(err) == 0
 
     def check_verbosity1_output(self, out):
-        assert 'Connecting to' in out
+        assert 'Connecting to %s' % self.src_database.url() in out
+        assert 'Connecting to %s' % self.dst_database.url() in out
         assert 'Querying' in out
         assert 'Performing 5 inserts and 2 updates to 2 tables...' in out
         assert 'Extraction completed: rows=7, tables=2, queries=3, depth=2' \

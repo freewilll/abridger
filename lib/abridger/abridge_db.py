@@ -18,7 +18,7 @@ class DbOutputter(object):
         self.verbosity = verbosity
 
         if verbosity > 0:
-            print('Connecting to', url)
+            print('Connecting to %s' % url)
         self.database = abridger.database.load(url)
         self.connection = self.database.connection
         self.cursor = self.connection.cursor()
@@ -120,7 +120,7 @@ def main(args):
         exit(1)
 
     if verbosity > 0:
-        print('Connecting to', args.src_url)
+        print('Connecting to %s' % args.src_url)
     src_database = abridger.database.load(args.src_url)
 
     if args.dst_url is not None:
