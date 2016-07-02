@@ -2,7 +2,7 @@
 
 PYTHON=python
 
-all: clean python
+all: python readme docs
 
 tests:
 	PYTHONPATH=./lib py.test -vs
@@ -33,5 +33,8 @@ venv:
 coverage:
 	py.test -vs --cov-report=term-missing --cov=abridger --cov=bin
 
-readme:
-	bin/tools/make-readme.py
+readme: venv
+	.tox/venv/bin/python bin/tools/make-readme.py
+
+docs:
+	$(MAKE) -C docsite html
