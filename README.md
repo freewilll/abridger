@@ -210,3 +210,33 @@ INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 ```
 
 
+Disabled relations
+------------------
+This demonstrates the blacklisting approach. All relations are included by default,
+however the relation from `employees` to `departments` is disabled.
+Fetching a department will therefore not fetch any of the employees.
+Relations can be disabled globally or per subject.
+
+
+Config
+```
+- relations:
+  - {defaults: everything}
+- subject:
+  - tables:
+    - {column: name, table: departments, values: Research}
+  - relations:
+    - {column: department_id, disabled: true, table: employees}
+```
+
+Output
+```
+departments.name=Research*
+```
+
+Results
+```
+INSERT INTO departments (id, name) VALUES(1, 'Research');
+```
+
+

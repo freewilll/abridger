@@ -34,3 +34,18 @@
     - subject:
       - tables:
         - {table: employees, column: name, values: John}
+
+- title: Disabled relations
+  description: |
+    This demonstrates the blacklisting approach. All relations are included by default,
+    however the relation from `employees` to `departments` is disabled.
+    Fetching a department will therefore not fetch any of the employees.
+    Relations can be disabled globally or per subject.
+  config:
+    - relations:
+        - { defaults: everything}
+    - subject:
+      - tables:
+        - {table: departments, column: name, values: Research}
+      - relations:
+        - {table: employees, column: department_id, disabled: true}
