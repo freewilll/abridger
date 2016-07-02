@@ -16,7 +16,6 @@ import abridger.database
 class DbOutputter(object):
     def __init__(self, url, verbosity):
         self.verbosity = verbosity
-
         self.database = abridger.database.load(url, verbose=verbosity > 0)
         self.connection = self.database.connection
         self.cursor = self.connection.cursor()
