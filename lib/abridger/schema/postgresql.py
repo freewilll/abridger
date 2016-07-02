@@ -56,10 +56,11 @@ class PostgresqlSchema(Schema):
             ORDER BY relname
         '''
 
-        with conn.cursor() as cur:
-            cur.execute(stmt)
-            for (oid, name) in cur.fetchall():
-                self._add_table(name, oid)
+        cur = conn.cursor()
+        cur.execute(stmt)
+        for (oid, name) in cur.fetchall():
+            self._add_table(name, oid)
+        cur.close()
 
     def _add_columns_from_conn(self, conn):
         stmt = '''
@@ -78,11 +79,12 @@ class PostgresqlSchema(Schema):
             ORDER BY relname, attnum
         '''
 
-        with conn.cursor() as cur:
-            cur.execute(stmt)
-            for (oid, name, attrnum, notnull) in cur.fetchall():
-                table = self.tables_by_oid[oid]
-                table.add_column(name, notnull, attrnum)
+        cur = conn.cursor()
+        cur.execute(stmt)
+        for (oid, name, attrnum, notnull) in cur.fetchall():
+            table = self.tables_by_oid[oid]
+            table.add_column(name, notnull, attrnum)
+        cur.close()
 
     def _add_foreign_key_constraints_from_conn(self, conn):
         stmt = '''
@@ -93,25 +95,26 @@ class PostgresqlSchema(Schema):
             WHERE contype = 'f'
         '''
 
-        with conn.cursor() as cur:
-            cur.execute(stmt)
-            for (name, src_oid, src_attrnum, dst_oid, dst_attrnum) \
-                    in cur.fetchall():
-                src_table = self.tables_by_oid[src_oid]
-                dst_table = self.tables_by_oid[dst_oid]
+        cur = conn.cursor()
+        cur.execute(stmt)
+        for (name, src_oid, src_attrnum, dst_oid, dst_attrnum) \
+                in cur.fetchall():
+            src_table = self.tables_by_oid[src_oid]
+            dst_table = self.tables_by_oid[dst_oid]
 
-                assert type(src_attrnum) is list
-                assert type(dst_attrnum) is list
-                assert len(src_attrnum) == len(dst_attrnum)
+            assert type(src_attrnum) is list
+            assert type(dst_attrnum) is list
+            assert len(src_attrnum) == len(dst_attrnum)
 
-                src_cols = []
-                dst_cols = []
-                for i in range(0, len(src_attrnum)):
-                    src_cols.append(src_table.cols_by_attrnum[src_attrnum[i]])
-                    dst_cols.append(dst_table.cols_by_attrnum[dst_attrnum[i]])
+            src_cols = []
+            dst_cols = []
+            for i in range(0, len(src_attrnum)):
+                src_cols.append(src_table.cols_by_attrnum[src_attrnum[i]])
+                dst_cols.append(dst_table.cols_by_attrnum[dst_attrnum[i]])
 
-                ForeignKeyConstraint.create_and_add_to_tables(
-                    name, tuple(src_cols), tuple(dst_cols))
+            ForeignKeyConstraint.create_and_add_to_tables(
+                name, tuple(src_cols), tuple(dst_cols))
+        cur.close()
 
     def _add_primary_key_constraints(self, conn):
         stmt = '''
@@ -121,15 +124,17 @@ class PostgresqlSchema(Schema):
             WHERE contype = 'p'
         '''
 
-        with conn.cursor() as cur:
-            cur.execute(stmt)
-            for (name, oid, attrnums) in cur.fetchall():
-                table = self.tables_by_oid[oid]
-                assert type(attrnums) is list
-                primary_key = list()
-                for attrnum in attrnums:
-                    primary_key.append(table.cols_by_attrnum[attrnum])
-                table.primary_key = tuple(primary_key)
+        cur = conn.cursor()
+        cur.execute(stmt)
+        for (name, oid, attrnums) in cur.fetchall():
+            table = self.tables_by_oid[oid]
+            assert type(attrnums) is list
+            primary_key = list()
+            for attrnum in attrnums:
+                primary_key.append(table.cols_by_attrnum[attrnum])
+            table.primary_key = tuple(primary_key)
+
+        cur.close()
 
     def _add_unique_indexes(self, conn):
         stmt = '''
@@ -144,27 +149,29 @@ class PostgresqlSchema(Schema):
             WHERE c1.relkind = 'r'
         '''
 
-        with conn.cursor() as cur:
-            cur.execute(stmt)
-            unique_indexes = defaultdict(dict)
-            for row in cur.fetchall():
-                (table_oid, name, is_unique, attrs) = (
-                    row[0], row[1], bool(row[2]), row[3])
-                if not is_unique:
-                    continue
+        cur = conn.cursor()
+        cur.execute(stmt)
+        unique_indexes = defaultdict(dict)
+        for row in cur.fetchall():
+            (table_oid, name, is_unique, attrs) = (
+                row[0], row[1], bool(row[2]), row[3])
+            if not is_unique:
+                continue
 
-                if table_oid not in self.tables_by_oid:
-                    continue
+            if table_oid not in self.tables_by_oid:
+                continue
 
-                table = self.tables_by_oid[table_oid]
-                col_attrs = [int(a.strip()) for a in attrs.split()]
+            table = self.tables_by_oid[table_oid]
+            col_attrs = [int(a.strip()) for a in attrs.split()]
 
-                # Ignore indexes that have an expression on one of the columns
-                if 0 in col_attrs:
-                    continue
+            # Ignore indexes that have an expression on one of the columns
+            if 0 in col_attrs:
+                continue
 
-                cols = set([table.cols_by_attrnum[a] for a in col_attrs])
-                unique_indexes[table][name] = cols
+            cols = set([table.cols_by_attrnum[a] for a in col_attrs])
+            unique_indexes[table][name] = cols
+
+        cur.close()
 
         for table in unique_indexes:
             for name in unique_indexes[table]:

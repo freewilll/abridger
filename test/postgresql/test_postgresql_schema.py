@@ -31,11 +31,11 @@ class TestPostgresqlSchema(object):
     '''
 
     def test_tables(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE test1 (id serial PRIMARY KEY);
-                CREATE TABLE test2 (id serial PRIMARY KEY);
-            ''')
+        cur = postgresql_conn.cursor()
+        cur.execute('''
+            CREATE TABLE test1 (id serial PRIMARY KEY);
+            CREATE TABLE test2 (id serial PRIMARY KEY);
+        ''')
         cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -46,14 +46,14 @@ class TestPostgresqlSchema(object):
         assert len(list(schema.tables_by_oid.keys())) == 2
 
     def test_columns(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE test1 (
-                    id serial PRIMARY KEY,
-                    not_null text NOT NULL,
-                    nullable text
-                );
-            ''')
+        cur = postgresql_conn.cursor()
+        cur.execute('''
+            CREATE TABLE test1 (
+                id serial PRIMARY KEY,
+                not_null text NOT NULL,
+                nullable text
+            );
+        ''')
         cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -81,8 +81,8 @@ class TestPostgresqlSchema(object):
         assert nullable_col.notnull is False
 
     def test_foreign_key_constraints(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute(self.test_relations_stmts)
+        cur = postgresql_conn.cursor()
+        cur.execute(self.test_relations_stmts)
         cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -130,12 +130,12 @@ class TestPostgresqlSchema(object):
         assert repr(fk1) is not None
 
     def test_primary_key_constraints(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE test1 (id1 serial PRIMARY KEY, name text);
-                CREATE TABLE test2 (name text, id2 serial PRIMARY KEY);
-                CREATE TABLE test3 (id3 serial);
-            ''')
+        cur = postgresql_conn.cursor()
+        cur.execute('''
+            CREATE TABLE test1 (id1 serial PRIMARY KEY, name text);
+            CREATE TABLE test2 (name text, id2 serial PRIMARY KEY);
+            CREATE TABLE test3 (id3 serial);
+        ''')
         cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -145,13 +145,13 @@ class TestPostgresqlSchema(object):
         assert schema.tables[2].primary_key is None
 
     def test_compound_primary_key_constraints(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE test1 (
-                    id INTEGER,
-                    name TEXT,
-                    PRIMARY KEY(id, name)
-                );
+        cur = postgresql_conn.cursor()
+        cur.execute('''
+            CREATE TABLE test1 (
+                id INTEGER,
+                name TEXT,
+                PRIMARY KEY(id, name)
+            );
         ''')
         cur.close()
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -159,8 +159,8 @@ class TestPostgresqlSchema(object):
         assert pk == (schema.tables[0].cols[0], schema.tables[0].cols[1])
 
     def test_dump_relations(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute(self.test_relations_stmts)
+        cur = postgresql_conn.cursor()
+        cur.execute(self.test_relations_stmts)
         cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
@@ -193,22 +193,23 @@ class TestPostgresqlSchema(object):
         assert data == expected_data
 
     def test_unique_indexes(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE test1 (
-                    id SERIAL PRIMARY KEY,
-                    col1 TEXT UNIQUE,
-                    col2 TEXT UNIQUE,
-                    col3 TEXT UNIQUE,
-                    col4 TEXT UNIQUE,
-                    UNIQUE(col1, col2)
-                );
+        cur = postgresql_conn.cursor()
+        cur.execute('''
+            CREATE TABLE test1 (
+                id SERIAL PRIMARY KEY,
+                col1 TEXT UNIQUE,
+                col2 TEXT UNIQUE,
+                col3 TEXT UNIQUE,
+                col4 TEXT UNIQUE,
+                UNIQUE(col1, col2)
+            );
 
-                CREATE INDEX index1 ON test1(col1, col2);
-                CREATE UNIQUE INDEX uindex1 ON test1(col1, col2);
-                CREATE UNIQUE INDEX uindex2 ON test1(col3, col4);
-                CREATE UNIQUE INDEX uindex3 ON test1(col3, SUBSTR(col4, 4));
+            CREATE INDEX index1 ON test1(col1, col2);
+            CREATE UNIQUE INDEX uindex1 ON test1(col1, col2);
+            CREATE UNIQUE INDEX uindex2 ON test1(col3, col4);
+            CREATE UNIQUE INDEX uindex3 ON test1(col3, SUBSTR(col4, 4));
         ''')
+        cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
         assert len(schema.tables[0].unique_indexes) == 8  # including PK
@@ -242,19 +243,20 @@ class TestPostgresqlSchema(object):
         assert('col2', 'col4') not in tuples
 
     def test_self_referencing_non_null_foreign_key(self, postgresql_conn):
-        with postgresql_conn.cursor() as cur:
-            for stmt in [
-                '''CREATE TABLE test1 (
-                        id SERIAL PRIMARY KEY
-                    );
-                ''',
-                '''ALTER TABLE test1 ADD COLUMN fk INTEGER NOT NULL DEFAULT 1
-                    REFERENCES test1''',
+        cur = postgresql_conn.cursor()
+        for stmt in [
+            '''CREATE TABLE test1 (
+                    id SERIAL PRIMARY KEY
+                );
+            ''',
+            '''ALTER TABLE test1 ADD COLUMN fk INTEGER NOT NULL DEFAULT 1
+                REFERENCES test1''',
 
-                # Sanity test the above is even possible
-                'INSERT INTO test1  (id) VALUES(1);'
-            ]:
-                cur.execute(stmt)
+            # Sanity test the above is even possible
+            'INSERT INTO test1  (id) VALUES(1);'
+        ]:
+            cur.execute(stmt)
+        cur.close()
 
         with pytest.raises(RelationIntegrityError):
             PostgresqlSchema.create_from_conn(postgresql_conn)

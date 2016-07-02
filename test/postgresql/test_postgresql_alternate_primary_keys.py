@@ -10,10 +10,10 @@ class TestPostgresqlAlternatePrimaryKeys(Base):
     @pytest.mark.parametrize('table, count', Base.alternate_primary_keys_tests)
     def test_alternate_primary_keys(self, postgresql_conn,
                                     table, count):
-        with postgresql_conn.cursor() as cur:
-            for stmt in self.test_alternate_primary_keys_stmts:
-                cur.execute(stmt)
-            cur.close()
+        cur = postgresql_conn.cursor()
+        for stmt in self.test_alternate_primary_keys_stmts:
+            cur.execute(stmt)
+        cur.close()
 
         schema = PostgresqlSchema.create_from_conn(postgresql_conn)
         self.check_alternate_primary_keys(schema, table, count)

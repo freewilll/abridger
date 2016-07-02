@@ -31,6 +31,7 @@ def postgresql_conn(request, postgresql_database):
 def schema_pg(request, postgresql_conn):
     test_sql_path = os.path.join(os.path.dirname(__file__),
                                  os.pardir, 'data', 'schema.sql')
-    with postgresql_conn.cursor() as cur:
-        cur.execute(open(test_sql_path).read())
+    cur = postgresql_conn.cursor()
+    cur.execute(open(test_sql_path).read())
+    cur.close()
     return PostgresqlSchema.create_from_conn(postgresql_conn)
