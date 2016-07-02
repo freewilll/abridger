@@ -34,18 +34,27 @@ class TestPostgresqlDatabase(DatabaseTestBase):
             with pytest.raises(ValueError):
                 PostgresqlDatabase(**params)
 
-    @pytest.mark.parametrize('params, url', [
-        ({}, 'u@h/n'),
-        ({'password': 'pass'}, 'u:pass@h/n'),
-        ({'port': 100}, 'u@h:100/n'),
-        ({'password': 'pass', 'port': 100}, 'u:pass@h:100/n'),
+    @pytest.mark.parametrize('params, url, url_nopass', [
+        ({}, 'u@h/n', 'u@h/n'),
+        ({'password': 'pass'}, 'u:pass@h/n', 'u@h/n'),
+        ({'port': 100}, 'u@h:100/n', 'u@h:100/n'),
+        ({'password': 'pass', 'port': 100}, 'u:pass@h:100/n', 'u@h:100/n'),
     ])
-    def test_url_generation(self, params, url):
+    def test_url_generation(self, params, url, url_nopass):
         full_params = {'host': 'h', 'user': 'u', 'dbname': 'n',
                        'connect': False}
         full_params.update(params)
+
+        # Check with password
         url = 'postgresql://' + url
-        assert PostgresqlDatabase(**full_params).url() == url
+        pg_url = PostgresqlDatabase(**full_params).url()
+        assert pg_url == url
+
+        # Check without password
+        full_params.pop('password', None)
+        url_nopass = 'postgresql://' + url_nopass
+        pg_url = PostgresqlDatabase(**full_params).url(include_password=False)
+        assert pg_url == url_nopass
 
     @mock.patch('abridger.database.postgresql.import_module',
                 side_effect=[ImportError(), None])

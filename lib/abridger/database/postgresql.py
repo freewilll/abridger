@@ -8,7 +8,7 @@ class PostgresqlDatabase(Database):
     CAN_GENERATE_SQL_STATEMENTS = True
 
     def __init__(self, host=None, port=None, dbname=None, user=None,
-                 password=None, connect=True):
+                 password=None, connect=True, verbose=False):
         if dbname is None:
             raise ValueError('dbname must have a value')
         if user is None:
@@ -26,17 +26,20 @@ class PostgresqlDatabase(Database):
         self.connection = None
 
         if connect:
+            if verbose:
+                print('Connecting to %s' % self.url(include_password=False))
             self.connect()
             self.create_schema(PostgresqlSchema)
 
     @staticmethod
-    def create_from_django_database(dj_details):
+    def create_from_django_database(dj_details, verbose):
         return PostgresqlDatabase(
             host=dj_details['HOST'],
             port=dj_details['PORT'] or 5432,
             dbname=dj_details['NAME'],
             user=dj_details['USER'],
-            password=dj_details['PASSWORD'])
+            password=dj_details['PASSWORD'],
+            verbose=verbose)
 
     def connect(self):
         if self.connection is not None:
@@ -58,10 +61,18 @@ class PostgresqlDatabase(Database):
             host=self.host,
             port=self.port)
 
-    def url(self):
+    def url(self, include_password=True):
+        if include_password:
+            if self.password:
+                password = ':%s' % self.password
+            else:
+                password = ''
+        else:
+            password = ''
+
         return 'postgresql://%s%s@%s%s/%s' % (
             self.user,
-            ':%s' % self.password if self.password is not None else '',
+            password,
             self.host,
             ':%s' % self.port if self.port is not None else '',
             self.dbname)

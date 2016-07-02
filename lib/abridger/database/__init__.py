@@ -15,10 +15,10 @@ DJANGO_ENGINE_TO_DBCONN_MAP = {
 }
 
 
-def load(url):
+def load(url, verbose=False):
     dj_details = dj_database_url.parse(url)
     database_cls = DJANGO_ENGINE_TO_DBCONN_MAP.get(dj_details['ENGINE'])
     if database_cls is None:
         raise DatabaseUrlError(
             'Unable to determine the database from the URL')
-    return database_cls.create_from_django_database(dj_details)
+    return database_cls.create_from_django_database(dj_details, verbose)
