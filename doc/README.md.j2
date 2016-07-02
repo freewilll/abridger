@@ -86,6 +86,13 @@ Config
 {{ demo.config -}}
 ```
 
+Output
+```
+{% for line in demo.output %}
+{{- line }}
+{% endfor -%}
+```
+
 Results
 ```
 {% for statement in demo.statements %}

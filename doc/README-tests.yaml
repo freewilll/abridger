@@ -1,11 +1,11 @@
-- title: Extraction with the default relations
+- title: Extraction with the default relations for a department
   description: By default, complete rows are fetched. This means that if a rule is added to fetch the department with name "Research" then rows referencing that department aren't fetched. This results in just one department being fetched and nothing else.
   config:
     - subject:
       - tables:
         - {table: departments, column: name, values: Research}
 
-- title: Extraction with a relation 1
+- title: Extraction with a relation for a department
   description: This does an extraction with a relation from `employees` to `departments`. This will include both employees in the research department.
   config:
     - subject:
@@ -14,7 +14,7 @@
       - relations:
         - {table: employees, column: department_id}
 
-- title: Extraction with a relation 2
+- title: Extraction with a relation for two departments
   description: This does an extraction with the above relation, but with both departments. This ends up fetching all employees.
   config:
   - subject:
@@ -23,7 +23,7 @@
     - relations:
       - {table: employees, column: department_id}
 
-- title: Everything
+- title: Extraction with a relation for an employee
   description: |
     This includes all relations. This leads to all employees in the research department being fetched since: |
     - John belongs to the research department
@@ -34,14 +34,3 @@
     - subject:
       - tables:
         - {table: employees, column: name, values: John}
-
-- title: Everything with --explain
-  description: This runs the above extraction, but with the `--explain` option.
-  config:
-    - relations:
-        - { defaults: everything}
-    - subject:
-      - tables:
-        - {table: employees, column: name, values: John}
-  after-thought: The asterisks indicate stickyness. In this case stickiness isn't used, so only the subject has a *.
-  explain: True

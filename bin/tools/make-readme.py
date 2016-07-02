@@ -59,16 +59,19 @@ def main():
     demos = []
     tests = yaml.load(read_file('README-tests.yaml'))
     for test in tests:
-        (title, description, config, after_thought, explain) = (
+        (title, description, config, after_thought) = (
             test['title'], test['description'], test['config'],
-            test.get('after-thought'), test.get('explain', False))
+            test.get('after-thought'))
 
         extraction_model = ExtractionModel.load(schema, config)
 
         with stdout_redirect(StringIO()) as new_stdout:
             extractor = Extractor(database, extraction_model,
-                                  explain=explain).launch()
+                                  explain=True).launch()
+        new_stdout.flush()
         new_stdout.seek(0)
+        output = new_stdout.read()
+        output = output.rstrip().split('\n')
 
         generator = Generator(schema, extractor)
         generator.generate_statements()
@@ -79,12 +82,11 @@ def main():
                 [insert_statement]))[0]
             statements.append(complete_statement(stmt, values))
 
-        if explain:
-            statements = [new_stdout.read()] + statements
         demo = {
             'title': title,
             'description': description,
             'config': yaml.dump(config),
+            'output': output,
             'statements': statements,
             'after_thought': after_thought,
         }

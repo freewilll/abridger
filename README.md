@@ -95,8 +95,8 @@ INSERT INTO employees (id, name, department_id) VALUES
 
 ```
 
-Extraction with the default relations
--------------------------------------
+Extraction with the default relations for a department
+------------------------------------------------------
 By default, complete rows are fetched. This means that if a rule is added to fetch the department with name "Research" then rows referencing that department aren't fetched. This results in just one department being fetched and nothing else.
 
 Config
@@ -106,14 +106,19 @@ Config
     - {column: name, table: departments, values: Research}
 ```
 
+Output
+```
+departments.name=Research*
+```
+
 Results
 ```
 INSERT INTO departments (id, name) VALUES(1, 'Research');
 ```
 
 
-Extraction with a relation 1
-----------------------------
+Extraction with a relation for a department
+-------------------------------------------
 This does an extraction with a relation from `employees` to `departments`. This will include both employees in the research department.
 
 Config
@@ -125,6 +130,13 @@ Config
     - {column: department_id, table: employees}
 ```
 
+Output
+```
+departments.name=Research*
+departments.name=Research* -> departments.id=1 -> employees.department_id=1
+departments.name=Research* -> departments.id=1 -> employees.department_id=1 -> employees.id=1 -> departments.id=1
+```
+
 Results
 ```
 INSERT INTO departments (id, name) VALUES(1, 'Research');
@@ -133,8 +145,8 @@ INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 ```
 
 
-Extraction with a relation 2
-----------------------------
+Extraction with a relation for two departments
+----------------------------------------------
 This does an extraction with the above relation, but with both departments. This ends up fetching all employees.
 
 Config
@@ -148,6 +160,15 @@ Config
     - {column: department_id, table: employees}
 ```
 
+Output
+```
+departments.name=Research*
+departments.name=Research* -> departments.id=1 -> employees.department_id=1
+departments.name=Research* -> departments.id=2 -> employees.department_id=2
+departments.name=Research* -> departments.id=1 -> employees.department_id=1 -> employees.id=1 -> departments.id=1
+departments.name=Research* -> departments.id=2 -> employees.department_id=2 -> employees.id=3 -> departments.id=2
+```
+
 Results
 ```
 INSERT INTO departments (id, name) VALUES(1, 'Research');
@@ -158,8 +179,8 @@ INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
 ```
 
 
-Everything
-----------
+Extraction with a relation for an employee
+------------------------------------------
 This includes all relations. This leads to all employees in the research department being fetched since: |
 - John belongs to the research department
 - All employees in the research department are fetched, which pulls in Jane
@@ -174,36 +195,18 @@ Config
     - {column: name, table: employees, values: John}
 ```
 
-Results
-```
-INSERT INTO departments (id, name) VALUES(1, 'Research');
-INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
-INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
-```
-
-
-Everything with --explain
--------------------------
-This runs the above extraction, but with the `--explain` option.
-
-Config
-```
-- relations:
-  - {defaults: everything}
-- subject:
-  - tables:
-    - {column: name, table: employees, values: John}
-```
-
-Results
+Output
 ```
 employees.name=John*
 employees.name=John* -> employees.id=1 -> departments.id=1
 employees.name=John* -> employees.id=1 -> departments.id=1 -> employees.department_id=1
+```
 
+Results
+```
 INSERT INTO departments (id, name) VALUES(1, 'Research');
 INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
 INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 ```
-The asterisks indicate stickyness. In this case stickiness isn't used, so only the subject has a *.
+
 
