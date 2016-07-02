@@ -67,7 +67,7 @@ Default Relationships
 
 Examples
 ========
-Some example extractions follow, using an example database.
+Some example extractions follow, using an example database. Each example shows the configuration, explain output and SQL results.
 
 Database
 --------
