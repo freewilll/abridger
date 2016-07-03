@@ -129,3 +129,41 @@ Results
   INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
   INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
   COMMIT;
+
+Running it
+----------
+Usage: ``abridge-db [-h] [-u URL] [-f FILE] [-e] [-q] [-v] CONFIG_PATH SRC_URL``
+
+positional arguments:
+
+===========  ==============================
+CONFIG_PATH  path to extraction config file
+SRC_URL      source database url
+===========  ==============================
+
+optional arguments:
+
+  -h, --help     show this help message and exit
+  -u URL         destination database url
+  -f FILE        destination database file. Use - for stdout
+  -e, --explain  explain where rows are coming from
+  -q, --quiet    Don't output anything
+  -v, --verbose  Verbose output
+
+Examples
+++++++++
+
+Extract data from a postgresql database and add it to another
+::
+
+  abridge-db config.yaml postgresql://user@localhost/test -u postgresql://user@localhost/abridged_test
+
+Extract data from a postgresql database and write an sql file
+::
+
+  abridge-db config.yaml postgresql://user@localhost/test -f test-postgres.sql
+
+Extract data from a sqlite3 database and output SQL to stdout
+::
+
+  abridge-db config.yaml sqlite:///test.sqlite3 -q -f -

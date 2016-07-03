@@ -5,12 +5,33 @@ import argparse
 import math
 import os
 import sys
+import textwrap
 
 from abridger.extraction_model import ExtractionModel
 from abridger.extractor import Extractor
 from abridger.generator import Generator
 import abridger.config_file_loader
 import abridger.database
+
+
+EPILOG = '''
+    Unless -e is being used, exactly one of -f and -u must be specified.
+    Use '-f -' to output the SQL results to stdout.
+
+    Note that using -e is very inefficient since the extractor will do one
+    query for each row.
+
+    Examples
+        Extract data from a postgresql database and add it to another:
+        {0} config.yaml postgresql://user@localhost/test -u postgresql://user@localhost/abridged_test
+
+        Extract data from a postgresql database and write an sql file:
+        {0} config.yaml postgresql://user@localhost/test -f test-postgres.sql
+
+        Extract data from a sqlite3 database and output SQL to stdout:
+        {0} config.yaml sqlite:///test.sqlite3 -q -f -
+
+'''.format(os.path.basename(sys.argv[0]))  # noqa
 
 
 class DbOutputter(object):
@@ -79,7 +100,10 @@ class SqlOutputter(object):
 
 def main(args):
     parser = argparse.ArgumentParser(
-        description='Minimize a database')
+        description='Minimize a database',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(EPILOG))
+
     parser.add_argument(dest='config_path', metavar='CONFIG_PATH',
                         help="path to extraction config file")
     parser.add_argument(dest='src_url', metavar='SRC_URL',
