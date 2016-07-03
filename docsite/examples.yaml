@@ -1,0 +1,51 @@
+- title: Default relations for a department
+  description: By default, complete rows are fetched. This means that if a rule is added to fetch the department with name "Research" then rows referencing that department aren't fetched. This results in just one department being fetched and nothing else.
+  config:
+    - subject:
+      - tables:
+        - {table: departments, column: name, values: Research}
+
+- title: Relation for a department
+  description: This does an extraction with a relation from `employees` to `departments`. This will include both employees in the research department.
+  config:
+    - subject:
+      - tables:
+        - {table: departments, column: name, values: Research}
+      - relations:
+        - {table: employees, column: department_id}
+
+- title: Relation for two departments
+  description: This does an extraction with the above relation, but with both departments. This ends up fetching all employees.
+  config:
+  - subject:
+    - tables:
+      - {table: departments, column: name, values: [Research, Accounting]}
+    - relations:
+      - {table: employees, column: department_id}
+
+- title: Relation for an employee
+  description: |
+    This includes all relations. This leads to all employees in the research department being fetched since: |
+    - John belongs to the research department
+    - All employees in the research department are fetched, which pulls in Jane
+  config:
+    - relations:
+        - { defaults: everything}
+    - subject:
+      - tables:
+        - {table: employees, column: name, values: John}
+
+- title: Disabled relations
+  description: |
+    This demonstrates the blacklisting approach. All relations are included by default,
+    however the relation from `employees` to `departments` is disabled.
+    Fetching a department will therefore not fetch any of the employees.
+    Relations can be disabled globally or per subject.
+  config:
+    - relations:
+        - { defaults: everything}
+    - subject:
+      - tables:
+        - {table: departments, column: name, values: Research}
+      - relations:
+        - {table: employees, column: department_id, disabled: true}

@@ -28,6 +28,7 @@ rpm-build
 *.sublime-workspace
 
 docsite/_build
+docsite/examples.rst
 
 # deb building stuff...
 debian/

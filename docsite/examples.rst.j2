@@ -1,0 +1,40 @@
+Examples
+========
+
+Some example extractions follow, using an example database. Each example shows the configuration, explain output and SQL results.
+
+First example
+-------------
+
+Database
+++++++++
+This example database is used:
+::
+{% for line in test_schema %}
+  {{ line -}}
+{% endfor %}
+
+{% for demo in demos %}
+{{- demo.title }}
+{% for i in range(demo.title|length) %}+{% endfor %}
+{{ demo.description }}
+
+Config
+::
+{% for line in demo.config %}
+  {{ line -}}
+{% endfor %}
+
+Output
+::
+{% for line in demo.output %}
+  {{ line -}}
+{% endfor %}
+
+Results
+::
+{% for statement in demo.statements %}
+  {{ statement -}}
+{% endfor %}
+
+{% endfor %}
