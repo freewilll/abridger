@@ -1,20 +1,20 @@
 Examples
 ========
+{% for toplevel_example in toplevel_examples %}
+{{ toplevel_example.title }}
+{% for i in range(toplevel_example.title|length) %}-{% endfor %}
 
-Some example extractions follow, using an example database. Each example shows the configuration, explain output and SQL results.
+{{ toplevel_example.description }}
 
-First example
--------------
+Schema
+++++++
 
-Database
-++++++++
-This example database is used:
 ::
-{% for line in test_schema %}
+{% for line in toplevel_example.schema %}
   {{ line -}}
 {% endfor %}
 
-{% for demo in demos %}
+{% for demo in toplevel_example.demos %}
 {{- demo.title }}
 {% for i in range(demo.title|length) %}+{% endfor %}
 {{ demo.description }}
@@ -35,6 +35,8 @@ Results
 ::
 {% for statement in demo.statements %}
   {{ statement -}}
+{% endfor %}
+
 {% endfor %}
 
 {% endfor %}

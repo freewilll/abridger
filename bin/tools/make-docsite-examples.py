@@ -2,6 +2,7 @@
 
 from io import StringIO
 from jinja2 import Template
+from pprint import pprint
 import contextlib
 import os
 import re
@@ -52,18 +53,19 @@ def complete_statement(stmt, values):
     return (stmt + ';') % tuple(formatted_values)
 
 
-def main():
+def process_example(toplevel_example):
     database = SqliteDatabase(path=':memory:')
     conn = database.connection
-    test_schema = read_file('examples-schema.sql')
+
+    test_schema = read_file(toplevel_example['schema'])
     conn.executescript(test_schema)
     schema = SqliteSchema.create_from_conn(conn)
 
     demos = []
-    examples = yaml.load(read_file('examples.yaml'))
-    for example in examples:
-        (title, description, config) = (
-            example['title'], example['description'], example['config'])
+    for example in toplevel_example['examples']:
+        (title, description, config, expected_statements) = (
+            example['title'], example['description'], example['config'],
+            example['expected_statements'])
 
         extraction_model = ExtractionModel.load(schema, config)
 
@@ -84,6 +86,19 @@ def main():
                 insert_statement))
             statements.append(complete_statement(stmt, values))
 
+        if expected_statements != statements:
+            print('There is a mismatch in expected statements.')
+            print('Schema:%s\n' % test_schema)
+            print('Config:')
+            pprint(config)
+            print('Statements:')
+            for stmt in statements:
+                print(stmt)
+            print('Expected statements:')
+            for stmt in expected_statements:
+                print(stmt)
+            exit(1)
+
         demo = {
             'title': title,
             'description': description,
@@ -92,11 +107,23 @@ def main():
             'statements': statements,
         }
         demos.append(demo)
+    return {
+        'title': toplevel_example['title'],
+        'description': toplevel_example['description'],
+        'schema': test_schema.split('\n'),
+        'demos': demos,
+    }
+
+
+def main():
+    examples = yaml.load(read_file('examples.yaml'))
+    toplevel_examples = []
+    for example in examples:
+        toplevel_examples.append(process_example(example))
 
     template = Template(open(file_path('examples.rst.j2')).read())
     with open(file_path('examples.rst'), 'wt') as f:
-        f.write(template.render(test_schema=test_schema.split("\n"),
-                                demos=demos))
+        f.write(template.render(toplevel_examples=toplevel_examples))
 
 
 if __name__ == '__main__':
