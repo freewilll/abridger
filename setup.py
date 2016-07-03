@@ -20,7 +20,7 @@ setup(
     description='Abridger database subsetting tool',
     author=__author__,
     author_email='w.angenent@gmail.com',
-    url='https://github.com/willangenent/abridger',
+    url='https://github.com/freewilll/abridger',
     license='GPLv3',
     install_requires=['setuptools', 'pyyaml', 'six',
                       'jsonschema', 'dj-database-url', 'future'],
