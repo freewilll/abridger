@@ -165,8 +165,11 @@ def main(args):
             insert_tables = set(total_table_insert_counts.keys())
             update_tables = set(total_table_insert_counts.keys())
             tables = insert_tables | update_tables
-            print('Performing %d inserts and %d updates to %d tables...' % (
-                total_insert_count, total_update_count, len(tables)))
+
+            if args.dst_url is not None:
+                print(
+                    'Performing %d inserts and %d updates to %d tables...' % (
+                        total_insert_count, total_update_count, len(tables)))
 
         insert_count = 0
         count = 0
@@ -213,6 +216,6 @@ def main(args):
 
         src_database.disconnect()
 
-    if verbosity > 0:
+    if verbosity > 0 and args.dst_url is not None:
         elapsed_time = time() - start_time
         print('Data loading completed in %0.1f seconds' % elapsed_time)
