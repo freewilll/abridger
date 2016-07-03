@@ -12,7 +12,7 @@
       - INSERT INTO departments (id, name) VALUES(1, 'Research');
 
   - title: Relation for a department
-    description: This does an extraction with a relation from `employees` to `departments`. This will include both employees in the research department.
+    description: This does an extraction with a relation from ``employees`` to ``departments``. This will include both employees in the research department.
     config:
       - subject:
         - tables:
@@ -58,7 +58,7 @@
   - title: Disabled relations
     description: |
       This demonstrates the blacklisting approach. All relations are included by default,
-      however the relation from `employees` to `departments` is disabled.
+      however the relation from ``employees`` to ``departments`` is disabled.
       Fetching a department will therefore not fetch any of the employees.
       Relations can be disabled globally or per subject.
     config:
