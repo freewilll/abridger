@@ -62,9 +62,13 @@ class TestAbridgeDbBase(object):
     def run_with_dst_database(self, src_url, dst_url, dst_database,
                               explain=False, verbosity=1, check=True):
         config_tempfile = self.make_config_tempfile()
-        args = [config_tempfile.name, src_url, '-u', dst_url]
+        args = [config_tempfile.name, src_url]
+
         if explain:
-            args.append('--explain')
+            args.append('-e')
+        else:
+            args.extend(['-u', dst_url])
+
         if verbosity == 0:
             args.append('-q')
         if verbosity == 2:

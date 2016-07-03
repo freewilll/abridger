@@ -133,19 +133,28 @@ def main(args):
     if args.verbose:
         verbosity = 2
 
-    if (args.dst_url is None) == (args.dst_file is None):
-        print('Either -u or -f must be passed')
-        exit(1)
+    if args.explain:
+        if args.dst_url is not None:
+            print('-u is meaningless when using -e')
+            exit(1)
+        if args.dst_file is not None:
+            print('-f is meaningless when using -e')
+            exit(1)
+    else:
+        if (args.dst_url is None) == (args.dst_file is None):
+            print('Either -u or -f must be passed')
+            exit(1)
 
     src_database = abridger.database.load(args.src_url, verbose=verbosity > 0)
 
-    if args.dst_url is not None:
-        outputter = DbOutputter(args.dst_url, verbosity)
-        if not isinstance(src_database, type(outputter.database)):
-            print('src and dst databases must be of the same type')
-            exit(1)
-    else:
-        outputter = SqlOutputter(src_database, args.dst_file, verbosity)
+    if not args.explain:
+        if args.dst_url is not None:
+            outputter = DbOutputter(args.dst_url, verbosity)
+            if not isinstance(src_database, type(outputter.database)):
+                print('src and dst databases must be of the same type')
+                exit(1)
+        else:
+            outputter = SqlOutputter(src_database, args.dst_file, verbosity)
 
     if verbosity > 0:
         print('Querying...')

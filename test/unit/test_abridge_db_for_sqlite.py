@@ -97,6 +97,13 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
         out, err = capsys.readouterr()
         assert 'Either -u or -f must be passed' in out
 
+    def test_e_f_and_u_args(self, capsys):
+        for arg in ['-u', '-f']:
+            with pytest.raises(SystemExit):
+                main(['foo', 'bar', '-e', arg, 'foo'])
+            out, err = capsys.readouterr()
+            assert '%s is meaningless when using -e' % arg in out
+
     def check_statements(self, stmts):
         self.prepare_dst(with_schema=True)
         self.dst_database.connect()
