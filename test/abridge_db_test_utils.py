@@ -8,7 +8,9 @@ class TestAbridgeDbBase(object):
         for stmt in (
             '''
                 CREATE TABLE test1(
-                    id INTEGER PRIMARY KEY)
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    amount REAL)
             ''', '''
                 CREATE TABLE test2(
                     id INTEGER PRIMARY KEY,
@@ -21,7 +23,12 @@ class TestAbridgeDbBase(object):
 
     def create_data(self, conn):
         cur = conn.cursor()
-        cur.execute('INSERT INTO test1 VALUES (1, null), (2, null), (3, null)')
+        cur.execute('''
+            INSERT INTO test1 (id, name, amount, test2_id) VALUES
+                (1, 'One', 1.1, NULL),
+                (2, 'Two', 2.2, NULL),
+                (3, 'Three''s', 3.3, NULL)
+        ''')
         cur.execute('INSERT INTO test2 VALUES (1, 1), (2, 2), (3, 3)')
         cur.execute('UPDATE test1 SET test2_id = 1 WHERE id=1')
         cur.execute('UPDATE test1 SET test2_id = 2 WHERE id=2')
@@ -37,9 +44,14 @@ class TestAbridgeDbBase(object):
         dst_conn = dst_database.connection
         cur = dst_conn.cursor()
         try:
-            cur.execute('SELECT id, test2_id FROM test1 ORDER BY id')
+            cur.execute(
+                'SELECT id, name, amount, test2_id FROM test1 ORDER BY id')
             rows = list(cur.fetchall())
-            assert rows == [(1, 1), (2, 2), (3, None)]
+            assert rows == [
+                (1, 'One', 1.1, 1),
+                (2, 'Two', 2.2, 2),
+                (3, "Three's", 3.3, None)
+            ]
 
             cur.execute('SELECT id, test1_id FROM test2 ORDER BY id')
             rows = list(cur.fetchall())

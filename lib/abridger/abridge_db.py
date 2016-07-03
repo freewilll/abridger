@@ -61,7 +61,7 @@ class SqlOutputter(object):
     def update_row(self, row):
         stmt = self.src_db.make_update_stmt(self.cursor, row)
         self.file.write(stmt)
-        self.file.write(b";\n")
+        self.file.write(b"\n")
 
     def begin(self):
         for stmt in self.src_db.make_begin_stmts():
@@ -124,9 +124,6 @@ def main(args):
             print('src and dst databases must be of the same type')
             exit(1)
     else:
-        if not src_database.CAN_GENERATE_SQL_STATEMENTS:
-            print("SQL generation isn't available for this type of database")
-            exit(1)
         outputter = SqlOutputter(src_database, args.dst_file, verbosity)
 
     if verbosity > 0:

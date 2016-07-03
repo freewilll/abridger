@@ -1,6 +1,8 @@
 from sqlite3 import OperationalError
 from tempfile import NamedTemporaryFile
+import os
 import pytest
+import subprocess
 
 from abridger.abridge_db import main
 from abridger.database.sqlite import SqliteDatabase
@@ -95,12 +97,34 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
         out, err = capsys.readouterr()
         assert 'Either -u or -f must be passed' in out
 
-    def test_unavailable_file_output(self, capsys):
+    def check_statements(self, stmts):
+        self.prepare_dst(with_schema=True)
+        self.dst_database.connect()
+        dst_conn = self.dst_database.connection
+        for stmt in stmts.split("\n"):
+            if stmt != 'COMMIT;':
+                dst_conn.execute(stmt)
+        dst_conn.commit()
+        self.check_dst_database(self.dst_database)
+
+    def test_output_to_stdout(self):
+        self.prepare_src()
+        config_tempfile = self.make_config_tempfile()
+        executable = os.path.join(
+            os.path.dirname(__file__), os.pardir, os.pardir, 'bin',
+            'abridge-db')
+        stmts = subprocess.check_output([
+            executable,
+            config_tempfile.name, self.src_database.url(), '-q', '-f', '-']
+        ).decode('UTF-8')
+        self.check_statements(stmts)
+
+    def test_output_to_file(self):
         self.prepare_src()
         src_url = self.src_database.url()
         config_tempfile = self.make_config_tempfile()
-        for path in ('-', '/tmp/a-file.test'):
-            with pytest.raises(SystemExit):
-                main([config_tempfile.name, src_url, '-q', '-f', path])
-            out, err = capsys.readouterr()
-            assert "SQL generation isn't available" in out
+        dst = NamedTemporaryFile(mode='wb')
+        dst.close()
+        main([config_tempfile.name, src_url, '-q', '-f', dst.name])
+        with open(dst.name) as f:
+            self.check_statements(f.read())

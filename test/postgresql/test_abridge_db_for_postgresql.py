@@ -4,7 +4,6 @@ import os
 import pytest
 import re
 import subprocess
-import tempfile
 
 from abridger.abridge_db import main
 from abridger.database.sqlite import SqliteDatabase
@@ -56,12 +55,10 @@ class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
 
     def check_statements(self, postgresql2, stmts):
         self.prepare_dst(postgresql2, disconnect=False)
-
         for stmt in stmts.split("\n"):
             if stmt == '' or re.match('^\\\\set.*', stmt):
                 continue
             self.dst_database.execute(stmt)
-
         self.check_dst_database(self.dst_database)
 
     def test_output_to_stdout(self, postgresql, postgresql2):
@@ -78,15 +75,15 @@ class TestAbridgeDbForPostgresql(TestAbridgeDbBase):
         self.check_statements(postgresql2, stmts)
 
     def test_output_to_file(self, postgresql, postgresql2):
-        dst_filename = tempfile.NamedTemporaryFile(mode='wb')
-        dst_filename.close()
+        dst = NamedTemporaryFile(mode='wb')
+        dst.close()
         config_tempfile = self.make_config_tempfile()
         self.prepare_src(postgresql)
 
         main([config_tempfile.name, self.src_database.url(), '-q',
-              '-f', dst_filename.name])
+              '-f', dst.name])
 
-        with open(dst_filename.name) as f:
+        with open(dst.name) as f:
             self.check_statements(postgresql2, f.read())
 
     def test_src_dst_type_mismatch(self, capsys, postgresql):

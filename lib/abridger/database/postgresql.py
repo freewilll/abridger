@@ -5,8 +5,6 @@ from abridger.schema import PostgresqlSchema
 
 
 class PostgresqlDatabase(Database):
-    CAN_GENERATE_SQL_STATEMENTS = True
-
     def __init__(self, host=None, port=None, dbname=None, user=None,
                  password=None, connect=True, verbose=False):
         if dbname is None:
@@ -105,9 +103,9 @@ class PostgresqlDatabase(Database):
         return [b'COMMIT;']
 
     def make_insert_stmt(self, cursor, row):
-        (stmt, placeholders) = list(self.make_insert_statements([row]))[0]
-        return cursor.mogrify(stmt, placeholders) + b';'
+        (stmt, values) = list(self.make_insert_statements([row]))[0]
+        return cursor.mogrify(stmt, values) + b';'
 
     def make_update_stmt(self, cursor, row):
-        (stmt, placeholders) = list(self.make_update_statements([row]))[0]
-        return cursor.mogrify(stmt, placeholders) + b';'
+        (stmt, values) = list(self.make_update_statements([row]))[0]
+        return cursor.mogrify(stmt, values) + b';'
