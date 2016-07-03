@@ -150,6 +150,13 @@ optional arguments:
   -q, --quiet    Don't output anything
   -v, --verbose  Verbose output
 
+Unless ``-e`` is being used, exactly one of ``-f`` and ``-u`` must be specified.
+Use ``-f -`` to output the SQL results to stdout.
+
+Note that using ``-e`` is very inefficient since the extractor will do one
+query for each row.
+
+
 Examples
 ++++++++
 
