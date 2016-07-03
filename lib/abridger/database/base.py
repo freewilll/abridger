@@ -63,31 +63,31 @@ class Database(object):
 
         return ' OR '.join(or_clauses), stmt_values
 
-    def make_insert_statements(self, rows, placeholder_symbol=None):
+    def make_insert_statement(self, row, placeholder_symbol=None):
         table_cols = {}
         phs = placeholder_symbol or self.placeholder_symbol
 
-        for (table, values) in rows:
-            if table not in table_cols:
-                cols_csv = ', '.join([c.name for c in table.cols])
-                ph_with_comma = '%s, ' % phs
-                q = ph_with_comma.join([''] * len(table.cols)) + \
-                    phs
-                table_cols[table] = (cols_csv, q)
-            else:
-                (cols_csv, q) = table_cols[table]
+        (table, values) = row
+        if table not in table_cols:
+            cols_csv = ', '.join([c.name for c in table.cols])
+            ph_with_comma = '%s, ' % phs
+            q = ph_with_comma.join([''] * len(table.cols)) + \
+                phs
+            table_cols[table] = (cols_csv, q)
+        else:
+            (cols_csv, q) = table_cols[table]
 
-            stmt = 'INSERT INTO %s (%s) VALUES(%s)' % (table.name, cols_csv, q)
-            yield stmt, values
+        stmt = 'INSERT INTO %s (%s) VALUES(%s)' % (table.name, cols_csv, q)
+        return stmt, values
 
     def insert_rows(self, rows, cursor=None):
         if cursor is None:
             cursor = self.connection.cursor()
-        statements = self.make_insert_statements(rows)
-        for (stmt, values) in statements:
+        for row in rows:
+            (stmt, values) = self.make_insert_statement(row)
             self.execute(stmt, values)
 
-    def make_update_statements(self, rows, placeholder_symbol=None):
+    def make_update_statement(self, row, placeholder_symbol=None):
         table_cols = {}
         phs = placeholder_symbol or self.placeholder_symbol
 
@@ -99,36 +99,36 @@ class Database(object):
                 col_names = table_cols[(table, cols)]
             return col_names
 
-        for (table, pk_cols, pk_values, value_cols, values) in rows:
-            assert len(pk_cols) > 0
+        (table, pk_cols, pk_values, value_cols, values) = row
+        assert len(pk_cols) > 0
 
-            value_col_names = get_col_names(table, value_cols)
-            pk_col_names = get_col_names(table, pk_cols)
+        value_col_names = get_col_names(table, value_cols)
+        pk_col_names = get_col_names(table, pk_cols)
 
-            placeholder_values = []
-            sets = []
-            where = []
-            for i, col_name in enumerate(value_col_names):
-                value = values[i]
-                assert value is not None
-                sets.append("%s=%s" % (col_name, phs))
-                placeholder_values.append(value)
+        placeholder_values = []
+        sets = []
+        where = []
+        for i, col_name in enumerate(value_col_names):
+            value = values[i]
+            assert value is not None
+            sets.append("%s=%s" % (col_name, phs))
+            placeholder_values.append(value)
 
-            for i, col_name in enumerate(pk_col_names):
-                pk_value = pk_values[i]
-                assert pk_value is not None
-                where.append("%s=%s" % (col_name, phs))
-                placeholder_values.append(pk_value)
+        for i, col_name in enumerate(pk_col_names):
+            pk_value = pk_values[i]
+            assert pk_value is not None
+            where.append("%s=%s" % (col_name, phs))
+            placeholder_values.append(pk_value)
 
-            stmt = 'UPDATE %s SET %s WHERE %s' % (
-                table.name,
-                ', '.join(sets),
-                ' AND '.join(where))
-            yield stmt, placeholder_values
+        stmt = 'UPDATE %s SET %s WHERE %s' % (
+            table.name,
+            ', '.join(sets),
+            ' AND '.join(where))
+        return stmt, placeholder_values
 
     def update_rows(self, rows, cursor=None):
         if cursor is None:
             cursor = self.connection.cursor()
-        statements = self.make_update_statements(rows)
-        for (stmt, values) in statements:
+        for row in rows:
+            (stmt, values) = self.make_update_statement(row)
             self.execute(stmt, values)

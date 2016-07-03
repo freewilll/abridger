@@ -78,8 +78,8 @@ def main():
 
         statements = []
         for insert_statement in generator.insert_statements:
-            (stmt, values) = list(database.make_insert_statements(
-                [insert_statement]))[0]
+            (stmt, values) = list(database.make_insert_statement(
+                insert_statement))
             statements.append(complete_statement(stmt, values))
 
         demo = {

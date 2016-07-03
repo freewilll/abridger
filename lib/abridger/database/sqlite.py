@@ -66,9 +66,9 @@ class SqliteDatabase(Database):
         return six.b(stmt % tuple(formatted_values))
 
     def make_insert_stmt(self, cursor, row):
-        (stmt, values) = list(self.make_insert_statements([row]))[0]
+        (stmt, values) = list(self.make_insert_statement(row))
         return self._make_sql(stmt, values) + b';'
 
     def make_update_stmt(self, cursor, row):
-        (stmt, values) = list(self.make_update_statements([row]))[0]
+        (stmt, values) = list(self.make_update_statement(row))
         return self._make_sql(stmt, values) + b';'
