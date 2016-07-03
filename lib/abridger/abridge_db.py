@@ -76,9 +76,6 @@ class SqlOutputter(object):
     def rollback(self):
         pass
 
-    def finish(self):
-        self.file.close()
-
 
 def main(args):
     parser = argparse.ArgumentParser(
@@ -215,7 +212,6 @@ def main(args):
             pass  # pragma: no cover
 
         src_database.disconnect()
-        outputter.finish()
 
     if verbosity > 0:
         elapsed_time = time() - start_time
