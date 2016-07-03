@@ -56,9 +56,6 @@ class DbOutputter(object):
     def rollback(self):
         self.connection.rollback()
 
-    def finish(self):
-        self.database.disconnect()
-
 
 class SqlOutputter(object):
     def __init__(self, src_database, path, verbosity):
