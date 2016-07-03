@@ -20,6 +20,8 @@ clean:
 	rm -rf .tox
 	rm -rf htmlcov
 	rm -rf lib/abridger.egg-info
+	rm -rf docsite/_build/*
+	rm -rf docsite/_static/*
 	find . -type f -regex ".*\.py[co]$$" -delete
 	find . -type f -name '*.pyc' -delete
 	find . -type d -name '__pycache__' -delete

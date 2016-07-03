@@ -2,6 +2,7 @@
 
 from io import StringIO
 from jinja2 import Template
+from graphviz import Digraph
 from pprint import pprint
 import contextlib
 import os
@@ -53,13 +54,25 @@ def complete_statement(stmt, values):
     return (stmt + ';') % tuple(formatted_values)
 
 
+def make_graph(schema, svg_path):
+    g = Digraph('G', filename=svg_path, format='svg')
+    for table in schema.tables:
+        for fk in table.foreign_keys:
+            g.edge(fk.src_cols[0].table.name, fk.dst_cols[0].table.name)
+    g.render(cleanup=True)
+
+
 def process_example(toplevel_example):
     database = SqliteDatabase(path=':memory:')
     conn = database.connection
 
-    test_schema = read_file(toplevel_example['schema'])
-    conn.executescript(test_schema)
+    schema_filename = toplevel_example['schema']
+    svg_filename = schema_filename.replace('.sql', '')
+    svg_path = file_path(os.path.join('_static', svg_filename))
+    schema_lines = read_file(schema_filename)
+    conn.executescript(schema_lines)
     schema = SqliteSchema.create_from_conn(conn)
+    make_graph(schema, svg_path)
 
     demos = []
     for example in toplevel_example['examples']:
@@ -88,7 +101,7 @@ def process_example(toplevel_example):
 
         if expected_statements != statements:
             print('There is a mismatch in expected statements.')
-            print('Schema:%s\n' % test_schema)
+            print('Schema:%s\n' % schema)
             print('Config:')
             pprint(config)
             print('Statements:')
@@ -107,10 +120,12 @@ def process_example(toplevel_example):
             'statements': statements,
         }
         demos.append(demo)
+
     return {
         'title': toplevel_example['title'],
         'description': toplevel_example['description'],
-        'schema': test_schema.split('\n'),
+        'schema_svg': os.path.join('_static', svg_filename),
+        'schema': schema_lines.split('\n'),
         'demos': demos,
     }
 
