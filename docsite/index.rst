@@ -8,12 +8,15 @@ Abridger documentation
 
 About abridger
 --------------
+Abridger is a tool for creating a referentially intact copy of a subset of a database.
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   intro
+   overview
+   getting_started
+   extraction_model
    examples
 

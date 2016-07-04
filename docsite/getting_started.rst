@@ -1,6 +1,5 @@
-Introduction
-============
-
+Getting Started
+===============
 
 Installation
 ------------
