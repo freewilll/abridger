@@ -232,8 +232,12 @@ class Extractor(object):
         if self.verbosity > 0:
             table_count = len(self.fetched_row_count_per_table.keys())
             print(
-                'Extraction completed: rows=%d, tables=%d, queries=%d, '
-                'depth=%d, duration=%0.1f seconds' % (
+                'Extraction completed: '
+                'fetched rows=%d, '
+                'tables=%d, '
+                'queries=%d, '
+                'depth=%d, '
+                'duration=%0.1f seconds' % (
                     self.fetched_row_count,
                     table_count,
                     self.fetch_count,

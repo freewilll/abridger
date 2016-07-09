@@ -200,6 +200,11 @@ def main(args):
                 print(
                     'Performing %d inserts and %d updates to %d tables...' % (
                         total_insert_count, total_update_count, len(tables)))
+            else:
+                print(
+                    'Writing SQL for %d inserts and %d updates '
+                    'in %d tables...' % (
+                        total_insert_count, total_update_count, len(tables)))
 
         insert_count = 0
         count = 0
@@ -246,6 +251,9 @@ def main(args):
 
         src_database.disconnect()
 
-    if verbosity > 0 and args.dst_url is not None:
-        elapsed_time = time() - start_time
-        print('Data loading completed in %0.1f seconds' % elapsed_time)
+    if verbosity > 0:
+        if args.dst_url is not None:
+            elapsed_time = time() - start_time
+            print('Data loading completed in %0.1f seconds' % elapsed_time)
+        else:
+            print('Done')

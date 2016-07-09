@@ -66,26 +66,36 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
 
     def check_verbosity1_output(self, out):
         assert 'Connecting to %s' % self.src_database.url() in out
-        assert 'Connecting to %s' % self.dst_database.url() in out
         assert 'Querying' in out
+        assert ('Extraction completed: '
+                'fetched rows=7, '
+                'tables=2, '
+                'queries=3, '
+                'depth=2') in out
+
+    def check_verbosity1_output_for_url(self, out):
+        self.check_verbosity1_output(out)
+        assert 'Connecting to %s' % self.dst_database.url() in out
         assert 'Performing 5 inserts and 2 updates to 2 tables...' in out
-        assert 'Extraction completed: rows=7, tables=2, queries=3, depth=2' \
-            in out
         assert 'Data loading completed in' in out
+
+    def check_verbosity1_output_for_file(self, out):
+        assert 'Writing SQL for 5 inserts and 2 updates in 2 tables...' in out
+        assert 'Done' in out
 
     def test_default_output(self, capsys):
         self.prepare_src()
         self.prepare_dst(with_schema=True)
         self.run_with_dst_database(verbosity=1)
         out, err = capsys.readouterr()
-        self.check_verbosity1_output(out)
+        self.check_verbosity1_output_for_url(out)
 
     def test_verbose_output(self, capsys):
         self.prepare_src()
         self.prepare_dst(with_schema=True)
         self.run_with_dst_database(verbosity=2)
         out, err = capsys.readouterr()
-        self.check_verbosity1_output(out)
+        self.check_verbosity1_output_for_url(out)
         assert ('Processing pass=1     queued=0     depth=0   tables=0    '
                 'rows=0       table') in out
         assert 'Inserting' in out
@@ -126,12 +136,14 @@ class TestAbridgeDbForSqlite(TestAbridgeDbBase):
         ).decode('UTF-8')
         self.check_statements(stmts)
 
-    def test_output_to_file(self):
+    def test_output_to_file(self, capsys):
         self.prepare_src()
         src_url = self.src_database.url()
         config_tempfile = self.make_config_tempfile()
         dst = NamedTemporaryFile(mode='wb')
         dst.close()
-        main([config_tempfile.name, src_url, '-q', '-f', dst.name])
+        main([config_tempfile.name, src_url, '-f', dst.name])
         with open(dst.name) as f:
             self.check_statements(f.read())
+        out, err = capsys.readouterr()
+        self.check_verbosity1_output_for_file(out)

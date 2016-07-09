@@ -114,9 +114,12 @@ Run abridger
 ::
 
   $ abridge-db config.yaml sqlite:///test.sqlite3 -f test-abridger.sql
+
   Connecting to sqlite:///test.sqlite3
   Querying...
-  Extraction completed: rows=1, tables=1, queries=1, depth=0, duration=0.0 seconds
+  Extraction completed: fetched rows=4, tables=2, queries=3, depth=2, duration=0.0 seconds
+  Writing SQL for 3 inserts and 0 updates in 2 tables...
+  Done
 
 Results
 +++++++
