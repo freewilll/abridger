@@ -72,12 +72,12 @@ class Generator(object):
             src_index = order_dict[table]
             cols = set()
             for fk in table.foreign_keys:
-                for col in fk.src_cols:
-                    dst_index = order_dict[col.table]
-                    extra_notnull = col in extra_table_not_null_cols
-                    notnull = col.notnull or extra_notnull
+                for src_col, dst_col in zip(fk.src_cols, fk.dst_cols):
+                    dst_index = order_dict[dst_col.table]
+                    extra_notnull = src_col in extra_table_not_null_cols
+                    notnull = src_col.notnull or extra_notnull
                     if not notnull and dst_index >= src_index:
-                        cols.add(col)
+                        cols.add(src_col)
 
             self.deferred_update_rules[table] = cols
 

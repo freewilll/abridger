@@ -57,6 +57,25 @@ class TestGenerator(TestExtractorBase):
         return SqliteSchema.create_from_conn(self.database.connection)
 
     @pytest.fixture()
+    # A single nullable dependency. Same as above, but with
+    # the table names are reversed
+    def schema2rev(self):
+        for stmt in [
+            '''CREATE TABLE test2 (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                test1_id INTEGER REFERENCES test1
+            );''',
+            '''CREATE TABLE test1 (
+                id INTEGER PRIMARY KEY,
+                name TEXT
+            );''',
+        ]:
+            self.database.execute(stmt)
+
+        return SqliteSchema.create_from_conn(self.database.connection)
+
+    @pytest.fixture()
     # A single not null dependency
     def schema3(self):
         for stmt in [
@@ -192,7 +211,8 @@ class TestGenerator(TestExtractorBase):
                           not_null_cols=None,
                           expected_deferred_update_rules=None):
         generator = self.get_generator_instance(
-            schema, not_null_cols=not_null_cols)
+            schema, not_null_cols=not_null_cols,
+            table=expected_table_order[0])
         table_order = [t.name for t in generator.table_order]
         if table_order != expected_table_order:
             print()
@@ -223,6 +243,18 @@ class TestGenerator(TestExtractorBase):
         }
         self.check_table_order(
             schema2, ['test1', 'test2'],
+            expected_deferred_update_rules=expected_deferred_update_rules)
+
+    def test_table_order2alt_a(self, schema2rev):
+        # Compared to schema2, there are no deferred update rules,
+        # since test1 comes before test2 in the table order,
+        # so test2's insert can go ahead.
+        expected_deferred_update_rules = {
+            schema2rev.tables[1]: set(),
+            schema2rev.tables[0]: set(),
+        }
+        self.check_table_order(
+            schema2rev, ['test1', 'test2'],  # alphabetical
             expected_deferred_update_rules=expected_deferred_update_rules)
 
     def test_table_order2b(self, schema2):
