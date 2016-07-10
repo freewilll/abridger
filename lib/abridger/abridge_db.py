@@ -26,7 +26,7 @@ EPILOG = '''
         {0} config.yaml postgresql://user@localhost/test -u postgresql://user@localhost/abridged_test
 
         Extract data from a postgresql database and write an sql file:
-        {0} config.yaml postgresql://user@localhost/test -f test-postgres.sql
+        {0} config.yaml postgresql://user@localhost/test -f test-postgresql.sql
 
         Extract data from a sqlite3 database and output SQL to stdout:
         {0} config.yaml sqlite:///test.sqlite3 -q -f -
