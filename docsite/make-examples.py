@@ -16,6 +16,7 @@ from abridger.extraction_model import ExtractionModel
 from abridger.extractor import Extractor
 from abridger.generator import Generator
 from abridger.schema.sqlite import SqliteSchema
+from docsite_utils import file_path, read_file
 
 
 @contextlib.contextmanager
@@ -25,17 +26,6 @@ def stdout_redirect(where):
         yield where
     finally:
         sys.stdout = sys.__stdout__
-
-
-def file_path(filename):
-    return os.path.abspath(os.path.join(
-        os.path.dirname(__file__),
-        os.path.pardir,
-        os.path.pardir, 'docsite', filename))
-
-
-def read_file(filename):
-    return open(file_path(filename)).read()
 
 
 def complete_statement(stmt, values):

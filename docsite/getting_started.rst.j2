@@ -55,85 +55,56 @@ In the following example, a test sqlite3 database will be created with some tabl
 
 Create a test database
 ++++++++++++++++++++++
+Create a file called ``{{ input_sql_path }}`` and put the following in it:
+::
+{% for line in schema %}
+  {{ line -}}
+{% endfor %}
+
+Load ``{{ input_sql_path }}`` into an sqlite3 database called ``{{ sqlite_db_path }}``
 ::
 
-  $ sqlite3 test.sqlite3
-  SQLite version 3.12.2 2016-04-18 17:30:31
-  Enter ".help" for usage hints.
-  sqlite> CREATE TABLE departments (
-     ...>     id INTEGER PRIMARY KEY,
-     ...>     name TEXT
-     ...> );
-  sqlite> CREATE TABLE employees (
-     ...>     id INTEGER PRIMARY KEY,
-     ...>     name TEXT,
-     ...>     department_id INTEGER NOT NULL REFERENCES departments
-     ...> );
-  sqlite> INSERT INTO departments (id, name) VALUES
-     ...>     (1, 'Research'),
-     ...>     (2, 'Accounting');
-  sqlite> INSERT INTO employees (id, name, department_id) VALUES
-     ...>     (1, 'John', 1),
-     ...>     (2, 'Jane', 1),
-     ...>     (3, 'Janet', 2);
-  sqlite> .quit
+  $ sqlite3 {{sqlite_db_path}} < {{ input_sql_path }}
 
 The contents of the test database
 +++++++++++++++++++++++++++++++++
 ::
 
-  $ sqlite3 test.sqlite3
-  SQLite version 3.12.2 2016-04-18 17:30:31
-  Enter ".help" for usage hints.
-  sqlite> .mode column
-  sqlite> .headers on
-  sqlite> SELECT e.*, d.name as department_name FROM employees e join departments d on (e.department_id=d.id) ORDER by id;
-  id          name        department_id  department_name
-  ----------  ----------  -------------  ---------------
-  1           John        1              Research
-  2           Jane        1              Research
-  3           Janet       2              Accounting
-  sqlite> .quit
+  $ {{ contents_cmdline }}
+{% for line in sqlite_db_contents %}
+  {{ line -}}
+{% endfor %}
 
-Create a config file
-++++++++++++++++++++
+Create an extraction config file
+++++++++++++++++++++++++++++++++
 In this example, we'll fetch the ``Research`` department, which will also fetch all employees in it.
-
+Create a file called ``{{ config_path }}`` and put the following in it:
 ::
 
-  $ cat << END > config.yaml
-  > - relations:
-  >   - { defaults: everything}
-  > - subject:
-  >   - tables:
-  >     - {table: departments, column: name, values: Research}
-  > END
+{% for line in config %}
+  {{ line -}}
+{% endfor %}
 
 Run abridger
 +++++++++++++
 ::
 
-  $ abridge-db config.yaml sqlite:///test.sqlite3 -f test-abridger.sql
-
-  Connecting to sqlite:///test.sqlite3
-  Querying...
-  Extraction completed: fetched rows=4, tables=2, queries=3, depth=2, duration=0.0 seconds
-  Writing SQL for 3 inserts and 0 updates in 2 tables...
-  Done
+  $ {{ abridge_db_cmdline }}
+{% for line in abridge_db_output %}
+  {{ line -}}
+{% endfor %}
 
 Results
 +++++++
 ::
 
-  $ cat test-abridger.sql
-  BEGIN;
-  INSERT INTO departments (id, name) VALUES(1, 'Research');
-  INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
-  INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
-  COMMIT;
+  $ cat {{ output_sql_path }}
+{% for line in sql_output %}
+  {{ line -}}
+{% endfor %}
 
-Running it
-----------
+Running abridger
+----------------
 Usage: ``abridge-db [-h] [-u URL] [-f FILE] [-e] [-q] [-v] CONFIG_PATH SRC_URL``
 
 positional arguments:

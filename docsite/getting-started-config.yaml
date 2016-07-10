@@ -1,0 +1,5 @@
+  - relations:
+    - { defaults: everything}
+  - subject:
+    - tables:
+      - {table: departments, column: name, values: Research}

@@ -29,14 +29,14 @@ clean:
 python:
 	$(PYTHON) setup.py build
 
-venv:
+.tox/venv:
 	tox -e venv -v
 
 coverage:
 	py.test -vs --cov-report=term-missing --cov=abridger --cov=bin
 
-readme: venv
+readme: .tox/venv
 	.tox/venv/bin/python bin/tools/make-readme.py
 
-docs:
-	$(MAKE) -C docsite html
+docs: .tox/venv
+	. .tox/venv/bin/activate && $(MAKE) -C docsite html
