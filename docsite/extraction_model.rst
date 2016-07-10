@@ -43,8 +43,8 @@ Example                                   Description
 :ref:`example_relations_two_departments1` Default relations for two departments
 :ref:`example_relations_two_departments2` An alternative default relations for two departments
 :ref:`example_relations_two_departments3` Another alternative default relations for two departments
-:ref:`example_relations_an_employee`      This includes all relations
-:ref:`example_relations_disabled1`        This demonstrates the blacklisting approach using disabled relations
+:ref:`example_relations_an_employee`      All relations
+:ref:`example_relations_disabled1`        Blacklisting approach using disabled relations
 ========================================= =======================================================================
 
 .. _defaults:
@@ -90,11 +90,7 @@ everything            no                 All of the above
 
 Examples:
 
-=============================================================== =======================================================================
-Example                                                         Default
---------------------------------------------------------------- -----------------------------------------------------------------------
-:ref:`example_relations_all_outgoing_not_null`                  all-outgoing-not-null
-:ref:`example_relations_all_outgoing_nullable`                  all-outgoing-nullable
-:ref:`example_relations_all_incoming`                           all-incoming
-:ref:`example_relations_all_incoming_and_all_outgoing_nullable` all-outgoing-nullable and all-incoming
-=============================================================== =======================================================================
+- :ref:`example_relations_all_outgoing_not_null`
+- :ref:`example_relations_all_outgoing_nullable`
+- :ref:`example_relations_all_incoming`
+- :ref:`example_relations_all_incoming_and_all_outgoing_nullable`

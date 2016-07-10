@@ -111,7 +111,6 @@
 # ------------------------------------------------------------------------------------------------------------------------
 - title: Relations
   schema: examples-schema.sql
-  description: Some example extractions follow, using an example database. Each example shows the configuration, explain output and SQL results.
   examples:
   - title: Default relations for a department
     ref: example_relations_for_a_department
@@ -136,7 +135,7 @@
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 
-  - title: Relation for two departments
+  - title: Relation for two departments 1
     ref: example_relations_two_departments1
     description: This does an extraction with the above relation, but with both departments. This ends up fetching all employees.
     config:
