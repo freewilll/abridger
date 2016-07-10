@@ -1,8 +1,120 @@
+- title: Subjects
+  schema: examples-schema-subjects.sql
+  examples:
+  - title: All departments
+    ref: example_subjects_all_departments
+    description: A table entry with just a table name will fetch all rows.
+    config:
+      - subject:
+        - tables:
+          - {table: departments}
+    expected_statements:
+      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+      - INSERT INTO departments (id, name) VALUES(3, 'Finance');
+  - title: One department
+    ref: example_subjects_one_department
+    description: A table entry with a single column/value will fetch one row.
+    config:
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: Research}
+    expected_statements:
+      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+  - title: Two departments
+    ref: example_subjects_two_departments
+    description: A table entry with multiple column/value will fetch multiple rows.
+    config:
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: ['Research', 'Accounting']}
+    expected_statements:
+      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+
+# ------------------------------------------------------------------------------------------------------------------------
+- title: Defaults
+  schema: examples-schema-defaults.sql
+  examples:
+  - title: all-outgoing-not-null
+    ref: example_relations_all_outgoing_not_null
+    description: |
+      ``all-outgoing-not-null`` is the minimum required relation.
+      Nullable outgoing foreign keys are ignored, as well as incoming foreign keys.
+      Fetching all ``departments`` with this setting will make the ``building_id`` foreign key null.
+      Also, since no incoming relations are in the defaults, no rows in ``employees`` are fetched.
+    config:
+      - relations:
+          - {defaults: all-outgoing-not-null}
+      - subject:
+        - tables:
+          - {table: departments}
+    expected_statements:
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', NULL);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
+
+  - title: all-outgoing-nullable
+    ref: example_relations_all_outgoing_nullable
+    description: |
+      ``all-outgoing-nullable`` ensures that for any row that is fetched all foreign keys are processed.
+      In this example it means that the ``buildings`` row with id=1 must be fetched to satisfy the ``building_id`` foreign key constraint on the ``departments`` table.
+      Also, since no incoming relations are in the defaults, no rows in ``employees`` are fetched.
+    config:
+      - relations:
+          - {defaults: all-outgoing-nullable}
+      - subject:
+        - tables:
+          - {table: departments}
+    expected_statements:
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
+
+  - title: all-incoming
+    ref: example_relations_all_incoming
+    description: |
+      ``all-incoming`` ensures that for any row that is fetched all *referencing* foreign keys are processed in other tables.
+      In this example it means that that all ``employees`` with ``department_id`` in the fetched departments are fetched.
+      Note how no rows in ``buildings`` are fetched, since ``all-outgoing-nullable`` wasn't enabled.
+    config:
+      - relations:
+          - {defaults: all-incoming}
+      - subject:
+        - tables:
+          - {table: departments}
+    expected_statements:
+     - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', NULL);
+     - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
+     - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
+     - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+     - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
+
+  - title: all-incoming and all-outgoing-nullable
+    ref: example_relations_all_incoming_and_all_outgoing_nullable
+    description: |
+      The combination of ``all-outgoing-nullable`` and ``all-incoming``, which is equivalent to ``everything`` fetches everything in ``buildings`` and ``employees`` related to all the ``departments``.
+    config:
+      - relations:
+          - {defaults: all-outgoing-nullable}
+          - {defaults: all-incoming}
+      - subject:
+        - tables:
+          - {table: departments}
+    expected_statements:
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
+      - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
+
+# ------------------------------------------------------------------------------------------------------------------------
 - title: Relations
   schema: examples-schema.sql
   description: Some example extractions follow, using an example database. Each example shows the configuration, explain output and SQL results.
   examples:
   - title: Default relations for a department
+    ref: example_relations_for_a_department
     description: By default, complete rows are fetched. This means that if a rule is added to fetch the department with name "Research" then rows referencing that department aren't fetched. This results in just one department being fetched and nothing else.
     config:
       - subject:
@@ -25,6 +137,7 @@
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 
   - title: Relation for two departments
+    ref: example_relations_two_departments1
     description: This does an extraction with the above relation, but with both departments. This ends up fetching all employees.
     config:
     - subject:
@@ -39,9 +152,47 @@
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
 
+  - title: Relation for two departments 2
+    ref: example_relations_two_departments2
+    description: This is equivalent to :ref:`example_relations_two_departments1`, except it used two separate table sections.
+    config:
+    - relations:
+      - {table: employees, column: department_id}
+    - subject:
+      - tables:
+        - {table: departments, column: id, values: 1}
+        - {table: departments, column: id, values: 2}
+    expected_statements:
+      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+      - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
+
+  - title: Relation for two departments 3
+    ref: example_relations_two_departments3
+    description: This is equivalent to :ref:`example_relations_two_departments1`, except it used two separate subjects.
+    config:
+    - relations:
+      - {table: employees, column: department_id}
+    - subject:
+      - tables:
+        - {table: departments, column: id, values: 1}
+    - subject:
+      - tables:
+        - {table: departments, column: name, values: Accounting}
+    expected_statements:
+      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+      - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
+
   - title: Relation for an employee
+    ref: example_relations_an_employee
     description: |
-      This includes all relations. This leads to all employees in the research department being fetched since: |
+      This includes all relations. This leads to all employees in the research department being fetched since:
+
       - John belongs to the research department
       - All employees in the research department are fetched, which pulls in Jane
     config:
@@ -55,7 +206,8 @@
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 
-  - title: Disabled relations
+  - title: Disabled relations 1
+    ref: example_relations_disabled1
     description: |
       This demonstrates the blacklisting approach. All relations are included by default,
       however the relation from ``employees`` to ``departments`` is disabled.

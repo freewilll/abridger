@@ -47,6 +47,7 @@ def complete_statement(stmt, values):
 def make_graph(schema, svg_path):
     g = Digraph('G', filename=svg_path, format='svg')
     for table in schema.tables:
+        g.node(table.name)
         for fk in table.foreign_keys:
             g.edge(fk.src_cols[0].table.name, fk.dst_cols[0].table.name)
     g.render(cleanup=True)
@@ -66,9 +67,9 @@ def process_example(toplevel_example):
 
     demos = []
     for example in toplevel_example['examples']:
-        (title, description, config, expected_statements) = (
-            example['title'], example['description'], example['config'],
-            example['expected_statements'])
+        (title, ref, description, config, expected_statements) = (
+            example['title'], example.get('ref'), example['description'],
+            example['config'], example['expected_statements'])
 
         extraction_model = ExtractionModel.load(schema, config)
 
@@ -89,6 +90,11 @@ def process_example(toplevel_example):
                 insert_statement))
             statements.append(complete_statement(stmt, values))
 
+        for update_statement in generator.update_statements:
+            (stmt, values) = list(database.make_update_statement(
+                update_statement))
+            statements.append(complete_statement(stmt, values))
+
         if expected_statements != statements:
             print('There is a mismatch in expected statements.')
             print('Schema:%s\n' % schema)
@@ -104,6 +110,7 @@ def process_example(toplevel_example):
 
         demo = {
             'title': title,
+            'ref': ref,
             'description': description,
             'config': yaml.dump(config).split("\n"),
             'output': output,
@@ -113,7 +120,7 @@ def process_example(toplevel_example):
 
     return {
         'title': toplevel_example['title'],
-        'description': toplevel_example['description'],
+        'description': toplevel_example.get('description'),
         'schema_svg': os.path.join('_static', svg_filename),
         'schema': schema_lines.split('\n'),
         'demos': demos,

@@ -4,7 +4,9 @@ Examples
 {{ toplevel_example.title }}
 {% for i in range(toplevel_example.title|length) %}-{% endfor %}
 
+{% if toplevel_example.description %}
 {{ toplevel_example.description }}
+{% endif %}
 
 Schema
 ++++++
@@ -18,6 +20,11 @@ Schema
 {% endfor %}
 
 {% for demo in toplevel_example.demos %}
+{% if demo.ref %}
+.. _{{ demo.ref }}:
+
+{% endif %}
+
 {{- demo.title }}
 {% for i in range(demo.title|length) %}+{% endfor %}
 {{ demo.description }}

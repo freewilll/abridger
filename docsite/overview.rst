@@ -4,7 +4,7 @@ The objective is to create a new database with a referentially intact subset of 
 
 It all comes down to defining rules on what to extract. If the rules are too strict, then nog enough data is copied. If the rules are not strict enough, too much data is copied. Furthermore, for highly complex databases, it can become quite a task to define the rules and combine them in a sensible way.
 
-Abridger tries to make this easy by defining the rules in one or more yaml files called the :doc:`extraction_model`.
+The rules are defined in an :doc:`extraction_model` which is configured in one or more yaml files.
 
 Concepts
 ++++++++
@@ -18,7 +18,7 @@ Concepts
   Relation
     A relation is a reference to a database foreign key. A relation is either outgoing or incoming from the persepctive of a subject table. Relations can be made disabled or made sticky.
   Default relations
-    By default, any row found in a table in the extraction model is fetched in its entirety, including all values of foreign keys. Rows in other tables referencing the source table aren't fetched. These defaults can be overriden.
+    By default, any row found in a table in the extraction model is fetched in its entirety. This will pull in rows required to satisfy any foreign key constraints on the row's table. Rows in other tables referencing the source table aren't fetched. These defaults can be overriden.
   Not null columns
     When populating the destination database or generating SQL, nullable columns can be treated as not-null so that they are included in the insert statements. This is useful in the case of check constraints.
 
