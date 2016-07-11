@@ -26,7 +26,7 @@ def main():
 
     p = Popen(['sqlite3', SQLITE_DB_PATH], stdout=PIPE, stdin=PIPE,
               stderr=PIPE)
-    schema = read_file('examples-schema.sql')
+    schema = read_file('examples-schema-relations.sql')
     out, err = p.communicate(input=bytes(schema, 'utf-8'))
 
     config_path = 'getting-started-config.yaml'

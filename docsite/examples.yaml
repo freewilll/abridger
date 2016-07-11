@@ -120,7 +120,7 @@
 # ------------------------------------------------------------------------------------------------------------------------
 - title: Relations
   doc_filename: examples_relations
-  schema: examples-schema.sql
+  schema: examples-schema-relations.sql
   examples:
   - title: Default relations for a department
     ref: example_default_relations_for_a_department
