@@ -1,4 +1,5 @@
 - title: Subjects
+  doc_filename: examples_subjects
   schema: examples-schema-subjects.sql
   examples:
   - title: All departments
@@ -34,6 +35,7 @@
 
 # ------------------------------------------------------------------------------------------------------------------------
 - title: Defaults
+  doc_filename: examples_defaults
   schema: examples-schema-defaults.sql
   examples:
   - title: all-outgoing-not-null
@@ -110,6 +112,7 @@
 
 # ------------------------------------------------------------------------------------------------------------------------
 - title: Relations
+  doc_filename: examples_relations
   schema: examples-schema.sql
   examples:
   - title: Default relations for a department

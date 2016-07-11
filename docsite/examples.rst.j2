@@ -1,52 +1,7 @@
 Examples
 ========
-{% for toplevel_example in toplevel_examples %}
-{{ toplevel_example.title }}
-{% for i in range(toplevel_example.title|length) %}-{% endfor %}
-
-{% if toplevel_example.description %}
-{{ toplevel_example.description }}
-{% endif %}
-
-Schema
-++++++
-
-.. image:: {{ toplevel_example.schema_svg }}.svg
-    :align: center
-
-::
-{% for line in toplevel_example.schema %}
-  {{ line -}}
-{% endfor %}
-
-{% for demo in toplevel_example.demos %}
-{% if demo.ref %}
-.. _{{ demo.ref }}:
-
-{% endif %}
-
-{{- demo.title }}
-{% for i in range(demo.title|length) %}+{% endfor %}
-{{ demo.description }}
-
-Config
-::
-{% for line in demo.config %}
-  {{ line -}}
-{% endfor %}
-
-Explain output
-::
-{% for line in demo.output %}
-  {{ line -}}
-{% endfor %}
-
-Results
-::
-{% for statement in demo.statements %}
-  {{ statement -}}
-{% endfor %}
-
-{% endfor %}
+.. toctree::
+{% for filename in filenames %}
+  {{ filename -}}
 
 {% endfor %}

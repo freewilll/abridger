@@ -30,6 +30,7 @@ rpm-build
 docsite/_build
 docsite/_static/*.svg
 docsite/examples.rst
+docsite/examples_*.rst
 docsite/getting_started.rst
 
 # deb building stuff...

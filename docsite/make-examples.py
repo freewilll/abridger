@@ -53,7 +53,7 @@ def make_graph(schema, svg_path):
     g.render(cleanup=True)
 
 
-def process_example(toplevel_example):
+def process_toplevel_example(toplevel_example):
     database = SqliteDatabase(path=':memory:')
     conn = database.connection
 
@@ -65,7 +65,7 @@ def process_example(toplevel_example):
     schema = SqliteSchema.create_from_conn(conn)
     make_graph(schema, svg_path)
 
-    demos = []
+    examples = []
     for example in toplevel_example['examples']:
         (title, ref, description, config, expected_statements) = (
             example['title'], example.get('ref'), example['description'],
@@ -108,34 +108,41 @@ def process_example(toplevel_example):
                 print(stmt)
             exit(1)
 
-        demo = {
+        examples.append({
             'title': title,
             'ref': ref,
             'description': description,
             'config': yaml.dump(config).split("\n"),
             'output': output,
             'statements': statements,
-        }
-        demos.append(demo)
+        })
 
-    return {
+    doc_filename = toplevel_example['doc_filename']
+
+    template = Template(open(file_path('examples-example.rst.j2')).read())
+
+    data = {
         'title': toplevel_example['title'],
         'description': toplevel_example.get('description'),
         'schema_svg': os.path.join('_static', svg_filename),
         'schema': schema_lines.split('\n'),
-        'demos': demos,
+        'examples': examples,
     }
+
+    with open(file_path('%s.rst' % doc_filename), 'wt') as f:
+        f.write(template.render(**data))
+    return doc_filename
 
 
 def main():
     examples = yaml.load(read_file('examples.yaml'))
-    toplevel_examples = []
+    filenames = []
     for example in examples:
-        toplevel_examples.append(process_example(example))
+        filenames.append(process_toplevel_example(example))
 
     template = Template(open(file_path('examples.rst.j2')).read())
     with open(file_path('examples.rst'), 'wt') as f:
-        f.write(template.render(toplevel_examples=toplevel_examples))
+        f.write(template.render(filenames=filenames))
 
 
 if __name__ == '__main__':

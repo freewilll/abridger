@@ -1,0 +1,47 @@
+{{ title }}
+{% for i in range(title|length) %}-{% endfor %}
+
+{% if description %}
+{{ description }}
+{% endif %}
+
+Schema
+++++++
+
+.. image:: {{ schema_svg }}.svg
+    :align: center
+
+::
+{% for line in schema %}
+  {{ line -}}
+{% endfor %}
+
+{% for example in examples %}
+{% if example.ref %}
+.. _{{ example.ref }}:
+
+{% endif %}
+
+{{- example.title }}
+{% for i in range(example.title|length) %}+{% endfor %}
+{{ example.description }}
+
+Config
+::
+{% for line in example.config %}
+  {{ line -}}
+{% endfor %}
+
+Explain output
+::
+{% for line in example.output %}
+  {{ line -}}
+{% endfor %}
+
+Results
+::
+{% for statement in example.statements %}
+  {{ statement -}}
+{% endfor %}
+
+{% endfor %}
