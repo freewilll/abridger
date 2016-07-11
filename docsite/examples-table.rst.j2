@@ -1,0 +1,9 @@
+{% for i in range(max_ref_len+7) %}={% endfor %} {% for i in range(max_sdesc_len) %}={% endfor %}
+Example{% for i in range(max_ref_len+1) %} {% endfor %}Description
+{% for i in range(max_ref_len+7) %}-{% endfor %} {% for i in range(max_sdesc_len) %}-{% endfor %}
+{%- for example in examples %}
+:ref:`{{ example.ref }}`{% for i in range(1 + max_ref_len - example.ref|length) %} {% endfor %}{{ example.sdesc }}
+{%- endfor %}
+{% for i in range(max_ref_len+7) %}={% endfor %} {% for i in range(max_sdesc_len) %}={% endfor %}
+
+

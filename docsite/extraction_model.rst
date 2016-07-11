@@ -18,13 +18,8 @@ A table on a subject consists of the following:
 
 Examples:
 
-======================================= =======================================================================
-Example                                 Description
---------------------------------------- -----------------------------------------------------------------------
-:ref:`example_subjects_all_departments` A table entry with just a table name will fetch all rows for that table
-:ref:`example_subjects_one_department`  A table entry with a single column/value will fetch one row
-:ref:`example_subjects_two_departments` A table entry with multiple column/value will fetch multiple rows
-======================================= =======================================================================
+
+.. include:: examples_subjects_table.rst
 
 .. _relations:
 
@@ -36,16 +31,7 @@ A relation can be applied globally or to a subject. A global relation is always 
 
 Examples:
 
-========================================= =======================================================================
-Example                                   Description
------------------------------------------ -----------------------------------------------------------------------
-:ref:`example_relations_for_a_department` Default relations for a department
-:ref:`example_relations_two_departments1` Default relations for two departments
-:ref:`example_relations_two_departments2` An alternative default relations for two departments
-:ref:`example_relations_two_departments3` Another alternative default relations for two departments
-:ref:`example_relations_an_employee`      All relations
-:ref:`example_relations_disabled1`        Blacklisting approach using disabled relations
-========================================= =======================================================================
+.. include:: examples_relations_table.rst
 
 .. _defaults:
 
@@ -90,7 +76,4 @@ everything            no                 All of the above
 
 Examples:
 
-- :ref:`example_relations_all_outgoing_not_null`
-- :ref:`example_relations_all_outgoing_nullable`
-- :ref:`example_relations_all_incoming`
-- :ref:`example_relations_all_incoming_and_all_outgoing_nullable`
+.. include:: examples_defaults_table.rst

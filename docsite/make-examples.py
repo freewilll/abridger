@@ -67,9 +67,11 @@ def process_toplevel_example(toplevel_example):
 
     examples = []
     for example in toplevel_example['examples']:
-        (title, ref, description, config, expected_statements) = (
+        (title, ref, description, config, expected_statements,
+         short_description) = (
             example['title'], example.get('ref'), example['description'],
-            example['config'], example['expected_statements'])
+            example['config'], example['expected_statements'],
+            example['short_description'])
 
         extraction_model = ExtractionModel.load(schema, config)
 
@@ -112,6 +114,7 @@ def process_toplevel_example(toplevel_example):
             'title': title,
             'ref': ref,
             'description': description,
+            'sdesc': short_description,
             'config': yaml.dump(config).split("\n"),
             'output': output,
             'statements': statements,
@@ -119,7 +122,8 @@ def process_toplevel_example(toplevel_example):
 
     doc_filename = toplevel_example['doc_filename']
 
-    template = Template(open(file_path('examples-example.rst.j2')).read())
+    max_ref_len = max([len(e['ref']) for e in examples])
+    max_sdesc_len = max([len(e['sdesc']) for e in examples])
 
     data = {
         'title': toplevel_example['title'],
@@ -127,10 +131,20 @@ def process_toplevel_example(toplevel_example):
         'schema_svg': os.path.join('_static', svg_filename),
         'schema': schema_lines.split('\n'),
         'examples': examples,
+        'max_ref_len': max_ref_len,
+        'max_sdesc_len': max_sdesc_len,
     }
 
+    # Write main rst file
+    template = Template(open(file_path('examples-example.rst.j2')).read())
     with open(file_path('%s.rst' % doc_filename), 'wt') as f:
         f.write(template.render(**data))
+
+    # Write table rst file
+    template = Template(open(file_path('examples-table.rst.j2')).read())
+    with open(file_path('%s_table.rst' % doc_filename), 'wt') as f:
+        f.write(template.render(**data))
+
     return doc_filename
 
 
