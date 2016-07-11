@@ -100,7 +100,7 @@
   - title: all-incoming and all-outgoing-nullable
     ref: example_relations_all_incoming_and_all_outgoing_nullable
     description: |
-      The combination of ``all-outgoing-nullable`` and ``all-incoming``, which is equivalent to ``everything`` fetches everything in ``buildings`` and ``employees`` related to all the ``departments``.
+      The combination of ``all-outgoing-nullable`` and ``all-incoming``, which is equivalent to ``everything``, fetches everything in ``buildings`` and ``employees`` related to all the ``departments``.
     short_description: all-incoming and all-outgoing-nullable
     config:
       - relations:
