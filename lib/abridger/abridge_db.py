@@ -29,7 +29,7 @@ EPILOG = '''
         {0} config.yaml postgresql://user@localhost/test -f test-postgresql.sql
 
         Extract data from a sqlite3 database and output SQL to stdout:
-        {0} config.yaml sqlite:///test.sqlite3 -q -f -
+        {0} config.yaml sqlite:///test-db.sqlite3 -q -f -
 
 '''.format(os.path.basename(sys.argv[0]))  # noqa
 

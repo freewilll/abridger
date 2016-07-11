@@ -10,7 +10,7 @@ from docsite_utils import file_path, read_file
 
 
 INPUT_SQL_PATH = 'test-input.sql'
-SQLITE_DB_PATH = 'test.sqlite3'
+SQLITE_DB_PATH = 'test-db.sqlite3'
 OUTPUT_SQL_PATH = 'test-output.sql'
 
 
