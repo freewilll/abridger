@@ -39,7 +39,7 @@ A relation can be applied globally or to a subject. A global relation is always 
   column
       Must be specified when using ``table`` to identify a foreign key.
   type
-      One of ``incoming`` or ``outgoing``, with ``outgoing`` the default. This identifies the direction of a relationship from the perspective of an encountered subject row.
+      One of ``incoming`` or ``outgoing``, with ``incoming`` the default. This identifies the direction of a relationship from the perspective of an encountered subject row.
   name
       Optional and purely for informational purposes.
   disabled
@@ -81,7 +81,7 @@ Use this to disable everything except the required ``all-outgoing-not-null`` rel
       - {defaults: all-outgoing-not-null}
 
 
-Setting default relations are useful when using the :ref:`blacklisting <example_relations_disabled1>` approach.
+Setting default relations are useful when using the blacklisting approach. See :ref:`example_relations_disabled_incoming` and :ref:`example_relations_disabled_outgoing`.
 
 ===================== ================== ==================================================================
 Setting               Enabled by default Meaning

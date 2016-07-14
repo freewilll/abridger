@@ -46,8 +46,9 @@
     description: |
       ``all-outgoing-not-null`` is the minimum required relation.
       Nullable outgoing foreign keys are ignored, as well as incoming foreign keys.
-      Fetching all ``departments`` with this setting will make the ``building_id`` foreign key null.
+      Fetching all ``departments`` with this setting will make the ``building_id`` foreign key ``null``.
       Also, since no incoming relations are in the defaults, no rows in ``employees`` are fetched.
+      If rows in ``buildings`` are required, they can be enabled by adding an ``outoing`` relation from ``departments`` to ``buildings``. This will also make the ``null`` go away in the "Research" department.
     short_description: all-outgoing-not-null
     config:
       - relations:
@@ -120,18 +121,22 @@
 # ------------------------------------------------------------------------------------------------------------------------
 - title: Relations
   doc_filename: examples_relations
-  schema: examples-schema-relations.sql
+  schema: examples-schema-defaults.sql
   examples:
   - title: Default relations for a department
     ref: example_default_relations_for_a_department
-    description: By default, complete rows are fetched. This means that if a rule is added to fetch the department with name "Research" then rows referencing that department aren't fetched. This results in just one department being fetched and nothing else.
+    description: |
+      By default, complete rows are fetched.
+      This means that if a rule is added to fetch the department with name "Research" then rows referencing that department aren't fetched.
+      However departments reference buildings, so all buildings referenced from departments will be fetched.
     short_description: Default relations for a department
     config:
       - subject:
         - tables:
           - {table: departments, column: name, values: Research}
     expected_statements:
-      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
 
   - title: Relation for a department
     ref: example_relations_for_a_department
@@ -144,13 +149,16 @@
         - relations:
           - {table: employees, column: department_id}
     expected_statements:
-      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 
   - title: Relation for two departments 1
     ref: example_relations_two_departments1
-    description: This does an extraction with the above relation, but with both departments. This ends up fetching all employees.
+    description: |
+      This does an extraction with the above relation, but with both departments.
+      This ends up fetching all employees.
     short_description: Default relations for two departments
     config:
     - subject:
@@ -159,8 +167,9 @@
       - relations:
         - {table: employees, column: department_id}
     expected_statements:
-      - INSERT INTO departments (id, name) VALUES(1, 'Research');
-      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
@@ -177,8 +186,9 @@
         - {table: departments, column: id, values: 1}
         - {table: departments, column: id, values: 2}
     expected_statements:
-      - INSERT INTO departments (id, name) VALUES(1, 'Research');
-      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
@@ -197,8 +207,9 @@
       - tables:
         - {table: departments, column: name, values: Accounting}
     expected_statements:
-      - INSERT INTO departments (id, name) VALUES(1, 'Research');
-      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
@@ -218,25 +229,57 @@
         - tables:
           - {table: employees, column: name, values: John}
     expected_statements:
-      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 
-  - title: Disabled relations 1
-    ref: example_relations_disabled1
+  - title: Disabled incoming relations
+    ref: example_relations_disabled_incoming
     description: |
       This demonstrates the blacklisting approach. All relations are included by default,
       however the relation from ``employees`` to ``departments`` is disabled.
       Fetching a department will therefore not fetch any of the employees.
+
+      This is an ``incoming`` relationship type from the perspective of the ``employees`` table.
+      The ``type`` key doesn't have to be included since the default type is ``incoming``.
       Relations can be disabled globally or per subject.
+      The ``type`` of a relationship is ``incoming`` by default.
     short_description: Blacklisting approach using disabled relations
     config:
       - relations:
           - { defaults: everything}
       - subject:
         - tables:
-          - {table: departments, column: name, values: Research}
+          - {table: departments, column: name, values: ['Research', 'Accounting']}
         - relations:
           - {table: employees, column: department_id, disabled: true}
     expected_statements:
-      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
+
+
+  - title: Disabled outgoing relations
+    ref: example_relations_disabled_outgoing
+    description: |
+      This is another example of the blacklisting approach. All relations are included by default,
+      however the relation from ``departments`` to ``buildings`` is disabled.
+      Fetching a department will therefore not fetch any of the buildings.
+      This is an ``outgoing`` relationship type from the perspective of the ``departments`` table due to the ``building_id`` foreign key.
+      A side effect of disabling this relation is that ``building_id`` becomes ``null`` for the "Research" department, even though the "Research" department is associated with the "London" building.
+    short_description: Blacklisting approach using disabled relations
+    config:
+      - relations:
+          - { defaults: everything}
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: ['Research', 'Accounting']}
+        - relations:
+          - {table: departments, column: building_id, disabled: true, type: outgoing}
+    expected_statements:
+     - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', NULL);
+     - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
+     - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
+     - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+     - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
