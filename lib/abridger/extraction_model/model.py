@@ -165,8 +165,14 @@ class ExtractionModel(object):
             type=type))
 
     def _add_table_relation(self, target, relation_data):
-        table_name = relation_data.get('table')
+        table_name = relation_data['table']
         col_name = relation_data.get('column')
+
+        if col_name is None:
+            raise RelationIntegrityError(
+                "Non default relations must have a column on table '%s'" %
+                table_name)
+
         (table, col) = self._check_table_and_column(table_name, col_name)
 
         foreign_key = None
@@ -185,10 +191,6 @@ class ExtractionModel(object):
         type = relation_data.get('type', Relation.TYPE_INCOMING)
         disabled = relation_data.get('disabled', False)
         sticky = relation_data.get('sticky', False)
-
-        if disabled and col is None:
-            raise RelationIntegrityError(
-                'Disabled relations must have a column')
 
         if (disabled and foreign_key is not None and
                 type == Relation.TYPE_OUTGOING and foreign_key.notnull):

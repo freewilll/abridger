@@ -238,14 +238,3 @@ class TestExtractorBasics(TestExtractorBase):
         result_rows = extractor.results[table1][table1.primary_key]
         for result_row in list(result_rows.values()):
             assert repr(result_row) is not None
-
-    def test_relation_without_a_column(self, schema2, data2):
-        extraction_model_data = [
-            {'relations': [{'table': 'test1'}]},
-            {'subject': [{'tables': [{'table': 'test2',
-                                      'column': 'id', 'values': 1}]}]},
-        ]
-        extraction_model = ExtractionModel.load(schema2, extraction_model_data)
-        extractor = Extractor(self.database, extraction_model).launch()
-        # Everything in test 1 and one row in test2
-        assert extractor.flat_results() == data2[0:2] + data2[2:3]

@@ -136,7 +136,7 @@ class TestExtractionModel(TestExtractionModelBase):
         with pytest.raises(UnknownColumnError):
             ExtractionModel.load(self.schema_sl, data)
 
-        # Check known column, but it's not a foreign keys
+        # Check known column, but it's not a foreign key
         known_relations = set()
         for rel in self.relations:
             known_relations.add((rel['table'], rel['column']))
@@ -164,11 +164,13 @@ class TestExtractionModel(TestExtractionModelBase):
         data = [{'relations': [relation]}]
         ExtractionModel.load(self.schema_sl, data)
 
-        # A missing column is ok
+        # A missing column is not ok
         relation = dict(self.relations[0])
         del relation['column']
         data = [{'relations': [relation]}]
-        ExtractionModel.load(self.schema_sl, data)
+        with pytest.raises(RelationIntegrityError) as e:
+            ExtractionModel.load(self.schema_sl, data)
+        assert 'Non default relations must have a column on table' in str(e)
 
         # A null name is ok
         relation = dict(self.relations[0])
@@ -313,19 +315,6 @@ class TestExtractionModel(TestExtractionModelBase):
         assert len(model.subjects) == 1
         assert model.subjects[0].relations[0].table.name == \
             self.relations[0]['table']
-
-    def test_relation_without_a_column(self):
-        relation = dict(self.relations[0])
-        del relation['column']
-        table = {'table': self.schema_sl.tables[0].name}
-        subject = [
-            {'relations': [relation]},
-            {'tables': [table]}
-        ]
-        data = [{'subject': subject}]
-        model = ExtractionModel.load(self.schema_sl, data)
-        assert len(model.subjects) == 1
-        assert model.subjects[0].relations[0].foreign_key is None
 
     def test_subject_repr(self):
         model = self.model_of_table0()
