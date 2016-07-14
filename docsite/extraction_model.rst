@@ -25,9 +25,28 @@ Examples:
 
 Relations
 ---------
-A relation enables or disables the processing of a foreign key in the database schema. A relationship is ``incoming`` or ``outgoing`` as seen from the perspective of a table in the extraction. All ``outgoing`` not null foreign keys *must* be processed since otherwise a corresponding row could not get inserted into the database.
+A relation enables or disables the processing of foreign keys in the database schema. A relationship is ``incoming`` or ``outgoing`` as seen from the perspective of a table in the extraction. All ``outgoing`` not null foreign keys *must* be processed since otherwise a corresponding row could not get inserted into the database.
 
 A relation can be applied globally or to a subject. A global relation is always processed. Relations specified under a subject are only executed when a row is found when fetching the subject's data.
+
+
+
+
+  defaults
+      Add all relations from a couple of selected types. See :ref:`defaults <defaults>` for more details.
+  table
+      A foreign key constraint is identified by specifing a ``table`` and ``column`` in a relation. The first foreign key relationship to match the table and column is used.
+  column
+      Must be specified when using ``table`` to identify a foreign key.
+  type
+      One of ``incoming`` or ``outgoing``, with ``outgoing`` the default. This identifies the direction of a relationship from the perspective of an encountered subject row.
+  name
+      Optional and purely for informational purposes.
+  disabled
+      Foreign key relations can be disabled. This is useful in the blacklisting approach where ``everything`` defaults are used and then individual relations disabled.
+  sticky
+      Sticky relations can be used to keep track of which rows are directly connected to the subject. See :ref:`sticky relations <sticky_relations>` for more details.
+
 
 Examples:
 
