@@ -49,7 +49,9 @@ def make_graph(schema, svg_path):
     for table in schema.tables:
         g.node(table.name)
         for fk in table.foreign_keys:
-            g.edge(fk.src_cols[0].table.name, fk.dst_cols[0].table.name)
+            style = 'solid' if fk.notnull else 'dashed'
+            g.edge(fk.src_cols[0].table.name, fk.dst_cols[0].table.name,
+                   style=style)
     g.render(cleanup=True)
 
 
