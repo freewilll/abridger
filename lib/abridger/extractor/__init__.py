@@ -47,19 +47,14 @@ class Extractor(object):
         # Add subject and global relations
         for relation in relations:
             fk = relation.foreign_key
-            if fk is not None:
-                if relation.type == Relation.TYPE_INCOMING:
-                    table_relations[fk.dst_cols[0].table].append(
-                        (relation.table, fk.dst_cols, fk.src_cols,
-                         relation.propagate_sticky, relation.only_if_sticky))
-                else:
-                    table_relations[fk.src_cols[0].table].append(
-                        (relation.table, fk.src_cols, fk.dst_cols,
-                         relation.propagate_sticky, relation.only_if_sticky))
+            if relation.type == Relation.TYPE_INCOMING:
+                table_relations[fk.dst_cols[0].table].append(
+                    (relation.table, fk.dst_cols, fk.src_cols,
+                     relation.propagate_sticky, relation.only_if_sticky))
             else:
-                table_relations[relation.table].append(
-                    (relation.table, None, None, relation.propagate_sticky,
-                     relation.only_if_sticky))
+                table_relations[fk.src_cols[0].table].append(
+                    (relation.table, fk.src_cols, fk.dst_cols,
+                     relation.propagate_sticky, relation.only_if_sticky))
 
         self.subject_table_relations[subject] = table_relations
 
@@ -79,46 +74,38 @@ class Extractor(object):
                 continue
 
             sticky = work_item.sticky and propagate_sticky
-            if src_cols is not None:
-                processed_outgoing_fk_cols |= set(src_cols)
+            processed_outgoing_fk_cols |= set(src_cols)
 
-                dst_table = dst_cols[0].table
-                src_col_indexes = [table.cols.index(c) for c in src_cols]
+            dst_table = dst_cols[0].table
+            src_col_indexes = [table.cols.index(c) for c in src_cols]
 
-                dst_values = []
-                seen_dst_values = set()
-                for results_row in results_rows:
-                    value_tuple = tuple(
-                        [results_row.row[i] for i in src_col_indexes])
+            dst_values = []
+            seen_dst_values = set()
+            for results_row in results_rows:
+                value_tuple = tuple(
+                    [results_row.row[i] for i in src_col_indexes])
 
-                    if any(s is None for s in value_tuple):
-                        # Don't process any foreign keys if any of the
-                        # values is None.
-                        continue
+                if any(s is None for s in value_tuple):
+                    # Don't process any foreign keys if any of the
+                    # values is None.
+                    continue
 
-                    if value_tuple not in seen_dst_values:
-                        dst_values.append(value_tuple)
-                    seen_dst_values.add(value_tuple)
+                if value_tuple not in seen_dst_values:
+                    dst_values.append(value_tuple)
+                seen_dst_values.add(value_tuple)
 
-                    if self.explain:
-                        for dst_value in dst_values:
-                            self.work_queue.put(WorkItem(
-                                work_item.subject, dst_table, dst_cols,
-                                [dst_value], sticky,
-                                parent_work_item=work_item,
-                                parent_results_row=results_row))
+                if self.explain:
+                    for dst_value in dst_values:
+                        self.work_queue.put(WorkItem(
+                            work_item.subject, dst_table, dst_cols,
+                            [dst_value], sticky,
+                            parent_work_item=work_item,
+                            parent_results_row=results_row))
 
-                if not self.explain and len(dst_values) > 0:
-                    self.work_queue.put(WorkItem(
-                        work_item.subject, dst_table, dst_cols,
-                        dst_values, sticky, parent_work_item=work_item))
-
-            else:
-                dst_table = relation_table
-                dst_values = None
+            if not self.explain and len(dst_values) > 0:
                 self.work_queue.put(WorkItem(
-                    work_item.subject, relation_table, None, None,
-                    sticky, parent_work_item=work_item))
+                    work_item.subject, dst_table, dst_cols,
+                    dst_values, sticky, parent_work_item=work_item))
 
     def _process_work_item_results_rows(self, work_item, results_rows,
                                         processed_outgoing_fk_cols):
