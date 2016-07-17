@@ -138,12 +138,13 @@
       - INSERT INTO buildings (id, name) VALUES(1, 'London');
       - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
 
-  - title: Relation for a department
-    ref: example_relations_for_a_department
+  - title: Incoming Relation
+    ref: incoming_relation1
     description: |
       This does an extraction with a relation from ``employees`` to ``departments``. This will include both employees in the research department.
       Note how rows in ``buildings`` are also included since by the default all outgoing foreign keys are fetched. See :ref:`defaults` for more details.
-    short_description: Relation for a department
+      The ``type`` of ``incoming`` doesn't have to be included in the config since this is the default.
+    short_description: Incoming Relation
     config:
       - subject:
         - tables:
@@ -235,6 +236,26 @@
       - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+
+  - title: Outgoing relation
+    ref: outgoing_relation
+    description: |
+      This shows the explicit enabling of an outgoing nullable relation when using the minimal defaults of ``all-outgoing-not-null``.
+      Without the relation, no rows in the ``buildings`` table would be fetched, since the default rules don't including following nullable foreign keys.
+      In this example, the relation is enabled, resulting in building being included.
+    short_description: Outgoing relation
+    config:
+      - relations:
+          - {defaults: all-outgoing-not-null}
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: ['Research', 'Accounting']}
+        - relations:
+          - {table: departments, column: building_id, type: outgoing}
+    expected_statements:
+     - INSERT INTO buildings (id, name) VALUES(1, 'London');
+     - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+     - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
 
   - title: Disabled incoming relation
     ref: example_relations_disabled_incoming
