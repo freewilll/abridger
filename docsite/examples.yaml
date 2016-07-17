@@ -140,7 +140,9 @@
 
   - title: Relation for a department
     ref: example_relations_for_a_department
-    description: This does an extraction with a relation from ``employees`` to ``departments``. This will include both employees in the research department.
+    description: |
+      This does an extraction with a relation from ``employees`` to ``departments``. This will include both employees in the research department.
+      Note how rows in ``buildings`` are also included since by the default all outgoing foreign keys are fetched. See :ref:`defaults` for more details.
     short_description: Relation for a department
     config:
       - subject:
@@ -234,7 +236,7 @@
       - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
       - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
 
-  - title: Disabled incoming relations
+  - title: Disabled incoming relation
     ref: example_relations_disabled_incoming
     description: |
       This demonstrates the blacklisting approach. All relations are included by default,
@@ -260,7 +262,7 @@
       - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
 
 
-  - title: Disabled outgoing relations
+  - title: Disabled outgoing relation
     ref: example_relations_disabled_outgoing
     description: |
       This is another example of the blacklisting approach. All relations are included by default,

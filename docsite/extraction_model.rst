@@ -56,41 +56,47 @@ Examples:
 
 Defaults
 --------
-Defaults can be set for what relations should be processed. By default,
+Default relations can be set by using the ``relations`` ``default`` key. There are four default settings that can be combined in an additive way:
 
-If no defaults are specified, a single relation of type ``all-outgoing-nullable`` is used. Otherwise only the set of specific relation defaults are used.
+===================== =============== ===============================================
+Setting               Default         Meaning
+--------------------- --------------- -----------------------------------------------
+all-outgoing-not-null yes             Always satisfy not null foreign key constraints
+all-outgoing-nullable yes             Ensures that complete rows are fetched
+all-incoming          no              Processing incoming foreign keys
+everything            no              All of the above
+===================== =============== ===============================================
 
-This is the default setting of just enabling ``all-outgoing-nullable`` relations:
+If no defaults are specified, a single relation of type ``all-outgoing-nullable`` is used. The ``all-outgoing-not-null`` default is always present. The combination of these two ensures that whenever a row is encountered, all outgoing foreign keys are processed. This will cause those referenced table rows to be included and the value of the foreign key to be set in the original row.
+
+This is the default setting:
 ::
 
     - relations:
+      - {defaults: all-outgoing-not-null}
       - {defaults: all-outgoing-nullable}
 
 
-This is equivalent to the ``everything`` default:
+To add all incoming relations to the default, use:
+::
+
+     - relations:
+      - {defaults: everything}
+
+Since ``all-outgoing-not-null`` is always included implicitly, the above is equivalent to:
 ::
 
     - relations:
       - {defaults: all-outgoing-nullable}
       - {defaults: all-incoming}
 
-Use this to disable everything except the required ``all-outgoing-not-null`` relation:
+Use this to disable all relations except the minimal required ``all-outgoing-not-null``:
 ::
 
     - relations:
       - {defaults: all-outgoing-not-null}
 
-
 Setting default relations are useful when using the blacklisting approach. See :ref:`example_relations_disabled_incoming` and :ref:`example_relations_disabled_outgoing`.
-
-===================== ================== ==================================================================
-Setting               Enabled by default Meaning
---------------------- ------------------ ------------------------------------------------------------------
-all-outgoing-not-null yes                Always enabled
-all-outgoing-nullable yes                This ensures that complete rows are fetched
-all-incoming          no                 This enables processing of incoming foreign keys
-everything            no                 All of the above
-===================== ================== ==================================================================
 
 
 Examples:
