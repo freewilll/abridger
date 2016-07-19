@@ -104,20 +104,25 @@ Includes
 --------
 Yaml files can be included in each other using the ``include`` directive. For example having this in a top level file:
 ::
+
     - include basic-tables.yaml
     - subject:
       - tables:
         - {table: departments}
 
 and this in another file called ``basic-tables.yaml``
+
 ::
+
     - subject:
       - tables:
         - {table: building_types}
         - {table: something_essential}
 
 will lead to the config effectively becoming:
+
 ::
+
     - subject:
       - tables:
         - {table: building_types}
