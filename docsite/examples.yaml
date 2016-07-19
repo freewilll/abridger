@@ -307,6 +307,7 @@
      - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
      - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
 
+# ------------------------------------------------------------------------------------------------------------------------
 - title: Compound Foreign Keys
   doc_filename: examples_compound_foreign_keys
   schema: examples-schema-compound-foreign-keys.sql
@@ -329,3 +330,34 @@
      - INSERT INTO employees (id1, id2, name, department1_id, department2_id) VALUES(1, 1, 'John', 1, 1);
      - INSERT INTO employees (id1, id2, name, department1_id, department2_id) VALUES(2, 2, 'Jane', 1, 1);
      - INSERT INTO employees (id1, id2, name, department1_id, department2_id) VALUES(3, 3, 'Janet', 2, 2);
+
+# ------------------------------------------------------------------------------------------------------------------------
+- title: Sticky Relations
+  doc_filename: examples_sticky_relations
+  schema: examples-schema-sticky-relations.sql
+  make_table: false
+  examples:
+  - title: Sticky Relations
+    ref: examples_sticky_relations
+    description: |
+      Let's say we want to have a database with all engineers in the engineering department and include all engineer's addresses.
+      We want to specifically *not* include manager's addresses. If we were to simply add relations from ``employees`` to ``departments`` and ``addresses`` to ``employees``, then any employee's boss would trigger a fetch from the management department, which would lead to all employee's managers being fetched, which would lead to all manager's addresses being fetched. By making the relations sticky, those relations are only processed if there is a sticky trail all the way back to a subject. This way, when the ``boss_id`` relation on ``employees`` is processed, the sticky flag gets dropped. When the bosses are processed, the sticky relationship from ``addresses`` to ``employees`` is then not applied. This can be seen in the explain output in the lines where the employee to boss relationship is processed: the asterisks, indicating stickiness, disappear. The end result is that John doesn't have an address entry, since he is not in the employees department.
+    short_description: Sticky Relations
+    config:
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: Engineers}
+        - relations:
+          - {table: employees, column: department_id, sticky: true}
+          - {table: addresses, column: employee_id, sticky: true}
+    expected_statements:
+     - INSERT INTO departments (id, name) VALUES(1, 'Managers');
+     - INSERT INTO departments (id, name) VALUES(2, 'Engineers');
+     - INSERT INTO employees (id, name, department_id, boss_id) VALUES(1, 'John', 1, NULL);
+     - INSERT INTO employees (id, name, department_id, boss_id) VALUES(2, 'Jane', 2, NULL);
+     - INSERT INTO employees (id, name, department_id, boss_id) VALUES(3, 'Janet', 2, NULL);
+     - INSERT INTO addresses (id, employee_id, details) VALUES(2, 2, 'Jane''s adddress');
+     - INSERT INTO addresses (id, employee_id, details) VALUES(3, 3, 'Janet''s first address');
+     - INSERT INTO addresses (id, employee_id, details) VALUES(4, 3, 'Janet''s second address');
+     - UPDATE employees SET boss_id=1 WHERE id=2;
+     - UPDATE employees SET boss_id=2 WHERE id=3;

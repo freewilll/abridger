@@ -130,3 +130,27 @@ will lead to the config effectively becoming:
     - subject:
       - tables:
         - {table: departments}
+
+.. _sticky_relations:
+
+Sticky relations
+----------------
+What can quickly happen when doing an extraction in a complicated database schema is an explosion of data. In many of these cases, just enabling a foreign key relationship can pull in lots of unwanted data. An easy solution to prevent this is to make use of the ``sticky`` relations. When this flag is set on a relation, then the relation is *only* processed if there is a direct graph of sticky relations back to a subject. The rules of transmitting stickiness are:
+
+- All rows in the initial subjects's table fetch are sticky
+- Non-sticky relations are always processed, however any potential stickyness is lost. This is the default behavior.
+- A sticky relationship is only processed if the row is sticky
+- Stickiness is only transmitted if a) the row is sticky and b) the relationship is sticky
+
+This behavior can be summarized in a table:
+
+================== =================== ========================= ====================
+Fetched row sticky Relationship sticky Relationship is processed Processed row sticky
+------------------ ------------------- ------------------------- --------------------
+No                 No                  Yes                       No
+Yes                No                  Yes                       No
+No                 Yes                 No                        *-*
+Yes                Yes                 Yes                       Yes
+================== =================== ========================= ====================
+
+See :ref:`examples_sticky_relations` for an example.
