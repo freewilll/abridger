@@ -1,6 +1,5 @@
 Extraction Model
 ================
-
 An extraction model consists of one more more :ref:`subjects <subjects>`. Each subject has its own set of tables and :ref:`relations <relations>`. Relations can however also be top-level, which allows setting of defaults that can be overridden by subjects. By :ref:`default <defaults>`, any row found in a table in the extraction model is fetched in its entirety.
 
 .. _subjects:
@@ -29,9 +28,6 @@ A relation enables or disables the processing of foreign keys in the database sc
 
 A relation can be applied globally or to a subject. A global relation is always processed. Relations specified under a subject are only executed when a row is found when fetching the subject's data.
 
-
-
-
   defaults
       Add all relations from a couple of selected types. See :ref:`defaults <defaults>` for more details.
   table
@@ -47,6 +43,7 @@ A relation can be applied globally or to a subject. A global relation is always 
   sticky
       Sticky relations can be used to keep track of which rows are directly connected to the subject. See :ref:`sticky relations <sticky_relations>` for more details.
 
+Compound keys are also supported, see e.g. :ref:`examples_compound_foreign_keys`
 
 Examples:
 

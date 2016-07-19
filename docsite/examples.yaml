@@ -306,3 +306,26 @@
      - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
      - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
      - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
+
+- title: Compound Foreign Keys
+  doc_filename: examples_compound_foreign_keys
+  schema: examples-schema-compound-foreign-keys.sql
+  make_table: false
+  examples:
+  - title: Compound Foreign Keys
+    ref: examples_compound_foreign_keys
+    description: This extermely convoluted example shows that compound foreign key support is built in. Relations can also be used, but only one column can be matched if the foreign key is a compound one.
+    short_description: Compound Foreign Keys
+    config:
+      - relations:
+          - {defaults: everything}
+      - subject:
+        - tables:
+          - {table: departments}
+    expected_statements:
+     - INSERT INTO buildings (id1, id2, name) VALUES(1, 1, 'London');
+     - INSERT INTO departments (id1, id2, name, building1_id, building2_id) VALUES(1, 1, 'Research', 1, 1);
+     - INSERT INTO departments (id1, id2, name, building1_id, building2_id) VALUES(2, 2, 'Accounting', NULL, NULL);
+     - INSERT INTO employees (id1, id2, name, department1_id, department2_id) VALUES(1, 1, 'John', 1, 1);
+     - INSERT INTO employees (id1, id2, name, department1_id, department2_id) VALUES(2, 2, 'Jane', 1, 1);
+     - INSERT INTO employees (id1, id2, name, department1_id, department2_id) VALUES(3, 3, 'Janet', 2, 2);

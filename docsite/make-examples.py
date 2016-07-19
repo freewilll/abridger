@@ -143,9 +143,10 @@ def process_toplevel_example(toplevel_example):
         f.write(template.render(**data))
 
     # Write table rst file
-    template = Template(open(file_path('examples-table.rst.j2')).read())
-    with open(file_path('%s_table.rst' % doc_filename), 'wt') as f:
-        f.write(template.render(**data))
+    if toplevel_example.get('make_table', True):
+        template = Template(open(file_path('examples-table.rst.j2')).read())
+        with open(file_path('%s_table.rst' % doc_filename), 'wt') as f:
+            f.write(template.render(**data))
 
     return doc_filename
 
