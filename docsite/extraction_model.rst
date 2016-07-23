@@ -36,7 +36,7 @@ A relation can be applied globally or to a subject. A global relation is always 
   defaults
       Add all relations from a couple of selected types. See :ref:`defaults <defaults>` for more details.
   table
-      A foreign key constraint is identified by specifing a ``table`` and ``column`` in a relation. The first foreign key relationship to match the table and column is used.
+      A foreign key constraint is identified by specifying a ``table`` and ``column`` in a relation. The first foreign key relationship to match the table and column is used.
   column
       Must be specified when using ``table`` to identify a foreign key.
   type
@@ -147,8 +147,8 @@ Sticky relations
 ----------------
 What can quickly happen when doing an extraction in a complicated database schema is an explosion of data. In many of these cases, just enabling a foreign key relationship can pull in lots of unwanted data. An easy solution to prevent this is to make use of the ``sticky`` relations. When this flag is set on a relation, then the relation is *only* processed if there is a direct graph of sticky relations back to a subject. The rules of transmitting stickiness are:
 
-- All rows in the initial subjects's table fetch are sticky
-- Non-sticky relations are always processed, however any potential stickyness is lost. This is the default behavior.
+- All rows in the initial subject's table fetch are sticky
+- Non-sticky relations are always processed, however any potential stickiness is lost. This is the default behavior.
 - A sticky relationship is only processed if the row is sticky
 - Stickiness is only transmitted if a) the row is sticky and b) the relationship is sticky
 
