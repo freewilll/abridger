@@ -18,5 +18,6 @@ Contents:
    overview
    getting_started
    extraction_model
+   extraction
+   sql_generation
    examples
-

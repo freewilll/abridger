@@ -20,6 +20,5 @@ Concepts
   Default relations
     By default, any row found in a table in the extraction model is fetched in its entirety. This will pull in rows required to satisfy any foreign key constraints on the row's table. Rows in other tables referencing the source table aren't fetched. These defaults can be overriden.
   Not null columns
-    When populating the destination database or generating SQL, nullable columns can be treated as not-null so that they are included in the insert statements. This is useful in the case of check constraints.
-
+    When populating the destination database or generating SQL, nullable columns can be treated as not-null so that they are included in the insert statements. This is useful in the case of check constraints. See :ref:`not_null_columns` for more information.
 
