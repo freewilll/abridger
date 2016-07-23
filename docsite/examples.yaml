@@ -26,8 +26,8 @@
       - INSERT INTO departments (id, name) VALUES(1, 'Research');
   - title: Two departments
     ref: example_subjects_two_departments
-    description: A table entry with multiple column/value will fetch multiple rows.
-    short_description: A table entry with multiple column/value will fetch multiple rows
+    description: A table entry with multiple column/values will fetch multiple rows.
+    short_description: A table entry with multiple column/values will fetch multiple rows
     config:
       - subject:
         - tables:
@@ -180,7 +180,7 @@
   - title: Relation for two departments 2
     ref: example_relations_two_departments2
     description: This is equivalent to :ref:`example_relations_two_departments1`, except it used two separate table sections.
-    short_description: An alternative default relations for two departments
+    short_description: Alternative default relations for two departments
     config:
     - relations:
       - {table: employees, column: department_id}
@@ -268,7 +268,7 @@
       The ``type`` key doesn't have to be included since the default type is ``incoming``.
       Relations can be disabled globally or per subject.
       The ``type`` of a relationship is ``incoming`` by default.
-    short_description: Blacklisting approach using disabled relations
+    short_description: Blacklisting approach with a disabled incoming relation
     config:
       - relations:
           - { defaults: everything}
@@ -291,7 +291,7 @@
       Fetching a department will therefore not fetch any of the buildings.
       This is an ``outgoing`` relationship type from the perspective of the ``departments`` table due to the ``building_id`` foreign key.
       A side effect of disabling this relation is that ``building_id`` becomes ``null`` for the "Research" department, even though the "Research" department is associated with the "London" building.
-    short_description: Blacklisting approach using disabled relations
+    short_description: Blacklisting approach with a disabled outgoing relation
     config:
       - relations:
           - { defaults: everything}
