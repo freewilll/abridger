@@ -114,10 +114,10 @@ def main(args):
                         help='explain where rows are coming from')
     parser.add_argument('-q', '--quiet', dest='quiet', action='store_true',
                         default=False,
-                        help="Don't output anything")
+                        help="don't output anything")
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
                         default=False,
-                        help="Verbose output")
+                        help="verbose output")
 
     # Ignore SIG_PIPE and don't throw exceptions on it
     signal(SIGPIPE, SIG_DFL)
