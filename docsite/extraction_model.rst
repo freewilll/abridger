@@ -45,6 +45,11 @@ A relation can be applied globally or to a subject. A global relation is always 
 
 Compound keys are also supported, see e.g. :ref:`examples_compound_foreign_keys`
 
+A relationship us uniquely identified by its ``table``, ``column``, ``type`` and ``name``. Identical relationships are processed in order and merged according to the following rules:
+
+- If any of one or more identical relations is disabled, then the relationship is disabled.
+- If any of one or more identical relations is sticky, then the relationship is sticky.
+
 Examples:
 
 .. include:: examples_relations_table.rst
