@@ -20,4 +20,5 @@ Contents:
    extraction_model
    extraction
    sql_generation
+   databases
    examples
