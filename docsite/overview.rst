@@ -12,13 +12,13 @@ Concepts
   Extraction model
     A collection of rules describing what to extract.
   Subject
-    An extraction model has one or more subjects. A subject is a collection of tables and relations.
+    An extraction model has one or more subjects. A subject is a collection of tables and relations. See :ref:`subjects` for more information.
   Table
-    A subject has one or more table definitions. A table can either represent an extraction of all rows in the table, or filtered rows using a column and values list. A table can also be set as top-level and is applied to all subject extractions.
+    A subject has one or more table definitions. A table can either represent an extraction of all rows in the table, or filtered rows using a column and values list. A table can also be set as top-level and is applied to all subject extractions. See :ref:`tables` for more information.
   Relation
-    A relation is a reference to a database foreign key. A relation is either outgoing or incoming from the persepctive of a subject table. Relations can be made disabled or sticky.
+    A relation is a reference to a database foreign key. A relation is either outgoing or incoming from the persepctive of a subject table. Relations can be made disabled or sticky. See :ref:`relations` for more information.
   Default relations
-    By default, any row found in a table in the extraction model is fetched in its entirety. This will pull in rows required to satisfy any foreign key constraints on the row's table. Rows in other tables referencing the source table aren't fetched. These defaults can be overriden.
+    By default, any row found in a table in the extraction model is fetched in its entirety. This will pull in rows required to satisfy any foreign key constraints on the row's table. Rows in other tables referencing the source table aren't fetched. These defaults can be overriden. See :ref:`defaults` for more information.
   Not null columns
     When populating the destination database or generating SQL, nullable columns can be treated as not-null so that they are included in the insert statements. This is useful in the case of check constraints. See :ref:`not_null_columns` for more information.
 
