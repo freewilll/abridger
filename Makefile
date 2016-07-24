@@ -2,7 +2,7 @@
 
 PYTHON=python
 
-all: python readme docs
+all: python .tox/venv docs
 
 tests:
 	PYTHONPATH=./lib py.test -vs
