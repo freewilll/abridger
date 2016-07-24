@@ -48,6 +48,8 @@ class WorkItem(object):
         col_indexes = [results_row.table.cols.index(c) for c in epk]
 
         cols_csv = ','.join([c.name for c in epk])
+        if len(epk) > 1:
+            cols_csv = '(%s)' % cols_csv
         values = [results_row.row[i] for i in col_indexes]
         values_csv = ','.join([str(v) for v in values])
         return (results_row.table, cols_csv, values_csv, self.sticky)
