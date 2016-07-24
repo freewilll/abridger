@@ -3,7 +3,7 @@ Getting Started
 
 Installation
 ------------
-The code is hosted on `GitHub <https://github.com/freewilll/abridger>`_. No python package has been eleased so far, so abridger should be installed with python's pip installer.
+The code is hosted on `GitHub <https://github.com/freewilll/abridger>`_. Abridger should be installed with python's pip installer.
 
 If you don’t have pip installed, run:
 
@@ -13,6 +13,9 @@ If you don’t have pip installed, run:
 
 Root installation
 ++++++++++++++++++
+Installation using pip
+::
+    $ sudo pip install abridger
 
 Install from github
 ::
@@ -44,7 +47,7 @@ If you would rather not install it as root, you can use ``virtualenv`` to instal
 
     $ virtualenv venv
     $ source venv/bin/activate
-    $ pip install git+https://github.com/freewilll/abridger
+    $ pip install abridger
 
     If you want to use postgresql
     $ pip install psycopg2
