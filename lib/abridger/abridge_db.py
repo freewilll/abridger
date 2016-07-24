@@ -105,9 +105,9 @@ def main(args):
                         help="path to extraction config file")
     parser.add_argument(dest='src_url', metavar='SRC_URL',
                         help="source database url")
-    parser.add_argument('-u', dest='dst_url', metavar='URL',
+    parser.add_argument('-u', '--url', dest='dst_url', metavar='URL',
                         help="destination database url")
-    parser.add_argument('-f', dest='dst_file', metavar='FILE',
+    parser.add_argument('-f', '--file', dest='dst_file', metavar='FILE',
                         help="destination database file. Use - for stdout")
     parser.add_argument('-e', '--explain', dest='explain', action='store_true',
                         default=False,

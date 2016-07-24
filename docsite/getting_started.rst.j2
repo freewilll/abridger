@@ -116,17 +116,17 @@ SRC_URL      source database url
 
 optional arguments:
 
-  -h, --help     show this help message and exit
-  -u URL         destination database url
-  -f FILE        destination database file. Use - for stdout
-  -e, --explain  explain where rows are coming from
-  -q, --quiet    Don't output anything
-  -v, --verbose  Verbose output
+  -h, --help            show this help message and exit
+  -u URL, --url URL     destination database url
+  -f FILE, --file FILE  destination database file. Use - for stdout
+  -e, --explain         explain where rows are coming from
+  -q, --quiet           don't output anything
+  -v, --verbose         verbose output
 
-Unless ``-e`` is being used, exactly one of ``-f`` and ``-u`` must be specified.
-Use ``-f -`` to output the SQL results to stdout.
+Unless ``--explain`` is being used, exactly one of ``--file`` and ``--url`` must be specified.
+Use ``--file -`` to output the SQL results to stdout.
 
-Note that using ``-e`` is very inefficient since the extractor will do one
+Note that using ``--explain`` is very inefficient since the extractor will do one
 query for each row.
 
 
