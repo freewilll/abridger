@@ -137,7 +137,8 @@ class Schema(object):
                 pk_len = len(table.alternate_primary_key or [])
                 ui_len = len(unique_index.cols)
                 if table.alternate_primary_key is None or ui_len < pk_len:
-                    table.alternate_primary_key = tuple(unique_index.cols)
+                    cols = sorted(unique_index.cols, key=lambda c: c.name)
+                    table.alternate_primary_key = tuple(cols)
 
         for table in self.tables:
             table._set_effective_primary_key()
