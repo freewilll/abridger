@@ -16,7 +16,7 @@ html: examples getting_started
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 examples: examples.rst.j2
-	../.tox/venv/bin/python make-examples.py
+	../.tox/venv/bin/python make_examples.py
 
 getting_started: getting_started.rst.j2
-	../.tox/venv/bin/python make-getting_started.py
+	../.tox/venv/bin/python make_getting_started.py
