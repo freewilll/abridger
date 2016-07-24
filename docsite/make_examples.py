@@ -55,7 +55,7 @@ def make_graph(schema, svg_path):
     g.render(cleanup=True)
 
 
-def process_toplevel_example(toplevel_example):
+def process_toplevel_example(toplevel_example, testing=True):
     database = SqliteDatabase(path=':memory:')
     conn = database.connection
 
@@ -110,6 +110,9 @@ def process_toplevel_example(toplevel_example):
             print('Expected statements:')
             for stmt in expected_statements:
                 print(stmt)
+
+            if testing:
+                raise Exception('Mistmatch in statements. See stdout output.')
             exit(1)
 
         examples.append({
@@ -137,6 +140,9 @@ def process_toplevel_example(toplevel_example):
         'max_sdesc_len': max_sdesc_len,
     }
 
+    if testing:
+        return
+
     # Write main rst file
     template = Template(open(file_path('examples-example.rst.j2')).read())
     with open(file_path('%s.rst' % doc_filename), 'wt') as f:
@@ -151,15 +157,17 @@ def process_toplevel_example(toplevel_example):
     return doc_filename
 
 
-def main():
+def main(testing=False):
     examples = yaml.load(read_file('examples.yaml'))
     filenames = []
     for example in examples:
-        filenames.append(process_toplevel_example(example))
+        filenames.append(process_toplevel_example(example,
+                                                  testing=testing))
 
-    template = Template(open(file_path('examples.rst.j2')).read())
-    with open(file_path('examples.rst'), 'wt') as f:
-        f.write(template.render(filenames=filenames))
+    if (not testing):
+        template = Template(open(file_path('examples.rst.j2')).read())
+        with open(file_path('examples.rst'), 'wt') as f:
+            f.write(template.render(filenames=filenames))
 
 
 if __name__ == '__main__':
