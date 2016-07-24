@@ -141,6 +141,20 @@ is equivalent to:
       - tables:
         - {table: departments}
 
+Includes can be done anywhere, so that e.g. a common file of relations can be defined and then used in several subjects like so:
+::
+
+    - subject:
+      - tables:
+        - {table: employees, column: name, values: ['John', 'Jane']}
+        - include employee-relations.yaml
+    - subject:
+      - tables:
+        - {table: departments, column: name, values: ['Research']}
+        - include employee-relations.yaml
+
+This is useful in complex databases where several combinations of relations and tables could get combined in several subjects.
+
 .. _sticky_relations:
 
 Sticky relations
