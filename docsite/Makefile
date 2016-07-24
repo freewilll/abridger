@@ -9,9 +9,12 @@ all: clean html
 clean:
 	rm -rf $(BUILDDIR)/*
 
-.PHONY: html
-html: examples getting_started
+sphinx:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+.PHONY: sphinx
+
+.PHONY: html
+html: examples getting_started sphinx
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

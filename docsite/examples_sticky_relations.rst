@@ -80,9 +80,9 @@ Explain output
   departments.name=Engineers* -> departments.id=2* -> employees.department_id=2*
   departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=2* -> addresses.employee_id=2*
   departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=3* -> addresses.employee_id=3*
-  departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=2 -> departments.id=2
   departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=2 -> employees.id=1
   departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=3 -> employees.id=2
+  departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=2 -> departments.id=2
   departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=3* -> addresses.employee_id=3* -> addresses.id=3 -> employees.id=3
   departments.name=Engineers* -> departments.id=2* -> employees.department_id=2* -> employees.id=2 -> employees.id=1 -> departments.id=1
 

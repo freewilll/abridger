@@ -75,12 +75,12 @@ Explain output
 ::
 
   departments*
-  departments* -> departments.id2,id1=1,1 -> buildings.(id1,id2)=(1,1)
-  departments* -> departments.id2,id1=1,1 -> employees.(department1_id,department2_id)=(1,1)
-  departments* -> departments.id2,id1=2,2 -> employees.(department1_id,department2_id)=(2,2)
-  departments* -> departments.id2,id1=1,1 -> buildings.(id1,id2)=(1,1) -> buildings.id1,id2=1,1 -> departments.(building1_id,building2_id)=(1,1)
-  departments* -> departments.id2,id1=1,1 -> employees.(department1_id,department2_id)=(1,1) -> employees.id1,id2=1,1 -> departments.(id1,id2)=(1,1)
-  departments* -> departments.id2,id1=2,2 -> employees.(department1_id,department2_id)=(2,2) -> employees.id1,id2=3,3 -> departments.(id1,id2)=(2,2)
+  departments* -> departments.id1,id2=1,1 -> buildings.(id1,id2)=(1,1)
+  departments* -> departments.id1,id2=1,1 -> employees.(department1_id,department2_id)=(1,1)
+  departments* -> departments.id1,id2=2,2 -> employees.(department1_id,department2_id)=(2,2)
+  departments* -> departments.id1,id2=1,1 -> buildings.(id1,id2)=(1,1) -> buildings.id1,id2=1,1 -> departments.(building1_id,building2_id)=(1,1)
+  departments* -> departments.id1,id2=1,1 -> employees.(department1_id,department2_id)=(1,1) -> employees.id1,id2=1,1 -> departments.(id1,id2)=(1,1)
+  departments* -> departments.id1,id2=2,2 -> employees.(department1_id,department2_id)=(2,2) -> employees.id1,id2=3,3 -> departments.(id1,id2)=(2,2)
 
 Results
 ::
