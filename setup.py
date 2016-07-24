@@ -21,7 +21,7 @@ setup(
     author=__author__,
     author_email='w.angenent@gmail.com',
     url='https://github.com/freewilll/abridger',
-    license='GPLv3',
+    license='MIT',
     install_requires=['setuptools', 'pyyaml', 'six',
                       'jsonschema', 'dj-database-url', 'future'],
     package_dir={'': 'lib'},
