@@ -14,6 +14,7 @@
       - INSERT INTO departments (id, name) VALUES(1, 'Research');
       - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
       - INSERT INTO departments (id, name) VALUES(3, 'Finance');
+
   - title: One department
     ref: example_subjects_one_department
     description: A table entry with a single column/value will fetch one row.
@@ -24,6 +25,7 @@
           - {table: departments, column: name, values: Research}
     expected_statements:
       - INSERT INTO departments (id, name) VALUES(1, 'Research');
+
   - title: Two departments
     ref: example_subjects_two_departments
     description: A table entry with multiple column/values will fetch multiple rows.
@@ -32,6 +34,37 @@
       - subject:
         - tables:
           - {table: departments, column: name, values: ['Research', 'Accounting']}
+    expected_statements:
+      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+
+  - title: Two tables
+    ref: example_subjects_two_tables
+    description: A subject can have multiple tables.
+    short_description: A table entry with multiple column/values will fetch multiple rows
+    config:
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: Accounting}
+          - {table: departments, column: name, values: Research}
+    expected_statements:
+      - INSERT INTO departments (id, name) VALUES(1, 'Research');
+      - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
+
+  - title: Two subjects
+    ref: example_subjects_two_subjects
+    description: |
+      Subjects can have different tables and relations.
+      This example is a bit silly since both departments can be done in the same subject,
+      it just illustrates that things can be broken down.
+    short_description: Two subjects with one table each
+    config:
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: Accounting}
+      - subject:
+        - tables:
+          - {table: departments, column: name, values: Research}
     expected_statements:
       - INSERT INTO departments (id, name) VALUES(1, 'Research');
       - INSERT INTO departments (id, name) VALUES(2, 'Accounting');
@@ -46,9 +79,9 @@
     description: |
       ``all-outgoing-not-null`` is the minimum required relation.
       Nullable outgoing foreign keys are ignored, as well as incoming foreign keys.
-      Fetching all ``departments`` with this setting will make the ``building_id`` foreign key ``null``.
+      Fetching all ``departments`` will make the ``building_id`` foreign key ``null``.
       Also, since no incoming relations are in the defaults, no rows in ``employees`` are fetched.
-      If rows in ``buildings`` are required, they can be enabled by adding an ``outoing`` relation from ``departments`` to ``buildings``. This will also make the ``null`` go away in the "Research" department.
+      If rows in ``buildings`` are required, they can be enabled by adding an ``outgoing`` relation from ``departments`` to ``buildings``. This will also make the ``null`` go away in the research department. See :ref:`outgoing_relation`.
     short_description: all-outgoing-not-null
     config:
       - relations:
@@ -63,7 +96,7 @@
   - title: all-outgoing-nullable
     ref: example_relations_all_outgoing_nullable
     description: |
-      ``all-outgoing-nullable`` ensures that for any row that is fetched all foreign keys are processed.
+      ``all-outgoing-nullable`` ensures that all foreign keys are processed.
       In this example it means that the ``buildings`` row with id=1 must be fetched to satisfy the ``building_id`` foreign key constraint on the ``departments`` table.
       Also, since no incoming relations are in the defaults, no rows in ``employees`` are fetched.
     short_description: all-outgoing-nullable
@@ -101,12 +134,31 @@
   - title: all-incoming and all-outgoing-nullable
     ref: example_relations_all_incoming_and_all_outgoing_nullable
     description: |
-      The combination of ``all-outgoing-nullable`` and ``all-incoming``, which is equivalent to ``everything``, fetches everything in ``buildings`` and ``employees`` related to all the ``departments``.
+      The combination of ``all-outgoing-nullable`` and ``all-incoming``, which is equivalent to :ref:`example_relations_everything`, fetches everything in ``buildings`` and ``employees`` related to all the ``departments``.
     short_description: all-incoming and all-outgoing-nullable
     config:
       - relations:
           - {defaults: all-outgoing-nullable}
           - {defaults: all-incoming}
+      - subject:
+        - tables:
+          - {table: departments}
+    expected_statements:
+      - INSERT INTO buildings (id, name) VALUES(1, 'London');
+      - INSERT INTO departments (id, name, building_id) VALUES(1, 'Research', 1);
+      - INSERT INTO departments (id, name, building_id) VALUES(2, 'Accounting', NULL);
+      - INSERT INTO employees (id, name, department_id) VALUES(1, 'John', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(2, 'Jane', 1);
+      - INSERT INTO employees (id, name, department_id) VALUES(3, 'Janet', 2);
+
+  - title: everything
+    ref: example_relations_everything
+    description: |
+      This is equivalent to the above :ref:`example_relations_all_incoming_and_all_outgoing_nullable`
+    short_description: everything
+    config:
+      - relations:
+          - {defaults: everything}
       - subject:
         - tables:
           - {table: departments}
@@ -126,9 +178,9 @@
   - title: Default relations for a department
     ref: example_default_relations_for_a_department
     description: |
-      By default, complete rows are fetched.
-      This means that if a rule is added to fetch the department with name "Research" then rows referencing that department aren't fetched.
-      However departments reference buildings, so all buildings referenced from departments will be fetched.
+      By default, whenever a row is seen, everything is done to ensure the row is complete.
+      Since the ``departments`` table contains a foreign key on ``building_id``, all buildings referenced from departments will be also fetched.
+      However rows referencing the department aren't fetched.
     short_description: Default relations for a department
     config:
       - subject:
@@ -220,7 +272,7 @@
   - title: Relation for an employee
     ref: example_relations_an_employee
     description: |
-      This includes all relations. This leads to all employees in the research department being fetched since:
+      A subject to fetch the John employee with the ``everything`` default leads to all employees in the research department being fetched since:
 
       - John belongs to the research department
       - All employees in the research department are fetched, which pulls in Jane
@@ -241,7 +293,7 @@
     ref: outgoing_relation
     description: |
       This shows the explicit enabling of an outgoing nullable relation when using the minimal defaults of ``all-outgoing-not-null``.
-      Without the relation, no rows in the ``buildings`` table would be fetched, since the default rules don't including following nullable foreign keys.
+      Without the relation, no rows in the ``buildings`` table would be fetched, since the default rules don't including following nullable foreign keys as described on :ref:`example_relations_all_outgoing_not_null`.
       In this example, the relation is enabled, resulting in building being included.
     short_description: Outgoing relation
     config:
@@ -260,14 +312,13 @@
   - title: Disabled incoming relation
     ref: example_relations_disabled_incoming
     description: |
-      This demonstrates the blacklisting approach. All relations are included by default,
+      This demonstrates the blacklisting approach. All relations are enabled by default,
       however the relation from ``employees`` to ``departments`` is disabled.
       Fetching a department will therefore not fetch any of the employees.
 
       This is an ``incoming`` relationship type from the perspective of the ``employees`` table.
       The ``type`` key doesn't have to be included since the default type is ``incoming``.
       Relations can be disabled globally or per subject.
-      The ``type`` of a relationship is ``incoming`` by default.
     short_description: Blacklisting approach with a disabled incoming relation
     config:
       - relations:
@@ -286,7 +337,7 @@
   - title: Disabled outgoing relation
     ref: example_relations_disabled_outgoing
     description: |
-      This is another example of the blacklisting approach. All relations are included by default,
+      This is another example of the blacklisting approach. All relations are enabled by default,
       however the relation from ``departments`` to ``buildings`` is disabled.
       Fetching a department will therefore not fetch any of the buildings.
       This is an ``outgoing`` relationship type from the perspective of the ``departments`` table due to the ``building_id`` foreign key.
@@ -315,7 +366,7 @@
   examples:
   - title: Compound Foreign Keys
     ref: examples_compound_foreign_keys
-    description: This extermely convoluted example shows that compound foreign key support is built in. Relations can also be used, but only one column can be matched if the foreign key is a compound one.
+    description: This extremely convoluted example shows that compound key support is built in. Relations can also be used, but only one column is matched in the foreign key.
     short_description: Compound Foreign Keys
     config:
       - relations:
@@ -341,7 +392,13 @@
     ref: examples_sticky_relations
     description: |
       Let's say we want to have a database with all engineers in the engineering department and include all engineer's addresses.
-      We want to specifically *not* include manager's addresses. If we were to simply add relations from ``employees`` to ``departments`` and ``addresses`` to ``employees``, then any employee's boss would trigger a fetch from the management department, which would lead to all employee's managers being fetched, which would lead to all manager's addresses being fetched. By making the relations sticky, those relations are only processed if there is a sticky trail all the way back to a subject. This way, when the ``boss_id`` relation on ``employees`` is processed, the sticky flag gets dropped. When the bosses are processed, the sticky relationship from ``addresses`` to ``employees`` is then not applied. This can be seen in the explain output in the lines where the employee to boss relationship is processed: the asterisks, indicating stickiness, disappear. The end result is that John doesn't have an address entry, since he is not in the employees department.
+      We want to specifically *not* include manager's addresses. If we were to simply add relations from ``employees`` to ``departments`` and ``addresses`` to ``employees``, then any employee's boss would trigger a fetch from the management department, which would lead to all employee's managers being fetched, which would lead to all manager's addresses being fetched.
+
+      By making relations `sticky`, they are only processed if there is a sticky trail all the way back to a subject.
+      If we set the sticky flag on the ``department_id`` and ``employee_id`` foreign keys, then these relationships are `only` processed if there is a direct trail back to a subject.
+      When the ``boss_id`` foreign key is processed, the sticky flag is dropped.
+      Therefore, when the "John" employee is processed, the sticky flag has been lost and the sticky relationships aren't used, resulting in no addresses being fetched for John.
+      This can be seen in the explain output in the lines where the employee to boss relationship is processed: the asterisks, indicating stickiness, disappear.
     short_description: Sticky Relations
     config:
       - subject:
@@ -371,8 +428,9 @@
     ref: examples_not_null_columns1
     description: |
       In this example, two tables, ``departments`` and ``employees`` both reference each other with nullable foreign keys.
-      It makes no difference to the SQL generation which table comes first, so they are processed in alphabetical order so the ``departments`` table gets done first.
-      The value for ``primary_employee_id`` can't be added until the rows has been inserted in to the ``employees`` table so an ``UPDATE`` statement for ``departments`` is needed after the ``employees`` rows have been inserted.
+      It makes no difference to the SQL generation which table comes first when generating the  ``INSERT`` statements, so they are processed in alphabetical order with the ``departments`` table getting insert statements generated first.
+      The value for ``primary_employee_id`` can't be added until the rows have been inserted in to the ``employees`` table
+      so an ``UPDATE`` statement for ``departments`` is needed after the ``employees`` rows have been inserted.
     short_description: Not Null Columns
     config:
       - subject:
