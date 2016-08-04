@@ -8,7 +8,7 @@ Abridger documentation
 
 About abridger
 --------------
-Abridger is a tool for creating a referentially intact copy of a subset of a database.
+Abridger is a tool for creating a referentially intact copy of a subset of a relational database.
 
 Contents:
 

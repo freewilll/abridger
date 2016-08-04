@@ -173,12 +173,12 @@ Explain output
 ::
 
   departments*
-  departments* -> departments.id=1 -> buildings.id=1
   departments* -> departments.id=1 -> employees.department_id=1
   departments* -> departments.id=2 -> employees.department_id=2
-  departments* -> departments.id=1 -> buildings.id=1 -> departments.building_id=1
+  departments* -> departments.id=1 -> buildings.id=1
   departments* -> departments.id=1 -> employees.department_id=1 -> employees.id=1 -> departments.id=1
   departments* -> departments.id=2 -> employees.department_id=2 -> employees.id=3 -> departments.id=2
+  departments* -> departments.id=1 -> buildings.id=1 -> departments.building_id=1
 
 Results
 ::
@@ -213,12 +213,12 @@ Explain output
 ::
 
   departments*
-  departments* -> departments.id=1 -> buildings.id=1
   departments* -> departments.id=1 -> employees.department_id=1
   departments* -> departments.id=2 -> employees.department_id=2
-  departments* -> departments.id=1 -> buildings.id=1 -> departments.building_id=1
+  departments* -> departments.id=1 -> buildings.id=1
   departments* -> departments.id=1 -> employees.department_id=1 -> employees.id=1 -> departments.id=1
   departments* -> departments.id=2 -> employees.department_id=2 -> employees.id=3 -> departments.id=2
+  departments* -> departments.id=1 -> buildings.id=1 -> departments.building_id=1
 
 Results
 ::

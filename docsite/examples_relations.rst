@@ -98,8 +98,8 @@ Explain output
 ::
 
   departments.name=Research*
-  departments.name=Research* -> departments.id=1 -> buildings.id=1
   departments.name=Research* -> departments.id=1 -> employees.department_id=1
+  departments.name=Research* -> departments.id=1 -> buildings.id=1
   departments.name=Research* -> departments.id=1 -> employees.department_id=1 -> employees.id=1 -> departments.id=1
 
 Results
@@ -136,9 +136,9 @@ Explain output
 ::
 
   departments.name=Research*
-  departments.name=Research* -> departments.id=1 -> buildings.id=1
   departments.name=Research* -> departments.id=1 -> employees.department_id=1
   departments.name=Research* -> departments.id=2 -> employees.department_id=2
+  departments.name=Research* -> departments.id=1 -> buildings.id=1
   departments.name=Research* -> departments.id=1 -> employees.department_id=1 -> employees.id=1 -> departments.id=1
   departments.name=Research* -> departments.id=2 -> employees.department_id=2 -> employees.id=3 -> departments.id=2
 
@@ -261,8 +261,8 @@ Explain output
 
   employees.name=John*
   employees.name=John* -> employees.id=1 -> departments.id=1
-  employees.name=John* -> employees.id=1 -> departments.id=1 -> buildings.id=1
   employees.name=John* -> employees.id=1 -> departments.id=1 -> employees.department_id=1
+  employees.name=John* -> employees.id=1 -> departments.id=1 -> buildings.id=1
   employees.name=John* -> employees.id=1 -> departments.id=1 -> buildings.id=1 -> departments.building_id=1
 
 Results
