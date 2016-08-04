@@ -15,6 +15,7 @@ Root installation
 ++++++++++++++++++
 Installation using pip
 ::
+
     $ sudo pip install abridger
 
 Install from github
