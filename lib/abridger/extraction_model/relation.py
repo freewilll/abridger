@@ -88,7 +88,8 @@ def merge_relations(relations):
         same_relations[relation._base_hash()].append(relation)
 
     results = []
-    for related_relations in list(same_relations.values()):
+    for key in list(sorted(same_relations.keys())):
+        related_relations = same_relations[key]
         disabled = False
         propagate_sticky = False
         only_if_sticky = False
