@@ -55,7 +55,7 @@ class Relation(object):
 
     def _base_hash(self):
         '''Returns a hash of everything except sticky and disabled'''
-        return hash('.'.join(self._base_list()))
+        return '.'.join(self._base_list())
 
     def __hash__(self):
         return hash('.'.join(self._base_list() + [
