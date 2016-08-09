@@ -35,8 +35,5 @@ python:
 coverage:
 	py.test -vs --cov-report=term-missing --cov=abridger --cov=bin
 
-readme: .tox/venv
-	.tox/venv/bin/python bin/tools/make-readme.py
-
 docs: .tox/venv
 	. .tox/venv/bin/activate && $(MAKE) -C docsite html
